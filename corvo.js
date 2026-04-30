@@ -167,6 +167,13 @@ global.agentChatHistory = []; // Armazena as últimas 15 mensagens para o dono
 
 const { callGeminiAI, callGeminiWithFallback, callGeminiAgentInternal, callGeminiAgent, callGroqAI, callGroqAgent } = require('./ARQUIVES/ai_core.js');
 
+let casamentoPedidos = []
+try {
+  casamentoPedidos = JSON.parse(fs.readFileSync('./DADOS DO CORVO/func/casamento_pedidos.json'))
+} catch {
+  casamentoPedidos = []
+}
+
 
 // =========================================================================
 
