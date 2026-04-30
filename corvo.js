@@ -3679,6 +3679,8 @@ ${data.current.condition.text}
               var carouselMessage = {
                 cards: [{
                   header: {
+                    title: "Corvo",
+                    subtitle: "Menu",
                     hasMediaAttachment: true,
                     ...(mediaMenu.videoMessage
                       ? { videoMessage: mediaMenu.videoMessage }
@@ -3692,13 +3694,17 @@ ${data.current.condition.text}
               };
 
               var msgMenu = generateWAMessageFromContent(from, {
-                interactiveMessage: {
-                  contextInfo: {
-                    participant: sender,
-                    quotedMessage: { conversation: "░⃟⃛🕸️ ᴀǫᴜɪ ᴇsᴛᴀ sᴇᴜ ᴍᴇɴᴜ ░⃟⃛🕸️" }
-                  },
-                  body: { text: "*🕸️ ᴍᴇɴᴜ ɪɴᴛᴇʀᴀᴛɪᴠᴏ 🕸️*" },
-                  carouselMessage
+                viewOnceMessage: {
+                  message: {
+                    interactiveMessage: {
+                      contextInfo: {
+                        participant: sender,
+                        quotedMessage: { conversation: "░⃟⃛🕸️ ᴀǫᴜɪ ᴇsᴛᴀ sᴇᴜ ᴍᴇɴᴜ ░⃟⃛🕸️" }
+                      },
+                      body: { text: "*🕸️ ᴍᴇɴᴜ ɪɴᴛᴇʀᴀᴛɪᴠᴏ 🕸️*" },
+                      carouselMessage
+                    }
+                  }
                 }
               }, {});
 
@@ -12690,23 +12696,23 @@ Aguarde o dono entrar em contato no privado.`
                       deviceListMetadata: {},
                       deviceListMetadataVersion: 2
                     },
-                    interactiveMessage: proto.Message.InteractiveMessage.create({
-                      body: proto.Message.InteractiveMessage.Body.create({
+                    interactiveMessage: {
+                      body: {
                         text: textok
-                      }),
-                      footer: proto.Message.InteractiveMessage.Footer.create({
+                      },
+                      footer: {
                         text: "© Corvo Security"
-                      }),
-                      header: proto.Message.InteractiveMessage.Header.create({
+                      },
+                      header: {
                         title: "Menu Interativo",
                         subtitle: "Corvo",
                         hasMediaAttachment: true,
                         ...(mediaMenu.videoMessage ? { videoMessage: mediaMenu.videoMessage } : { imageMessage: mediaMenu.imageMessage })
-                      }),
-                      nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                      },
+                      nativeFlowMessage: {
                         buttons: botoes
-                      })
-                    })
+                      }
+                    }
                   }
                 }
               }, { quoted: info });
