@@ -415,7 +415,7 @@ process.on('uncaughtException', function (err) {
   console.error(err.stack);
 });
 const messageStore = {}
-const API_KEY_SANDRO2 = CREDENTIALS_USER.API_KEY_SANDRO || "corvo-md-domina";
+const API_KEY_SANDRO2 = CREDENTIALS_USER.API_KEY_SANDRO || "";
 const API_URL = CREDENTIALS_USER.API_URL || "https://api.minhabucetinha.com.br";
 const CORVO_URL = 'https://api.sandrohost.com.br';
 const CorvoBot = "COMPRE SUA KEY DA Corvo NA URL ACIMA!!"
@@ -929,10 +929,10 @@ async function startcorvo(upsert, corvo, qrcode) {
         var body = extrairTexto(info);
         var Procurar_String = body;
         var budy2 = body.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-        
-        var prefix = (isGroup && fs.existsSync(`./DADOS DO CORVO/grupos/ATIVAÇÕES-CORVO/${from}.json`) && jsonGp[0].multiprefix) 
-            ? (jsonGp[0]?.prefixos[jsonGp[0]?.prefixos?.indexOf(String(body)?.trim()?.charAt(0))] || jsonGp[0].prefixos[0])
-            : (setting.prefix || "/");
+
+        var prefix = (isGroup && fs.existsSync(`./DADOS DO CORVO/grupos/ATIVAÇÕES-CORVO/${from}.json`) && jsonGp[0].multiprefix)
+          ? (jsonGp[0]?.prefixos[jsonGp[0]?.prefixos?.indexOf(String(body)?.trim()?.charAt(0))] || jsonGp[0].prefixos[0])
+          : (setting.prefix || "/");
 
         var isCmd = body.startsWith(prefix) || body.startsWith("/") || body.startsWith(".");
 
@@ -948,11 +948,11 @@ async function startcorvo(upsert, corvo, qrcode) {
 
         var PR_String = Procurar_String.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
 
-        try { 
-          var groupMetadata = isGroup ? await corvo.groupMetadata(from) : "" 
-        } catch { 
+        try {
+          var groupMetadata = isGroup ? await corvo.groupMetadata(from) : ""
+        } catch {
           // Não continuar se falhar metadata, apenas deixar vazio
-          groupMetadata = "" 
+          groupMetadata = ""
         }
 
         // Aprender LID↔Phone de TODOS os participantes do grupo via phoneNumber do metadata
@@ -4570,7 +4570,7 @@ ${listaPrefixos}
         );
 
         var isBotTriggered = isMentionedByNumber || isMentionedByLid || isReplyToBot || (!isGroup) || (isGroup && body.toLowerCase().match(/\bcorvo\b/));
-    
+
         if (isBotTriggered && !isCmd && !info.key.fromMe && body && body.trim().length > 0) {
           try {
             // Função para limpar LIDs de um texto e trocar por números reais
@@ -6281,7 +6281,7 @@ Seja útil, natural e direto.`
             reply("*ᴏᴋᴀʏ ᴍᴇsᴛʀᴇ, ɪʀᴇɪ ʀᴇɪɴɪᴄɪᴀʀ, ᴀɢᴜᴀʀᴅᴇ ᴜᴍ ᴍᴏᴍᴇɴᴛᴏ... 🙇‍♂️*")
             setTimeout(async () => { process.exit() }, 1200)
             break
-            
+
           case 'update':
           case 'atualizar':
             if (!SoDono) return reply(mess.onlyOwner());
