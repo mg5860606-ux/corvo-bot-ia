@@ -1,0 +1,109 @@
+
+/**
+ * SISTEMA DE ALUGUEL AUTOMATICO COM PIX
+ * Autor: ChatGPT (ajustado para YutaBot / Maskara Bot)
+ * Descricao:
+ * - Planos:
+ *   1) R$10 = 15 dias
+ *   2) R$20 = 30 dias
+ * - Bloqueia todos os comandos quando aluguel expira
+ * - Libera automaticamente apos pagamento PIX aprovado
+ * - Apenas admins podem usar: pagarbot / renovar
+ */
+
+const fs = require('fs')
+const { v4: uuidv4 } = require('uuid')
+
+// ================== ARQUIVOS ==================
+const YutaAluguel = './ARQUIVES/tictactoe/grupos_com_aluguel.json'
+const PixPendentesFile = './ARQUIVES/tictactoe/pix_pendentes.json'
+
+if (!fs.existsSync(YutaAluguel)) fs.writeFileSync(YutaAluguel, JSON.stringify([], null, 2))
+if (!fs.existsSync(PixPendentesFile)) fs.writeFileSync(PixPendentesFile, JSON.stringify([], null, 2))
+
+let gruposAutorizados = JSON.parse(fs.readFileSync(YutaAluguel))
+let pixPendentes = JSON.parse(fs.readFileSync(PixPendentesFile))
+
+function salvarGrupos() {
+  fs.writeFileSync(YutaAluguel, JSON.stringify(gruposAutorizados, null, 2))
+}
+
+function salvarPixPendentes() {
+  fs.writeFileSync(PixPendentesFile, JSON.stringify(pixPendentes, null, 2))
+}
+
+// ================== PLANOS ==================
+const PLANOS_ALUGUEL = {
+  1: { valor: 10, dias: 15 },
+  2: { valor: 20, dias: 30 }
+}
+
+// ================== FUNCOES ==================
+function ativarAluguelGrupo(from, dias = 0) {
+  const agora = new Date()
+  const expiraEm = new Date(agora.getTime() + dias * 24 * 60 * 60 * 1000)
+
+  const grupo = gruposAutorizados.find(g => g.id === from)
+  if (!grupo) {
+    gruposAutorizados.push({ id: from, expiraEm: expiraEm.toISOString() })
+  } else {
+    grupo.expiraEm = expiraEm.toISOString()
+  }
+  salvarGrupos()
+}
+
+async function desativarAluguelGrupo(from, yuta) {
+  gruposAutorizados = gruposAutorizados.filter(g => g.id !== from)
+  salvarGrupos()
+  await yuta.sendMessage(from, { text: '*⏳ O ALUGUEL EXPIROU. RENOVE PARA CONTINUAR USANDO O BOT.*' })
+}
+
+function isGrupoAutorizado(from, yuta) {
+  const grupo = gruposAutorizados.find(g => g.id === from)
+  if (!grupo) return false
+
+  const agora = new Date()
+  const expira = new Date(grupo.expiraEm)
+
+  if (agora > expira) {
+    desativarAluguelGrupo(from, yuta)
+    return false
+  }
+  return true
+}
+
+function registrarPixPendente(grupoId, pagamentoId, plano) {
+  pixPendentes.push({
+    grupoId,
+    pagamentoId,
+    plano,
+    criadoEm: Date.now()
+  })
+  salvarPixPendentes()
+}
+
+async function processarPixAprovado(pagamentoId, yuta) {
+  const pix = pixPendentes.find(p => p.pagamentoId === pagamentoId)
+  if (!pix) return
+
+  const plano = PLANOS_ALUGUEL[pix.plano]
+  if (!plano) return
+
+  ativarAluguelGrupo(pix.grupoId, plano.dias)
+
+  pixPendentes = pixPendentes.filter(p => p.pagamentoId !== pagamentoId)
+  salvarPixPendentes()
+
+  await yuta.sendMessage(pix.grupoId, {
+    text: `*✅ PAGAMENTO CONFIRMADO!*\n\nPlano ativado por *${plano.dias} dias* 🎉`
+  })
+}
+
+// ================== EXPORT ==================
+module.exports = {
+  PLANOS_ALUGUEL,
+  isGrupoAutorizado,
+  ativarAluguelGrupo,
+  registrarPixPendente,
+  processarPixAprovado
+}

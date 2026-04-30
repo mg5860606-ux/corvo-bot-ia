@@ -1,0 +1,31 @@
+{
+  "name": "logan-ia",
+  "version": "1.0.0",
+  "description": "Logan - Bot de WhatsApp com IA",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "whatsapp-bot",
+    "whatsapp-baileys",
+    "bot-ia",
+    "groq"
+  ],
+  "author": "Luan",
+  "license": "MIT",
+  "dependencies": {
+    "@hapi/boom": "^10.0.0",
+    "@whiskeysockets/baileys": "^6.7.16",
+    "chalk": "^4.1.2",
+    "groq-sdk": "^1.1.2",
+    "moment-timezone": "^0.5.46",
+    "pino": "^7.0.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davyfll472-arch/Logan-ia.git"
+  },
+  "homepage": "https://github.com/davyfll472-arch/Logan-ia#readme"
+}
