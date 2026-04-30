@@ -2,27 +2,28 @@ const JavaScriptObfuscator = require('javascript-obfuscator');
 const fs = require('fs');
 const path = require('path');
 
-const inputFile = path.join(__dirname, 'corvo.source.js');
-const outputFile = path.join(__dirname, 'corvo.js');
+const inputFile = path.join(__dirname, 'ARQUIVES', 'ai_core.source.js');
+const outputFile = path.join(__dirname, 'ARQUIVES', 'ai_core.js');
 
-console.log("🛡️  Iniciando Criptografia do Código Fonte...");
+console.log("🛡️ Iniciando Criptografia do Núcleo de IA...");
 
 if (!fs.existsSync(inputFile)) {
-    console.error("❌ Erro: O arquivo corvo.source.js não foi encontrado!");
-    console.error("Certifique-se de que o seu código original foi renomeado para corvo.source.js");
+    console.error("❌ Erro: O arquivo ai_core.source.js não foi encontrado!");
     process.exit(1);
 }
 
 try {
     const sourceCode = fs.readFileSync(inputFile, 'utf8');
 
-    console.log("⏳ Ofuscando as linhas... (Isso pode demorar alguns segundos devido ao tamanho do arquivo)");
+    console.log("⏳ Ofuscando...");
 
-    // Configuração de ofuscação média-alta (balanceada para performance e segurança)
+    // Criptografia pesada, pois o arquivo é pequeno e aguenta!
     const obfuscationResult = JavaScriptObfuscator.obfuscate(sourceCode, {
         compact: true,
-        controlFlowFlattening: false,
-        deadCodeInjection: false,
+        controlFlowFlattening: true,
+        controlFlowFlatteningThreshold: 1.0,
+        deadCodeInjection: true,
+        deadCodeInjectionThreshold: 1.0,
         debugProtection: false,
         disableConsoleOutput: false,
         identifierNamesGenerator: 'hexadecimal',
@@ -31,19 +32,26 @@ try {
         renameGlobals: false,
         selfDefending: false,
         simplify: true,
-        splitStrings: false,
+        splitStrings: true,
+        splitStringsChunkLength: 5,
         stringArray: true,
+        stringArrayCallsTransform: true,
         stringArrayEncoding: ['base64'],
-        stringArrayThreshold: 0.75,
+        stringArrayIndexShift: true,
+        stringArrayRotate: true,
+        stringArrayShuffle: true,
+        stringArrayWrappersCount: 2,
+        stringArrayWrappersChainedCalls: true,
+        stringArrayWrappersParametersMaxCount: 4,
+        stringArrayWrappersType: 'function',
+        stringArrayThreshold: 1.0,
         unicodeEscapeSequence: false
     });
 
     fs.writeFileSync(outputFile, obfuscationResult.getObfuscatedCode());
 
     console.log("✅ Criptografia Concluída com Sucesso!");
-    console.log(`🔒 O arquivo ${outputFile} foi gerado e está protegido.`);
-    console.log("⚠️  Lembre-se de editar sempre o corvo.source.js e rodar este script novamente (node proteger.js) para aplicar as mudanças.");
-
+    console.log(`🔒 O núcleo ${outputFile} foi gerado e está protegido.`);
 } catch (error) {
     console.error("❌ Ocorreu um erro durante a ofuscação:", error);
 }
