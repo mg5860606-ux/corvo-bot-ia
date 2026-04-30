@@ -43,5 +43,8 @@
     "request": "^2.88.2",
     "scr-emoji": "^0.0.3",
     "yt-search": "^2.13.1"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^5.4.2"
   }
 }
