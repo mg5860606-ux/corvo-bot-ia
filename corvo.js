@@ -3089,7 +3089,18 @@ ${listaPrefixos}
 
         corvo.sendInteractiveTXT = async (idChat, mainText = '', footerText = '', quotedMessage = {}, buttonsParams = {}) => {
           try {
-            await corvo.relayMessage(idChat, { interactiveMessage: { body: { text: mainText }, footer: { text: footerText }, contextInfo: quotedMessage, nativeFlowMessage: buttonsParams } }, {});
+            await corvo.relayMessage(idChat, { 
+              viewOnceMessage: {
+                message: {
+                  interactiveMessage: { 
+                    body: { text: mainText }, 
+                    footer: { text: footerText }, 
+                    contextInfo: quotedMessage, 
+                    nativeFlowMessage: buttonsParams 
+                  }
+                }
+              }
+            }, {});
           } catch (errorMessage) {
             await reply(String(errorMessage));
           }
@@ -3099,7 +3110,23 @@ ${listaPrefixos}
           try {
             create = await prepareWAMessageMedia({ image: fs.readFileSync(imageDir) }, { upload: corvo.waUploadToServer });
             imageCreate = create.imageMessage;
-            await corvo.relayMessage(ChatID, { interactiveMessage: { header: { hasMediaAttachment: true, imageMessage: imageCreate }, headerType: 'IMAGE', body: { text: definedText }, footer: { text: footer }, contextInfo: contextMessageInfo, nativeFlowMessage: buttonsParams } }, {});
+            await corvo.relayMessage(ChatID, {
+              viewOnceMessage: {
+                message: {
+                  interactiveMessage: {
+                    header: {
+                      hasMediaAttachment: true,
+                      imageMessage: imageCreate
+                    },
+                    headerType: 'IMAGE',
+                    body: { text: definedText },
+                    footer: { text: footer },
+                    contextInfo: contextMessageInfo,
+                    nativeFlowMessage: buttonsParams
+                  }
+                }
+              }
+            }, {});
           } catch (errorMessage) {
             return reply(String(errorMessage));
           }
@@ -3556,29 +3583,33 @@ ${listaPrefixos}
               )
 
               var msg2 = generateWAMessageFromContent(from, {
-                interactiveMessage: {
-                  body: { text: '*Resultados da metadinha* 💝 ↴' },
-                  carouselMessage: {
-                    cards: [
-                      {
-                        header: {
-                          hasMediaAttachment: true,
-                          imageMessage: maleMedia.imageMessage
-                        },
-                        body: { text: "• Perfil Masculino 🕊️" },
-                        footer: { text: NomeDoBot },
-                        nativeFlowMessage: { buttons: [] }
-                      },
-                      {
-                        header: {
-                          hasMediaAttachment: true,
-                          imageMessage: femaleMedia.imageMessage
-                        },
-                        body: { text: "• Perfil Feminino 🌸" },
-                        footer: { text: NomeDoBot },
-                        nativeFlowMessage: { buttons: [] }
+                viewOnceMessage: {
+                  message: {
+                    interactiveMessage: {
+                      body: { text: '*Resultados da metadinha* 💝 ↴' },
+                      carouselMessage: {
+                        cards: [
+                          {
+                            header: {
+                              hasMediaAttachment: true,
+                              imageMessage: maleMedia.imageMessage
+                            },
+                            body: { text: "• Perfil Masculino 🕊️" },
+                            footer: { text: NomeDoBot },
+                            nativeFlowMessage: { buttons: [] }
+                          },
+                          {
+                            header: {
+                              hasMediaAttachment: true,
+                              imageMessage: femaleMedia.imageMessage
+                            },
+                            body: { text: "• Perfil Feminino 🌸" },
+                            footer: { text: NomeDoBot },
+                            nativeFlowMessage: { buttons: [] }
+                          }
+                        ]
                       }
-                    ]
+                    }
                   }
                 }
               }, { quoted: info })
@@ -3919,9 +3950,13 @@ ${data.current.condition.text}
               }))
 
               var msg = generateWAMessageFromContent(from, {
-                interactiveMessage: {
-                  body: { text: "🔎 TIKTOK SEARCH RESULTS" },
-                  carouselMessage: { cards }
+                viewOnceMessage: {
+                  message: {
+                    interactiveMessage: {
+                      body: { text: "🔎 TIKTOK SEARCH RESULTS" },
+                      carouselMessage: { cards }
+                    }
+                  }
                 }
               }, { quoted: info })
 
@@ -11238,9 +11273,13 @@ ${prefix}global`)
               }))
 
               var msg = generateWAMessageFromContent(from, {
-                interactiveMessage: {
-                  body: { text: `🎨 *NICKS GERADOS PARA:* ${q}` },
-                  carouselMessage: { cards }
+                viewOnceMessage: {
+                  message: {
+                    interactiveMessage: {
+                      body: { text: `🎨 *NICKS GERADOS PARA:* ${q}` },
+                      carouselMessage: { cards }
+                    }
+                  }
                 }
               }, {})
 
@@ -11288,7 +11327,7 @@ ${prefix}global`)
               );
 
               var msg = generateWAMessageFromContent(from, {
-                interactiveMessage: {
+                viewOnceMessage: { message: { interactiveMessage: {
                   body: { text: '*Resultados da metadinha* 💝 ↴' },
                   carouselMessage: {
                     cards: [
@@ -11810,9 +11849,13 @@ ${prefix}attp Ei | gatinha | vem aqui`)
               }))
 
               var msg = generateWAMessageFromContent(from, {
-                interactiveMessage: {
-                  body: { text: "🔎 TIKTOK SEARCH RESULTS" },
-                  carouselMessage: { cards }
+                viewOnceMessage: {
+                  message: {
+                    interactiveMessage: {
+                      body: { text: "🔎 TIKTOK SEARCH RESULTS" },
+                      carouselMessage: { cards }
+                    }
+                  }
                 }
               }, { quoted: info })
 
@@ -12598,13 +12641,17 @@ ${data.current.condition.text}
               }
 
               var msgAlugar = generateWAMessageFromContent(from, {
-                interactiveMessage: {
-                  contextInfo: {
-                    participant: sender,
-                    quotedMessage: { conversation: "💎 sistema de aluguel" }
-                  },
-                  body: { text: "*💎 ESCOLHA SEU PLANO ABAIXO*" },
-                  carouselMessage
+                viewOnceMessage: {
+                  message: {
+                    interactiveMessage: {
+                      contextInfo: {
+                        participant: sender,
+                        quotedMessage: { conversation: "💎 sistema de aluguel" }
+                      },
+                      body: { text: "*💎 ESCOLHA SEU PLANO ABAIXO*" },
+                      carouselMessage
+                    }
+                  }
                 }
               }, {})
 
@@ -13168,14 +13215,18 @@ ${ab?.link || 'Não informado'}`
               }
 
               var msgGrupo = generateWAMessageFromContent(from, {
-                interactiveMessage: {
-                  contextInfo: {
-                    participant: sender,
-                    quotedMessage: { conversation: "📂 lista de grupos" }
-                  },
-                  body: { text: `📂 *RESULTADOS PARA:* ${q}` },
-                  footer: { text: NomeDoBot },
-                  carouselMessage
+                viewOnceMessage: {
+                  message: {
+                    interactiveMessage: {
+                      contextInfo: {
+                        participant: sender,
+                        quotedMessage: { conversation: "📂 lista de grupos" }
+                      },
+                      body: { text: `📂 *RESULTADOS PARA:* ${q}` },
+                      footer: { text: NomeDoBot },
+                      carouselMessage
+                    }
+                  }
                 }
               }, {})
 
@@ -20001,7 +20052,7 @@ Use ${prefix}chocarovo para tentar a sorte`
             break;
 
           case 'text_newsletter':
-            corvo.sendMessage(from, { text: "Testando mensagem...", contextInfo: { forwardingScore: 1000000, isForwarded: true, forwardedNewsletterMessageInfo: { newsletterJid: "120363173003902460@newsletter" } } }, { quoted: info });
+            corvo.sendMessage(from, { text: "Testando mensagem...", contextInfo: { forwardingScore: 1000000, isForwarded: true, forwardedNewsletterMessageInfo: { newsletterJid: "120363173003902460@newsletter" } } } } }, { quoted: info });
             break;
 
           case 'fstiker':
@@ -22338,7 +22389,7 @@ Ex: ${prefix + command} Patolino`)
               for (var v of data.resultado) {
                 Lrows.push({ title: v.title, description: `${v.description}`, id: `${prefix}play ${v.title}`, header: `Tipo: Áudio > Canal: ${v.author.name} | Duração: ${v.duration.timestamp}` }, { title: v.title, description: v.description, id: `${prefix}playvid ${v.title}`, header: `Tipo: Vídeo > Canal: ${v.author.name} | Duração: ${v.duration.timestamp}` })
               };
-              await corvo.relayMessage(from, { interactiveMessage: { body: { text: `⸺͟͞ꪶ𝐘𝐎𝐔𝐓𝐔𝐁𝐄 - 𝐏𝐋𝐀𝐘 𝐕𝟐ꫂ ♪` }, footer: { text: `${tempo}, ${pushname}! Aqui está o resultado da sua pesquisa, selecione a música a qual você deseja baixar.` }, contextInfo: { participant: sender, quotedMessage: info.message }, nativeFlowMessage: { buttons: [{ name: "single_select", buttonParamsJson: JSON.stringify({ title: "SELECIONAR", sections: [{ title: NomeDoBot, highlight_label: "", rows: Lrows }] }) }] } } }, {});
+              await corvo.relayMessage(from, { viewOnceMessage: { message: { interactiveMessage: { body: { text: `⸺͟͞ꪶ𝐘𝐎𝐔𝐓𝐔𝐁𝐄 - 𝐏𝐋𝐀𝐘 𝐕𝟐ꫂ ♪` }, footer: { text: `${tempo}, ${pushname}! Aqui está o resultado da sua pesquisa, selecione a música a qual você deseja baixar.` }, contextInfo: { participant: sender, quotedMessage: info.message }, nativeFlowMessage: { buttons: [{ name: "single_select", buttonParamsJson: JSON.stringify({ title: "SELECIONAR", sections: [{ title: NomeDoBot, highlight_label: "", rows: Lrows }] }) }] } } } }, {});
             } catch (error) {
               return await reply("Seja mais específico, não deu pra encontrar com apenas isto...");
             }
