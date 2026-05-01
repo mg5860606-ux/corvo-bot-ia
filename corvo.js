@@ -124,30 +124,6 @@ async function saveAiContextLocal(from, context) {
 // ==============================================================
 
 
-const CONFIG_ADMIN = {
-  SPIDERX_API_KEY: "glnzLoIUlvwM6YZ4ildC", // KEY SPIDERX (Áudio/Vídeo)
-  GOOGLE_API_KEYS: [
-        /* Api 1 */ "COLOQUE_SUA_API_AQUI",
-        /* Api 2 */ "",
-        /* Api 3 */ "",
-        /* Api 4 */ "",
-        /* Api 5 */ "",
-        /* Api 6 */ "",
-        /* Api 7 */ "",
-        /* Api 8 */ "",
-        /* Api 9 */ "",
-        /* Api 10 */ "",
-        /* Api 11 */ "", // ruan  //
-        /* Api 12 */ "", // ruan  //
-        /* Api 13 */ "",
-        /* Api 14 */ "",
-        /* Api 15 */ ""
-  ],
-  MODEL_PRIMARY: "gemini-1.5-flash",
-  MODEL_SECONDARY: "gemini-1.5-pro",
-  MODEL_TERTIARY: "gemini-2.0-flash-exp"
-};
-
 const CONFIG_GROQ = {
   KEYS: ["COLOQUE_SUA_API_AQUI"],
   MODEL: "llama-3.3-70b-versatile"
