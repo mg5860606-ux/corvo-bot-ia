@@ -1,10 +1,10 @@
 {
   "prefix": "/",
   "TOKEN": "SUA_API_TOKEN",
-  "NomeDoBot": "Corvo",
-  "ownerName": "CORVO",
+  "NomeDoBot": "",
+  "ownerName": "",
   "channelcorvo": "",
   "channel": "",
-  "ownerNumber": "559481089441",
+  "ownerNumber": "",
   "CREDENTIALS_USER": {}
 }

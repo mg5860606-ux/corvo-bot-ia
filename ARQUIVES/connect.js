@@ -42,7 +42,6 @@ const qrcodeTerminal = require('qrcode-terminal');
 const { fs, readline, LoggerB, Boom, axios, util, time, date, getBuffer, banner2, banner3, colors, getGroupAdmins, mess, getRandom, NodeCache, nescessario, setting, extractDDD, extractStateFromNumber, extractStateFromDDD } = require('../ARQUIVES/funcoes/exports.js');
 const moment = require('moment-timezone');
 const qrcode = "./DADOS DO CORVO/qr-code";
-const { NomeDoBot, channelnk } = require('../DADOS DO CORVO/INFO_CORVO/media/INFO_CORVO.json');
 
 const logger = LoggerB.child({});
 logger.level = 'silent';
@@ -84,6 +83,21 @@ setInterval(() => {
 }, 10000);
 
 async function startConnect() {
+    const configPath = './DADOS DO CORVO/INFO_CORVO/media/INFO_CORVO.json';
+    let infoConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    
+    if (!infoConfig.NomeDoBot || !infoConfig.ownerName || !infoConfig.ownerNumber) {
+        console.log(colors.magenta("\n╔══╌✯╌══⊱×⊰ CONFIGURAÇÃO INICIAL ⊱×⊰══╌✯╌══╗"));
+        let pNomeBot = await question(colors.cyan("1. Como você quer chamar a IA? (Ex: Assistente, Bot, etc)\n--> "));
+        infoConfig.NomeDoBot = pNomeBot.trim() || "Assistente";
+        let pOwnerName = await question(colors.cyan("2. Qual é o seu nome? (Como a IA deve te chamar?)\n--> "));
+        infoConfig.ownerName = pOwnerName.trim() || "Mestre";
+        let pOwnerNum = await question(colors.cyan("3. Qual o seu número de WhatsApp (com DDI e DDD)? Ex: 5511999999999\n--> "));
+        infoConfig.ownerNumber = pOwnerNum.replace(/\D/g, '');
+        fs.writeFileSync(configPath, JSON.stringify(infoConfig, null, 2));
+        console.log(colors.green("✅ Configuração salva com sucesso!\n"));
+    }
+
     const { state, saveCreds } = await useMultiFileAuthState(qrcode);
 
     let botNumber = "";
@@ -312,7 +326,7 @@ async function startConnect() {
                     forwardingScore: 1,
                     forwardedNewsletterMessageInfo: {
                         newsletterJid: setting.channelnk,
-                        newsletterName: NomeDoBot,
+                        newsletterName: infoConfig.NomeDoBot || "Bot",
                         serverMessageId: ''
                     }
                 };

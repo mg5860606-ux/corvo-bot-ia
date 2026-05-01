@@ -1,12 +1,10 @@
 /*
 ========================================================
-             ⭐ CRIADO POR MARCOS ⭐
+             ⭐ BOT DE WHATSAPP GENÉRICO ⭐
 ========================================================
 */
 /* 
-* Não revenda ou passe para alguém essa base.
-* Author: CORVO.
-* Apoio: CORVO.
+* IA e utilitários integrados.
 * Site api pra funcionar os downloads: https://corvoapis.site
 */
 
@@ -105,7 +103,7 @@ async function resetAiMemoryLocal(from) {
   }
 
   const ctxData = getLocalData(CONTEXT_FILE);
-  ctxData[from] = { resetFlag: true, ownerPreferredName: "Marcos" };
+  ctxData[from] = { resetFlag: true, ownerPreferredName: setting.ownerName || "Mestre" };
   saveLocalData(CONTEXT_FILE, ctxData);
   return true;
 }
@@ -113,7 +111,7 @@ async function resetAiMemoryLocal(from) {
 async function getAiContextLocal(from) {
   const data = getLocalData(CONTEXT_FILE);
   if (data[from]) return data[from];
-  return { ownerPreferredName: "Marcos", resetFlag: true };
+  return { ownerPreferredName: setting.ownerName || "Mestre", resetFlag: true };
 }
 
 async function saveAiContextLocal(from, context) {
@@ -457,9 +455,9 @@ var SANDRO_MD = "SANDRO_BOT_2026";
 
 
 async function responderIA(texto, estilo, mediaData = null) {
-  var promptFinal = `Você é o Corvo, um bot de WhatsApp com personalidade forte, sarcástica e extremamente humano.
+  var promptFinal = `Você é o ${setting.NomeDoBot || "Assistente"}, um bot de WhatsApp com personalidade forte, sarcástica e extremamente humano.
 REGRAS:
-1. Nunca diga que é uma IA, assistente ou robô. Você é o Corvo.
+1. Nunca diga que é uma IA, assistente ou robô. Você é o ${setting.NomeDoBot || "Assistente"}.
 2. Fale como um humano natural, use gírias leves se apropriado, seja direto e tenha personalidade.
 3. Se os usuários apenas mencionarem seu nome sem fazer uma pergunta direta, leia o histórico recente fornecido no prompt e dê uma resposta curta participando do assunto atual ou comentando o que estão falando.
 4. Se fizerem uma pergunta direta, responda normalmente seguindo seu estilo.
@@ -1278,11 +1276,11 @@ async function startcorvo(upsert, corvo, qrcode) {
 
         var isChVip = isVip ? "ꜱɪᴍ ✅" : "ɴᴀᴏ ❌"
 
-        // Marcos PV Auto-Reply
+        // Owner PV Auto-Reply
         if (!isGroup && SoDono && body && !isCmd && !info.key.fromMe) {
           console.log('[DEBUG] Owner PV detected, body:', body);
           var mBody = body.trim().toLowerCase();
-          if (['bot', 'corvo', 'marcos', 'oi'].includes(mBody)) {
+          if (['bot', (setting.NomeDoBot || 'assistente').toLowerCase(), (setting.ownerName || 'mestre').toLowerCase(), 'oi'].includes(mBody)) {
             console.log('[DEBUG] Triggering auto-reply "eu"');
             await corvo.sendPresenceUpdate('composing', from).catch(() => { });
             await corvo.sendMessage(from, { text: 'eu' }, { quoted: info });
@@ -4648,18 +4646,18 @@ ${listaPrefixos}
                   getAiContextLocal(from)
                 ]);
 
-                // Lógica de Contexto Fixa para o Marcos
+                // Lógica de Contexto Fixa para o Dono
                 if (contextAI.resetFlag) {
                   contextAI.resetFlag = false;
-                  contextAI.botName = "Corvo";
-                  contextAI.ownerPreferredName = "Marcos";
+                  contextAI.botName = setting.NomeDoBot || "Assistente";
+                  contextAI.ownerPreferredName = setting.ownerName || "Mestre";
                   saveAiContextLocal(from, contextAI);
                 }
 
-                const promptCorvo = `Você é o ${contextAI.botName || "Corvo"}, um bot de WhatsApp com personalidade forte, sarcástica, extremamente humano e leal.
+                const promptCorvo = `Você é o ${contextAI.botName || "Assistente"}, um bot de WhatsApp com personalidade forte, sarcástica, extremamente humano e leal.
 REGRAS:
-- NUNCA diga que é uma IA, assistente ou robô. Você é o Corvo e haja como um humano natural.
-- Seu dono se chama ${contextAI.ownerPreferredName || "Marcos"}. 
+- NUNCA diga que é uma IA, assistente ou robô. Você é o ${contextAI.botName || "Assistente"} e haja como um humano natural.
+- Seu dono se chama ${contextAI.ownerPreferredName || "Mestre"}. 
 - Converse normalmente, com personalidade, seja sarcástico quando der, mas sempre prestativo. Aja como um amigo.
 - NUNCA pergunte como o usuário quer ser chamado e NUNCA pergunte qual é o seu próprio nome. Apenas assuma esses nomes e aja com naturalidade.
 - Responda de forma direta, sem enrolar, e não quebre o personagem.
@@ -6311,7 +6309,7 @@ Seja útil, natural e direto.`
                 
                 // Resetar memória da IA para forçar perguntas de nome
                 try {
-                  const contextData = { ownerPreferredName: "Marcos", resetFlag: true };
+                  const contextData = { ownerPreferredName: setting.ownerName || "Mestre", resetFlag: true };
                   const CONTEXT_FILE = './database/ai_context.json';
                   let allContexts = {};
                   if (fs.existsSync(CONTEXT_FILE)) {
