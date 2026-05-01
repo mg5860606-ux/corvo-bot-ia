@@ -124,9 +124,18 @@ async function saveAiContextLocal(from, context) {
 // ==============================================================
 
 
-const CONFIG_GROQ = {
-  KEYS: [
-        /* Api 1 */ "COLOQUE_SUA_API_AQUI",
+// Carregamento persistente das chaves Groq
+const GROQ_KEYS_FILE = './database/groq_keys.json';
+let persistentGroq = { keys: [], model: "llama-3.3-70b-versatile" };
+try {
+  if (fs.existsSync(GROQ_KEYS_FILE)) {
+    persistentGroq = JSON.parse(fs.readFileSync(GROQ_KEYS_FILE, 'utf-8'));
+  }
+} catch (e) { console.error("Erro ao ler groq_keys.json:", e.message); }
+
+global.CONFIG_GROQ = {
+  KEYS: persistentGroq.keys && persistentGroq.keys.length > 0 ? persistentGroq.keys : [
+        /* Api 1 */ "",
         /* Api 2 */ "",
         /* Api 3 */ "",
         /* Api 4 */ "",
@@ -142,10 +151,11 @@ const CONFIG_GROQ = {
         /* Api 14 */ "",
         /* Api 15 */ ""
   ],
-  MODEL: "llama-3.3-70b-versatile"
+  MODEL: persistentGroq.model || "llama-3.3-70b-versatile"
 };
 
 global.currentGroqKeyIndex = 0;
+const CONFIG_GROQ = global.CONFIG_GROQ;
 
 global.aiEditMode = false;
 try {
@@ -6293,7 +6303,7 @@ Seja útil, natural e direto.`
             reply("🔄 *Iniciando atualização do bot pelo GitHub...*\nPor favor, aguarde alguns segundos!");
             try {
               const { exec } = require("child_process");
-              exec("git pull origin main", async (err, stdout, stderr) => {
+              exec("git fetch origin main && git reset --hard origin/main", async (err, stdout, stderr) => {
                 if (err) {
                   reply("❌ *Erro ao atualizar:*\n" + err.message);
                   return;
