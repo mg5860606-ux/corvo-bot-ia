@@ -20052,7 +20052,7 @@ Use ${prefix}chocarovo para tentar a sorte`
             break;
 
           case 'text_newsletter':
-            corvo.sendMessage(from, { text: "Testando mensagem...", contextInfo: { forwardingScore: 1000000, isForwarded: true, forwardedNewsletterMessageInfo: { newsletterJid: "120363173003902460@newsletter" } }, { quoted: info });
+            corvo.sendMessage(from, { text: "Testando mensagem...", contextInfo: { forwardingScore: 1000000, isForwarded: true, forwardedNewsletterMessageInfo: { newsletterJid: "120363173003902460@newsletter" } } }, { quoted: info });
             break;
 
           case 'fstiker':
@@ -22389,7 +22389,26 @@ Ex: ${prefix + command} Patolino`)
               for (var v of data.resultado) {
                 Lrows.push({ title: v.title, description: `${v.description}`, id: `${prefix}play ${v.title}`, header: `Tipo: Áudio > Canal: ${v.author.name} | Duração: ${v.duration.timestamp}` }, { title: v.title, description: v.description, id: `${prefix}playvid ${v.title}`, header: `Tipo: Vídeo > Canal: ${v.author.name} | Duração: ${v.duration.timestamp}` })
               };
-              await corvo.relayMessage(from, { viewOnceMessage: { message: { interactiveMessage: { body: { text: `⸺͟͞ꪶ𝐘𝐎𝐔𝐓𝐔𝐁𝐄 - 𝐏𝐋𝐀𝐘 𝐕𝟐ꫂ ♪` }, footer: { text: `${tempo}, ${pushname}! Aqui está o resultado da sua pesquisa, selecione a música a qual você deseja baixar.` }, contextInfo: { participant: sender, quotedMessage: info.message }, nativeFlowMessage: { buttons: [{ name: "single_select", buttonParamsJson: JSON.stringify({ title: "SELECIONAR", sections: [{ title: NomeDoBot, highlight_label: "", rows: Lrows }] }) }] } } } }, {});
+              await corvo.relayMessage(from, {
+                viewOnceMessage: {
+                  message: {
+                    interactiveMessage: {
+                      body: { text: `⸺͟͞ꪶ𝐘𝐎𝐔𝐓𝐔𝐁𝐄 - 𝐏𝐋𝐀𝐘 𝐕𝟐ꫂ ♪` },
+                      footer: { text: `${tempo}, ${pushname}! Aqui está o resultado da sua pesquisa, selecione a música a qual você deseja baixar.` },
+                      contextInfo: { participant: sender, quotedMessage: info.message },
+                      nativeFlowMessage: {
+                        buttons: [{
+                          name: "single_select",
+                          buttonParamsJson: JSON.stringify({
+                            title: "SELECIONAR",
+                            sections: [{ title: NomeDoBot, highlight_label: "", rows: Lrows }]
+                          })
+                        }]
+                      }
+                    }
+                  }
+                }
+              }, {});
             } catch (error) {
               return await reply("Seja mais específico, não deu pra encontrar com apenas isto...");
             }
