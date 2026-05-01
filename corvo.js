@@ -12690,25 +12690,20 @@ Aguarde o dono entrar em contato no privado.`
               var textok = `𖤐 𝐌𝐄𝐍𝐔 𝐃𝐎 𝐂𝐎𝐑𝐕𝐎 𖤐\n\n✦ 𝗨𝘀𝘂𝗮́𝗿𝗶𝗼: ${pushname}\n✦ 𝗖𝗮𝗿𝗴𝗼: ${isCargo}\n✦ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: 『 ${prefix} 』\n✦ 𝗛𝗼𝗿𝗮́𝗿𝗶𝗼: ${timeMenu}\n✦ 𝗩𝗲𝗿𝘀𝗮̃𝗼: ${versao}`;
 
 
-              var msg = generateWAMessageFromContent(from, {
+              const msg = generateWAMessageFromContent(from, {
                 viewOnceMessage: {
                   message: {
-                    messageContextInfo: {
-                      deviceListMetadata: {},
-                      deviceListMetadataVersion: 2
-                    },
                     interactiveMessage: {
+                      header: {
+                        title: "𖤐 𝐌𝐄𝐍𝐔 𝐃𝐎 𝐂𝐎𝐑𝐕𝐎 𖤐",
+                        hasMediaAttachment: true,
+                        ...(mediaMenu.videoMessage ? { videoMessage: mediaMenu.videoMessage } : { imageMessage: mediaMenu.imageMessage })
+                      },
                       body: {
                         text: textok
                       },
                       footer: {
                         text: "© Corvo Security"
-                      },
-                      header: {
-                        title: "Menu Interativo",
-                        subtitle: "Corvo",
-                        hasMediaAttachment: true,
-                        ...(mediaMenu.videoMessage ? { videoMessage: mediaMenu.videoMessage } : { imageMessage: mediaMenu.imageMessage })
                       },
                       nativeFlowMessage: {
                         buttons: botoes
