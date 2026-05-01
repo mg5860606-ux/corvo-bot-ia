@@ -11352,7 +11352,7 @@ ${prefix}global`)
                     ]
                   }
                 }
-              }, { quoted: info });
+              } } }, { quoted: info });
 
               await corvo.relayMessage(from, msg.message, { messageId: msg.key.id });
 
