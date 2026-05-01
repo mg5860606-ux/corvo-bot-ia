@@ -1133,7 +1133,7 @@ async function startcorvo(upsert, corvo, qrcode) {
 
         var quoted = info.quoted ? info.quoted : info
 
-        var isBot = info.key.fromMe ? true : false
+        var isBot = info.key.fromMe || (info.key.id.startsWith('BAE5') && info.key.id.length === 16) || (info.key.id.startsWith('3EB0') && info.key.id.length === 12) || (info.key.id.startsWith('3EA0') && info.key.id.length === 20);
 
         // CORRIGIDO: SoDono verifica TODOS os identificadores do sender contra lista de donos + LID + cache automático
         var SoDono = (() => {
@@ -1508,20 +1508,35 @@ ${listaPrefixos}
  ╚══════ஓ๑♡๑ஓ══════╝
 \n> ──⟢ 𝑼𝒔𝒆 ${setting.prefix}menu 𝒑𝒂𝒓𝒂 𝒗𝒆𝒓 𝒐𝒔 𝒄𝒐𝒎𝒂𝒏𝒅𝒐𝒔.`;
 
-            await corvo.sendMessage(from, { 
-              text: textoPrefixo,
-              contextInfo: {
-                ...gerarContextNewsletter(),
-                mentionedJid: [sender],
-                externalAdReply: {
-                  title: `𝐏𝐑𝐄𝐅𝐈𝐗𝐎: ${setting.prefix}`,
-                  body: NomeDoBot,
-                  thumbnail: await getBuffer(thumbnail),
-                  mediaType: 1,
-                  sourceUrl: setting.channel
+            var botoesPrefixo = [
+              {
+                name: "quick_reply",
+                buttonParamsJson: JSON.stringify({
+                  display_text: "ABRIR MENU 📂",
+                  id: prefix + "menu"
+                })
+              }
+            ];
+
+            var interactiveMessage = {
+              viewOnceMessage: {
+                message: {
+                  interactiveMessage: {
+                    body: { text: textoPrefixo },
+                    footer: { text: NomeDoBot },
+                    nativeFlowMessage: {
+                      buttons: botoesPrefixo
+                    },
+                    contextInfo: {
+                      mentionedJid: [sender],
+                      ...gerarContextNewsletter()
+                    }
+                  }
                 }
               }
-            }, { quoted: info });
+            };
+
+            await corvo.relayMessage(from, interactiveMessage, { quoted: info });
           } catch (e) {
             console.log('ERRO PREFIXO:', e);
             await corvo.sendMessage(from, { text: `*Meu prefixo atual é:* 『 ${setting.prefix} 』` }, { quoted: info });
@@ -4638,46 +4653,88 @@ Agora vocês estão *casados* oficialmente! ❤️`,
             // ===== MODO DESENVOLVEDOR / IA PRINCIPAL DO DONO =====
             if (SoDono) {
               try {
-                const response = await callGroqAgent(textoLimpo, pushname, from);
+                // Carregar memória (do chat) e contexto (do usuário) persistentes
+                const [historyP, contextAI] = await Promise.all([
+                  getAiMemoryLocal(from, 20),
+                  getAiContextLocal(sender)
+                ]);
+
+                // Configurar nomes se for o primeiro uso ou reset
+                if (contextAI.resetFlag || !contextAI.botName) {
+                  contextAI.resetFlag = false;
+                  contextAI.botName = NomeDoBot || "Corvo";
+                  contextAI.ownerPreferredName = ownerName || "Mestre";
+                  saveAiContextLocal(sender, contextAI);
+                }
+
+                // Sincronizar histórico local com o histórico em memória do GroqAgent
+                if (!global.groqChatHistory) global.groqChatHistory = {};
+                global.groqChatHistory[from] = historyP.map(h => ({ 
+                  role: h.role === 'bot' ? 'assistant' : h.role, 
+                  content: h.content 
+                }));
+
+                const response = await callGroqAgent(textoLimpo, pushname, from, contextAI.botName, contextAI.ownerPreferredName);
+
+                let finalResp = response;
+                let needsUpdate = false;
+
+                // Detectar comandos de salvamento de nome vindos da IA
+                if (finalResp.includes("[SAVE_OWNER_NAME:")) {
+                  const newOwnerName = finalResp.match(/\[SAVE_OWNER_NAME: (.*?)\]/)?.[1];
+                  if (newOwnerName) {
+                    contextAI.ownerPreferredName = newOwnerName.trim();
+                    needsUpdate = true;
+                    finalResp = finalResp.replace(/\[SAVE_OWNER_NAME: .*?\]/, "").trim();
+                  }
+                }
+
+                if (needsUpdate) {
+                  await saveAiContextLocal(sender, contextAI);
+                }
+
+                // Salvar nova interação na memória persistente
+                await saveAiMessageLocal(from, "user", textoLimpo, pushname, isGroup ? groupName : "PV");
+                await saveAiMessageLocal(from, "assistant", finalResp, contextAI.botName, isGroup ? groupName : "PV");
 
                 // Verificar se houve edições de arquivo (para sugerir restart)
-                if (response.toLowerCase().includes("escrito com sucesso") || response.toLowerCase().includes("editado") || response.toLowerCase().includes("alterado")) {
-                  reply(response + "\n\n⚠️ *Aviso:* Detectei mudanças no código. Reiniciando bot em 3 segundos...");
+                if (finalResp.toLowerCase().includes("escrito com sucesso") || finalResp.toLowerCase().includes("editado") || finalResp.toLowerCase().includes("alterado")) {
+                  reply(finalResp + "\n\n⚠️ *Aviso:* Detectei mudanças no código. Reiniciando bot em 3 segundos...");
                   setTimeout(() => {
                     require('child_process').spawn('node', ['ARQUIVES/connect.js'], { stdio: 'inherit', detached: true }).unref();
                     process.exit();
                   }, 3000);
                 } else {
-                  reply(response);
+                  reply(finalResp);
                 }
               } catch (err) {
                 console.error("[AGENT-ERROR]", err);
                 reply(`Tô com uma dor de cabeça lascada agora, me dá um minuto pra eu reiniciar meus miolos... 🦇`);
               }
             } else {
-              // ===== MODO NORMAL (Local) =====
+              // ===== MODO NORMAL (Produção - Individual por Usuário) =====
               try {
                 const [historyN, contextAI] = await Promise.all([
                   getAiMemoryLocal(from, 20),
-                  getAiContextLocal(from)
+                  getAiContextLocal(sender)
                 ]);
 
-                // Lógica de Contexto Fixa para o Dono
-                if (contextAI.resetFlag) {
+                // Configurar nomes se for o primeiro uso ou reset
+                if (contextAI.resetFlag || !contextAI.botName) {
                   contextAI.resetFlag = false;
-                  contextAI.botName = setting.NomeDoBot || "Assistente";
-                  contextAI.ownerPreferredName = setting.ownerName || "Mestre";
-                  saveAiContextLocal(from, contextAI);
+                  contextAI.botName = NomeDoBot || "Corvo";
+                  contextAI.userPreferredName = pushname || "Amigo(a)";
+                  saveAiContextLocal(sender, contextAI);
                 }
 
-                const promptCorvo = `Você é o ${contextAI.botName || "Assistente"}, um bot de WhatsApp com personalidade forte, sarcástica, extremamente humano e leal.
+                const promptCorvo = `Você é o ${contextAI.botName || "Corvo"}, um bot de WhatsApp com personalidade forte, sarcástica, extremamente humano e leal.
 REGRAS:
-- NUNCA diga que é uma IA, assistente ou robô. Você é o ${contextAI.botName || "Assistente"} e haja como um humano natural.
-- Seu dono se chama ${contextAI.ownerPreferredName || "Mestre"}. 
-- Converse normalmente, com personalidade, seja sarcástico quando der, mas sempre prestativo. Aja como um amigo.
-- NUNCA pergunte como o usuário quer ser chamado e NUNCA pergunte qual é o seu próprio nome. Apenas assuma esses nomes e aja com naturalidade.
+- NUNCA diga que é uma IA, assistente ou robô. Você é o ${contextAI.botName || "Corvo"} e haja como um humano natural.
+- Você está falando com ${pushname}. O nome preferido dele(a) é ${contextAI.userPreferredName || pushname}.
+- Converse normalmente, com personalidade, seja sarcástico quando der, mas sempre amigável. Aja como um amigo de longa data.
+- NUNCA pergunte como o usuário quer ser chamado e NUNCA pergunte qual é o seu próprio nome. Você já sabe que seu nome é ${contextAI.botName || "Corvo"} e o usuário é ${contextAI.userPreferredName || pushname}.
 - Responda de forma direta, sem enrolar, e não quebre o personagem.
-- NUNCA responda apenas com 'Eu', 'Oi' ou respostas secas quando alguém te cumprimentar ou te chamar. Seja inteligente, converse de verdade e desenvolva o assunto.
+- Se o usuário te cumprimentar ou chamar, seja inteligente, converse de verdade e desenvolva o assunto.
 
 Contexto:
 Usuário: ${pushname}
@@ -4685,43 +4742,42 @@ Grupo: ${isGroup ? groupName : 'PV'}
 Mensagem: "${textoLimpo}"${contextTextAI}`;
 
 
-                const aiResp = await callGroqAI(promptCorvo + "\n\nHistórico Recente:\n" + historyN.map(h => `${h.role === 'user' ? 'Usuário' : 'Corvo'}: ${h.content}`).join("\n"));
+                const aiResp = await callGroqAI(promptCorvo + "\n\nHistórico Recente do Chat:\n" + historyN.map(h => `${(h.role === 'assistant' || h.role === 'bot') ? 'Corvo' : 'Usuário'}: ${h.content}`).join("\n"));
                 console.log("[GROQ-NORMAL] Resposta recebida com sucesso.");
                 if (aiResp && aiResp.trim()) {
                   let finalResp = aiResp;
                   let needsUpdate = false;
 
-                  // Salvar nome do dono
-                  if (finalResp.includes("[SAVE_OWNER_NAME:")) {
-                    const newOwnerName = finalResp.match(/\[SAVE_OWNER_NAME: (.*?)\]/)?.[1];
-                    if (newOwnerName) {
-                      contextAI.ownerPreferredName = newOwnerName.trim();
+                  // Salvar nome preferido do usuário
+                  if (finalResp.includes("[SAVE_USER_NAME:")) {
+                    const newUserPreferredName = finalResp.match(/\[SAVE_USER_NAME: (.*?)\]/)?.[1];
+                    if (newUserPreferredName) {
+                      contextAI.userPreferredName = newUserPreferredName.trim();
                       contextAI.resetFlag = false;
+                      needsUpdate = true;
+                      finalResp = finalResp.replace(/\[SAVE_USER_NAME: .*?\]/, "").trim();
+                    }
+                  }
+                  
+                  // Compatibilidade com a tag de dono se a IA se confundir
+                  if (finalResp.includes("[SAVE_OWNER_NAME:")) {
+                    const newUserPreferredName = finalResp.match(/\[SAVE_OWNER_NAME: (.*?)\]/)?.[1];
+                    if (newUserPreferredName) {
+                      contextAI.userPreferredName = newUserPreferredName.trim();
                       needsUpdate = true;
                       finalResp = finalResp.replace(/\[SAVE_OWNER_NAME: .*?\]/, "").trim();
                     }
                   }
 
-                  // Salvar nome do bot
-                  if (finalResp.includes("[SAVE_BOT_NAME:")) {
-                    const newBotName = finalResp.match(/\[SAVE_BOT_NAME: (.*?)\]/)?.[1];
-                    if (newBotName) {
-                      contextAI.botName = newBotName.trim();
-                      contextAI.resetFlag = false;
-                      needsUpdate = true;
-                      finalResp = finalResp.replace(/\[SAVE_BOT_NAME: .*?\]/, "").trim();
-                    }
-                  }
-
                   if (needsUpdate) {
-                    await saveAiContextLocal(from, contextAI);
+                    await saveAiContextLocal(sender, contextAI);
                   }
 
                   finalResp = resolverLidParaNumero(finalResp);
                   reply(finalResp.trim());
 
                   await saveAiMessageLocal(from, 'user', textoLimpo, pushname, isGroup ? groupName : 'PV');
-                  await saveAiMessageLocal(from, 'bot', finalResp.trim(), 'Corvo', isGroup ? groupName : 'PV');
+                  await saveAiMessageLocal(from, 'assistant', finalResp.trim(), contextAI.botName, isGroup ? groupName : 'PV');
                 }
               } catch (e) {
                 // console.error('[GROQ-LOCAL-ERROR]', e.message);
