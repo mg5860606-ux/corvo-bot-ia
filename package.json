@@ -12,7 +12,6 @@
     "gemini",
     "groq"
   ],
-  "author": "Marcos",
   "license": "ISC",
   "dependencies": {
     "@distube/ytdl-core": "^4.16.12",
@@ -44,7 +43,5 @@
     "scr-emoji": "^0.0.3",
     "yt-search": "^2.13.1"
   },
-  "devDependencies": {
-    "javascript-obfuscator": "^5.4.2"
-  }
+  "devDependencies": {}
 }

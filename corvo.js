@@ -1534,7 +1534,7 @@ async function startcorvo(upsert, corvo, qrcode) {
 
         async function replyWithReaction(text, options = {}, quotedThis = info) {
           await corvo.sendPresenceUpdate('composing', from).catch(() => { });
-          // Não enviar reação a pedido do dono Marcos
+          // Não enviar reação a pedido do dono
           await corvo.sendMessage(from, { text: text }, { quoted: quotedThis })
             .catch(async (error) => {
               await corvo.sendMessage(from, { text: mess.error() }, { quoted: selo });
