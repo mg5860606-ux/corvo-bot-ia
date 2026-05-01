@@ -10,3 +10,14 @@ corvo.source.js
 ARQUIVES/ai_core.source.js
 
 database/groq_keys.json
+
+# Dados locais e memoria
+DADOS DO CORVO/ai_memory.json
+DADOS DO CORVO/ai_contexts.json
+DADOS DO CORVO/qr-code/
+DADOS DO CORVO/data/
+DADOS DO CORVO/grupos/
+DADOS DO CORVO/func/
+DADOS DO CORVO/usuarios/
+DADOS DO CORVO/anti_sp.json
+DADOS DO CORVO/INFO_CORVO/media/INFO_CORVO.json
