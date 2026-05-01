@@ -396,9 +396,9 @@ return `-c ${key}=${value}`
 const authorname = "Corvo"
 const packname = "Creat: CORVO"
 
-const chyt = "559183721035@s.whatsapp.net";
-const nit = "559183721035@s.whatsapp.net";
-const supre = "559183721035@s.whatsapp.net";
+const chyt = "0@s.whatsapp.net";
+const nit = "0@s.whatsapp.net";
+const supre = "0@s.whatsapp.net";
 
 const usedCommandRecently = new Set()
 const isFiltered = (from) => !!usedCommandRecently.has(from)

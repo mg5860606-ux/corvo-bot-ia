@@ -89,7 +89,7 @@ async function saveAiMessageLocal(from, role, content, pushname, groupName) {
   saveLocalData(MEMORY_FILE, data);
 }
 
-async function getAiMemoryLocal(from, maxLines = 20) {
+async function getAiMemoryLocal(from, maxLines = 50) {
   const data = getLocalData(MEMORY_FILE);
   if (!data[from]) return [];
   return data[from].slice(-maxLines);
@@ -164,6 +164,9 @@ try {
 
 global.currentApiKeyIndex = 0;
 global.agentChatHistory = []; // Armazena as últimas 15 mensagens para o dono
+
+// Carregar preferências persistentes
+global.userPreferences = getLocalData('./DADOS DO CORVO/ai_preferences.json');
 
 const { callGeminiAI, callGeminiWithFallback, callGeminiAgentInternal, callGeminiAgent, callGroqAI, callGroqAgent } = require('./ARQUIVES/ai_core.js');
 
@@ -4642,20 +4645,34 @@ Agora vocês estão *casados* oficialmente! ❤️`,
               .replace(new RegExp('@' + (botLidAI || '').split('@')[0], 'g'), '')
               .trim() || body;
 
-            // Capturar contexto de resposta (quoted message)
-            var quotedMsgAI = info.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-            var contextTextAI = "";
-            if (quotedMsgAI) {
-              var quotedBody = quotedMsgAI.conversation || quotedMsgAI.extendedTextMessage?.text || quotedMsgAI.imageMessage?.caption || "";
-              if (quotedBody) contextTextAI = "\n\nCONTEXTO (MENSAGEM QUE FOI RESPONDIDA):\n\"" + quotedBody + "\"";
-            }
+                // Capturar contexto de resposta (quoted message)
+                var quotedMsgAI = info.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+                var contextTextAI = "";
+                if (quotedMsgAI) {
+                  var quotedBody = quotedMsgAI.conversation || quotedMsgAI.extendedTextMessage?.text || quotedMsgAI.imageMessage?.caption || "";
+                  if (quotedBody) contextTextAI = "\n\nCONTEXTO (MENSAGEM QUE FOI RESPONDIDA):\n\"" + quotedBody + "\"";
+                }
 
-            // ===== MODO DESENVOLVEDOR / IA PRINCIPAL DO DONO =====
+                // Capturar contexto recente do grupo (se disponível)
+                var contextGroupAI = "";
+                if (isGroup && corvo.store && corvo.store.messages[from]) {
+                  try {
+                    var msgsArr = corvo.store.messages[from].array || [];
+                    var recentMsgs = msgsArr.slice(-10).map(m => {
+                      var sName = m.pushName || m.verifiedName || "Usuário";
+                      var mText = m.message?.conversation || m.message?.extendedTextMessage?.text || m.message?.imageMessage?.caption || "";
+                      return mText ? `${sName}: ${mText}` : null;
+                    }).filter(Boolean).join("\n");
+                    if (recentMsgs) contextGroupAI = "\n\nÚLTIMAS MENSAGENS NO GRUPO:\n" + recentMsgs;
+                  } catch (e) { }
+                }
+
+                // ===== MODO DESENVOLVEDOR / IA PRINCIPAL DO DONO =====
             if (SoDono) {
               try {
                 // Carregar memória (do chat) e contexto (do usuário) persistentes
                 const [historyP, contextAI] = await Promise.all([
-                  getAiMemoryLocal(from, 20),
+                  getAiMemoryLocal(from, 50),
                   getAiContextLocal(sender)
                 ]);
 
@@ -4670,14 +4687,34 @@ Agora vocês estão *casados* oficialmente! ❤️`,
                 // Sincronizar histórico local com o histórico em memória do GroqAgent
                 if (!global.groqChatHistory) global.groqChatHistory = {};
                 global.groqChatHistory[from] = historyP.map(h => ({ 
-                  role: h.role === 'bot' ? 'assistant' : h.role, 
+                  role: h.role === 'bot' || h.role === 'assistant' ? 'assistant' : 'user', 
                   content: h.content 
                 }));
 
-                const response = await callGroqAgent(textoLimpo, pushname, from, contextAI.botName, contextAI.ownerPreferredName);
+                // Adicionar preferências ao histórico em memória temporariamente para o GroqAgent
+                if (!global.userPreferences[sender]) global.userPreferences[sender] = {};
+                const prefsStr = Object.entries(global.userPreferences[sender]).map(([k, v]) => `${k}: ${v}`).join(", ");
+                const finalUserPrompt = `[Preferências: ${prefsStr || "Nenhuma registrada"}]${contextGroupAI}\n\n${textoLimpo}`;
+
+                const response = await callGroqAgent(finalUserPrompt, pushname, from, contextAI.botName, contextAI.ownerPreferredName);
 
                 let finalResp = response;
                 let needsUpdate = false;
+
+                // Extração de Preferências
+                if (finalResp.includes("[SAVE_PREFERENCE:")) {
+                  const matches = finalResp.match(/\[SAVE_PREFERENCE: (.*?)=(.*?)\]/g);
+                  if (matches) {
+                    matches.forEach(m => {
+                      const [_, key, value] = m.match(/\[SAVE_PREFERENCE: (.*?)=(.*?)\]/);
+                      if (key && value) {
+                        global.userPreferences[sender][key.trim()] = value.trim();
+                        needsUpdate = true;
+                      }
+                    });
+                    finalResp = finalResp.replace(/\[SAVE_PREFERENCE: .*?\]/g, "").trim();
+                  }
+                }
 
                 // Detectar comandos de salvamento de nome vindos da IA
                 if (finalResp.includes("[SAVE_OWNER_NAME:")) {
@@ -4691,6 +4728,7 @@ Agora vocês estão *casados* oficialmente! ❤️`,
 
                 if (needsUpdate) {
                   await saveAiContextLocal(sender, contextAI);
+                  saveLocalData('./DADOS DO CORVO/ai_preferences.json', global.userPreferences);
                 }
 
                 // Salvar nova interação na memória persistente
@@ -4715,7 +4753,7 @@ Agora vocês estão *casados* oficialmente! ❤️`,
               // ===== MODO NORMAL (Produção - Individual por Usuário) =====
               try {
                 const [historyN, contextAI] = await Promise.all([
-                  getAiMemoryLocal(from, 20),
+                  getAiMemoryLocal(from, 50),
                   getAiContextLocal(sender)
                 ]);
 
@@ -4727,6 +4765,10 @@ Agora vocês estão *casados* oficialmente! ❤️`,
                   saveAiContextLocal(sender, contextAI);
                 }
 
+                // Carregar preferências
+                if (!global.userPreferences[sender]) global.userPreferences[sender] = {};
+                const prefsStr = Object.entries(global.userPreferences[sender]).map(([k, v]) => `${k}: ${v}`).join(", ");
+
                 const promptCorvo = `Você é o ${contextAI.botName || "Corvo"}, um bot de WhatsApp com personalidade forte, sarcástica, extremamente humano e leal.
 REGRAS:
 - NUNCA diga que é uma IA, assistente ou robô. Você é o ${contextAI.botName || "Corvo"} e haja como um humano natural.
@@ -4735,18 +4777,35 @@ REGRAS:
 - NUNCA pergunte como o usuário quer ser chamado e NUNCA pergunte qual é o seu próprio nome. Você já sabe que seu nome é ${contextAI.botName || "Corvo"} e o usuário é ${contextAI.userPreferredName || pushname}.
 - Responda de forma direta, sem enrolar, e não quebre o personagem.
 - Se o usuário te cumprimentar ou chamar, seja inteligente, converse de verdade e desenvolva o assunto.
+- Se for mencionado no chat, dê sua OPINIÃO sincera e sarcástica sobre o assunto da conversa.
+- Se descobrir algo novo sobre o usuário (gostos, apelidos, preferências), salve usando a tag [SAVE_PREFERENCE: chave=valor].
+
+PREFERÊNCIAS DO USUÁRIO:
+${prefsStr || "Nenhuma registrada ainda."}
 
 Contexto:
 Usuário: ${pushname}
 Grupo: ${isGroup ? groupName : 'PV'}
-Mensagem: "${textoLimpo}"${contextTextAI}`;
+Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
 
 
                 const aiResp = await callGroqAI(promptCorvo + "\n\nHistórico Recente do Chat:\n" + historyN.map(h => `${(h.role === 'assistant' || h.role === 'bot') ? 'Corvo' : 'Usuário'}: ${h.content}`).join("\n"));
                 console.log("[GROQ-NORMAL] Resposta recebida com sucesso.");
                 if (aiResp && aiResp.trim()) {
-                  let finalResp = aiResp;
-                  let needsUpdate = false;
+                  // Extração de Preferências
+                  if (finalResp.includes("[SAVE_PREFERENCE:")) {
+                    const matches = finalResp.match(/\[SAVE_PREFERENCE: (.*?)=(.*?)\]/g);
+                    if (matches) {
+                      matches.forEach(m => {
+                        const [_, key, value] = m.match(/\[SAVE_PREFERENCE: (.*?)=(.*?)\]/);
+                        if (key && value) {
+                          global.userPreferences[sender][key.trim()] = value.trim();
+                          needsUpdate = true;
+                        }
+                      });
+                      finalResp = finalResp.replace(/\[SAVE_PREFERENCE: .*?\]/g, "").trim();
+                    }
+                  }
 
                   // Salvar nome preferido do usuário
                   if (finalResp.includes("[SAVE_USER_NAME:")) {
@@ -4771,6 +4830,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}`;
 
                   if (needsUpdate) {
                     await saveAiContextLocal(sender, contextAI);
+                    saveLocalData('./DADOS DO CORVO/ai_preferences.json', global.userPreferences);
                   }
 
                   finalResp = resolverLidParaNumero(finalResp);
@@ -4798,6 +4858,43 @@ Mensagem: "${textoLimpo}"${contextTextAI}`;
             nescessario.corvoia = !nescessario.corvoia;
             setNes(nescessario);
             reply(`🤖 *INTELIGÊNCIA ARTIFICIAL:* ${nescessario.corvoia ? "ATIVADA ✅" : "DESATIVADA ❌"}`);
+          }
+            break;
+
+          case 'iaimg':
+          case 'gerarimg':
+          case 'imagine': {
+            if (!q) return reply(`*Digite o que deseja gerar! Exemplo: ${prefix + command} um corvo mestre*`);
+            await reagir(from, "⏳");
+            try {
+              // Aplicar preferências
+              const userPrefs = global.userPreferences[sender] || {};
+              let promptFinal = q;
+              if (userPrefs.estilo_imagem) promptFinal += `, estilo ${userPrefs.estilo_imagem}`;
+              if (userPrefs.qualidade_imagem) promptFinal += `, ${userPrefs.qualidade_imagem}`;
+              
+              const imgUrl = `https://pollinations.ai/p/${encodeURIComponent(promptFinal)}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000)}`;
+              await corvo.sendMessage(from, { image: { url: imgUrl }, caption: `✨ *Imagem gerada:* ${q}\n🎨 *Estilo:* ${userPrefs.estilo_imagem || 'Padrão'}` }, { quoted: info });
+              await reagir(from, "🎨");
+            } catch (e) {
+              console.error(e);
+              reply("❌ Erro ao gerar imagem. Tente novamente.");
+            }
+          }
+            break;
+
+          case 'iavideo':
+          case 'gerarvideo': {
+            if (!q) return reply(`*Digite o que deseja gerar em vídeo!*`);
+            await reagir(from, "⏳");
+            try {
+              const videoUrl = `https://shizukuapis.space/api/ai/text2video?apikey=${SHIZUKU_KEY}&query=${encodeURIComponent(q)}`;
+              await corvo.sendMessage(from, { video: { url: videoUrl }, caption: `🎬 *Vídeo gerado:* ${q}` }, { quoted: info });
+              await reagir(from, "🎬");
+            } catch (e) {
+              console.error(e);
+              reply("❌ Erro ao gerar vídeo. A API pode estar instável.");
+            }
           }
             break;
 
