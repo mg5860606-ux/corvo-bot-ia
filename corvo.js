@@ -1479,8 +1479,19 @@ async function startcorvo(upsert, corvo, qrcode) {
 
         // ====== COMANDOS SEM PREFIXO (TRIGGERS DIRETOS) ======
         var textoDireto = (body || '').trim().toLowerCase();
-        if (textoDireto === 'prefixo' || textoDireto === 'prefix') {
+        if (textoDireto.split(' ')[0] === 'prefixo' || textoDireto.split(' ')[0] === 'prefix') {
           try {
+            var argsDireto = (body || '').trim().split(/[ \t]+/);
+            argsDireto.shift();
+            var qDireto = argsDireto.join(' ').trim();
+
+            if (qDireto) {
+              if (!SoDono && !isnit && !info.key.fromMe) return reply(mess.onlyOwner());
+              setting.prefix = qDireto;
+              fs.writeFileSync('./DADOS DO CORVO/INFO_CORVO/media/INFO_CORVO.json', JSON.stringify(setting, null, 2));
+              return reply(`*ᴏᴋᴀʏ ᴍᴇsᴛʀᴇ, ᴀɢᴏʀᴀ ᴍᴇᴜ ᴘʀᴇғɪxᴏ ᴇ『 ${setting.prefix} 』🙇‍♂️*`);
+            }
+
             var prefixosAtivos = [setting.prefix];
             if (isGroup && dataGp?.[0]?.multiprefix && dataGp?.[0]?.prefixos?.length > 0) {
               prefixosAtivos = dataGp[0].prefixos;
@@ -3104,7 +3115,7 @@ ${listaPrefixos}
         var similarityCmd = (txt) => {
           getsmlrt = getSimilarity(allCases, txt, prefix)
           if (rmLetras(getsmlrt.nome).includes(`${prefix}ᴍᴇɴᴜ`)) return [{ comando: getsmlrt.nome, porcentagem: getsmlrt.porcentagem }]
-          return [{ comando: prefix + getsmlrt.nome, porcentagem: Number(getsmlrt.porcentagem).toFixed(1) }]
+          return [{ comando: prefix + getsmlrt.nome, porcentagem: getsmlrt.porcentagem }]
         }
 
 
@@ -7477,7 +7488,7 @@ ${prefix}global`)
           }
             break;
 
-          case 'prefixo': case 'setprefix':
+          case 'setprefix':
             if (args.length < 1) return reply(`*ᴏᴋᴀʏ ᴍᴇsᴛʀᴇ, ᴍᴇᴜ ᴘʀᴇғɪxᴏ ᴀᴛᴜᴀʟ ᴇ『 ${prefix} 』🙇‍♂️*`)
             if (!SoDono && !isnit && !info.key.fromMe) return reply(mess.onlyOwner())
             setting.prefix = q.trim()
@@ -32336,18 +32347,20 @@ BELE KAFFER
             // Se for um comando que não caiu em nenhum case acima
             if (isCmd && command) {
               var AB = similarityCmd(command);
-              var privateCmd = (pc, cmd, porcentagem) => {
-                return `┏━━━━━━━━━━━━━━━━━━━━━━━━━━━
-┃ ⚠️ *COMANDO NÃO ENCONTRADO*
+              if (AB[0].porcentagem >= 60) {
+                var privateCmd = (pc, cmd, porcentagem) => {
+                  return `┏━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┃ ⚠️  *COMANDO NÃO ENCONTRADO*
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━
-┃ ❌ *Digitou:* \`${pc}\`
-┃ 💡 *Sugestão:* \`${cmd}\` ?
-┃ 📊 *Semelhança:* \`${porcentagem}%\`
+┃ ❌  *Digitou:* \`${pc}\`
+┃ 💡  *Sugestão:* \`${cmd}\`?
+┃ 📊  *Precisão:* \`${porcentagem.toFixed(1)}%\`
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  > 💠 *CORVO BOT*`;
+  > 💠  *CORVO BOT AI*`;
+                }
+                var notcmd = privateCmd(prefix + command, AB[0].comando, AB[0].porcentagem);
+                reply(notcmd);
               }
-              var notcmd = privateCmd(prefix + command, AB[0].comando, AB[0].porcentagem);
-              return reply(notcmd);
             }
 
             // IF DOS ANTIs - (LOCALIZAÇÃO - CONTATO - CATALOGO)
