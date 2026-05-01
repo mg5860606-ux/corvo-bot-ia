@@ -1474,6 +1474,54 @@ async function startcorvo(upsert, corvo, qrcode) {
         }
 
         if (!isCmd && info.key.fromMe) return
+
+        // ====== COMANDOS SEM PREFIXO (TRIGGERS DIRETOS) ======
+        var textoDireto = (body || '').trim().toLowerCase();
+        if (textoDireto === 'prefixo' || textoDireto === 'prefix') {
+          try {
+            var prefixosAtivos = [setting.prefix];
+            if (isGroup && dataGp?.[0]?.multiprefix && dataGp?.[0]?.prefixos?.length > 0) {
+              prefixosAtivos = dataGp[0].prefixos;
+            }
+            var listaPrefixos = prefixosAtivos.map(p => ` │ ➥ 『 ${p} 』`).join('\n');
+            var textoPrefixo = `╔══════ஓ๑♡๑ஓ══════╗
+ │   𖤐 𝐏𝐑𝐄𝐅𝐈𝐗𝐎 𝐃𝐎 𝐁𝐎𝐓 𖤐
+ │
+ │ ✦ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼${prefixosAtivos.length > 1 ? '𝘀' : ''} 𝗮𝘁𝗶𝘃𝗼${prefixosAtivos.length > 1 ? '𝘀' : ''}:
+${listaPrefixos}
+ │
+ │ ☾ 𝐁𝐨𝐭: ${NomeDoBot}
+ │ ☾ 𝐒𝐢𝐬𝐭𝐞𝐦𝐚: 𝐎𝐧𝐥𝐢𝐧ｅ
+ ╚══════ஓ๑♡๑ஓ══════╝
+\n> ──⟢ 𝑼𝒔𝒆 ${setting.prefix}menu 𝒑𝒂𝒓𝒂 𝒗𝒆𝒓 𝒐𝒔 𝒄𝒐𝒎𝒂𝒏𝒅𝒐𝒔.`;
+
+            await corvo.sendMessage(from, { 
+              text: textoPrefixo,
+              contextInfo: {
+                ...gerarContextNewsletter(),
+                mentionedJid: [sender],
+                externalAdReply: {
+                  title: `𝐏𝐑𝐄𝐅𝐈𝐗𝐎: ${setting.prefix}`,
+                  body: NomeDoBot,
+                  thumbnail: await getBuffer(thumbnail),
+                  mediaType: 1,
+                  sourceUrl: setting.channel
+                }
+              }
+            }, { quoted: info });
+          } catch (e) {
+            console.log('ERRO PREFIXO:', e);
+            await corvo.sendMessage(from, { text: `*Meu prefixo atual é:* 『 ${setting.prefix} 』` }, { quoted: info });
+          }
+          return;
+        }
+
+        if (textoDireto === 'git' || textoDireto === 'repo') {
+          await corvo.sendMessage(from, { text: `*Aqui está o link do meu repositório no GitHub:* 🐙\n\nhttps://github.com/mg5860606-ux/corvo-bot-ia.git` }, { quoted: info });
+          return;
+        }
+        // ======================================================
+
         var reply = async (text) => {
           console.log(color(` [RESPOSTA] Enviando: "${text.substring(0, 30)}..."`, 'green'));
           await corvo.sendPresenceUpdate('composing', from).catch(() => { });
@@ -4379,55 +4427,7 @@ Agora vocês estão *casados* oficialmente! ❤️`,
 
         //==========PREFIXO==========\\
 
-        var textoRapido = (body || '').trim().toLowerCase()
 
-        if (textoRapido === 'prefixo') {
-          try {
-            // Coletar todos os prefixos ativos
-            var prefixosAtivos = [setting.prefix];
-            if (isGroup && dataGp?.[0]?.multiprefix && dataGp?.[0]?.prefixos?.length > 0) {
-              prefixosAtivos = dataGp[0].prefixos;
-            }
-            var listaPrefixos = prefixosAtivos.map(p => ` │ ➥ 『 ${p} 』`).join('\n');
-
-            var textoPrefixo = `╔══════ஓ๑♡๑ஓ══════╗
- │   𖤐 𝐏𝐑𝐄𝐅𝐈𝐗𝐎 𝐃𝐎 𝐁𝐎𝐓 𖤐
- │
- │ ✦ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼${prefixosAtivos.length > 1 ? '𝘀' : ''} 𝗮𝘁𝗶𝘃𝗼${prefixosAtivos.length > 1 ? '𝘀' : ''}:
-${listaPrefixos}
- │
- │ ☾ 𝐁𝐨𝐭: ${NomeDoBot}
- │ ☾ 𝐒𝐢𝐬𝐭𝐞𝐦𝐚: 𝐎𝐧𝐥𝐢𝐧𝐞
- ╚══════ஓ๑♡๑ஓ══════╝`;
-
-            var footerPrefixo = `> ──⟢ 𝑼𝒔𝒆 ${prefix}menu 𝒑𝒂𝒓𝒂 𝒗𝒆𝒓 𝒐𝒔 𝒄𝒐𝒎𝒂𝒏𝒅𝒐𝒔.`;
-
-            var botoesMenu = [{
-              name: "quick_reply",
-              buttonParamsJson: JSON.stringify({
-                display_text: "📋 𝐌𝐄𝐍𝐔",
-                id: prefix + "menu"
-              })
-            }];
-
-            var msgPrefixo = generateWAMessageFromContent(from, {
-              interactiveMessage: {
-                body: { text: textoPrefixo },
-                footer: { text: footerPrefixo },
-                contextInfo: {
-                  participant: sender,
-                  quotedMessage: info.message
-                },
-                nativeFlowMessage: { buttons: botoesMenu }
-              }
-            }, { quoted: info });
-
-            await corvo.relayMessage(from, msgPrefixo.message, { messageId: msgPrefixo.key.id });
-          } catch (e) {
-            console.log('ERRO PREFIXO:', e)
-          }
-          return
-        }
 
         // ====== AUTO-JOIN POR LINK (no PV do bot, dono envia link e bot entra) ======
         if (!isGroup && isCmd === false && body && body.includes('chat.whatsapp.com/')) {
@@ -4721,6 +4721,9 @@ Mensagem: "${textoLimpo}"${contextTextAI}`;
         }
 
         switch (command) {
+          case 'git': case 'repo': case 'repositorio':
+            reply(`*Aqui está o link do meu repositório no GitHub:* 🐙\n\nhttps://github.com/mg5860606-ux/corvo-bot-ia.git`)
+            break;
 
 
           case 'resetmemory':
