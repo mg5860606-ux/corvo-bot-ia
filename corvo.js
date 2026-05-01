@@ -3811,17 +3811,23 @@ ${data.current.condition.text}
               };
 
               var msgMenu = generateWAMessageFromContent(from, {
-                viewOnceMessage: {
-                  message: {
-                    interactiveMessage: {
-                      contextInfo: {
-                        participant: sender,
-                        quotedMessage: { conversation: "░⃟⃛🕸️ ᴀǫᴜɪ ᴇsᴛᴀ sᴇᴜ ᴍᴇɴᴜ ░⃟⃛🕸️" }
-                      },
-                      body: { text: "*🕸️ ᴍᴇɴᴜ ɪɴᴛᴇʀᴀᴛɪᴠᴏ 🕸️*" },
-                      carouselMessage
-                    }
-                  }
+                interactiveMessage: {
+                  contextInfo: {
+                    participant: sender,
+                    quotedMessage: { conversation: "░⃟⃛🕸️ ᴀǫᴜɪ ᴇsᴛᴀ sᴇᴜ ᴍᴇɴᴜ ░⃟⃛🕸️" }
+                  },
+                  header: {
+                    title: "Corvo",
+                    subtitle: "Menu",
+                    hasMediaAttachment: true,
+                    ...(mediaMenu.videoMessage
+                      ? { videoMessage: mediaMenu.videoMessage }
+                      : { imageMessage: mediaMenu.imageMessage })
+                  },
+                  headerType: mediaMenu.videoMessage ? "VIDEO" : "IMAGE",
+                  body: { text: textok },
+                  footer: { text: "ᴇsᴄᴏʟʜᴀ ᴀ ᴏᴘçãᴏ ᴀʙᴀɪxᴏ" },
+                  nativeFlowMessage: { buttons: botoes }
                 }
               }, {});
 
