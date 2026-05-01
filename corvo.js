@@ -125,7 +125,23 @@ async function saveAiContextLocal(from, context) {
 
 
 const CONFIG_GROQ = {
-  KEYS: ["COLOQUE_SUA_API_AQUI"],
+  KEYS: [
+        /* Api 1 */ "COLOQUE_SUA_API_AQUI",
+        /* Api 2 */ "",
+        /* Api 3 */ "",
+        /* Api 4 */ "",
+        /* Api 5 */ "",
+        /* Api 6 */ "",
+        /* Api 7 */ "",
+        /* Api 8 */ "",
+        /* Api 9 */ "",
+        /* Api 10 */ "",
+        /* Api 11 */ "",
+        /* Api 12 */ "",
+        /* Api 13 */ "",
+        /* Api 14 */ "",
+        /* Api 15 */ ""
+  ],
   MODEL: "llama-3.3-70b-versatile"
 };
 
