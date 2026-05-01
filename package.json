@@ -4,7 +4,7 @@
   "description": "Corvo Bot - IA Autônoma",
   "main": "corvo.js",
   "scripts": {
-    "start": "node ARQUIVES/connect.js"
+    "start": "node --no-deprecation ARQUIVES/connect.js"
   },
   "keywords": [
     "whatsapp-bot",
