@@ -6277,11 +6277,29 @@ Seja útil, natural e direto.`
             reply("🔄 *Iniciando atualização do bot pelo GitHub...*\nPor favor, aguarde alguns segundos!");
             try {
               const { exec } = require("child_process");
-              exec("git pull origin main", (err, stdout, stderr) => {
+              exec("git pull origin main", async (err, stdout, stderr) => {
                 if (err) {
                   reply("❌ *Erro ao atualizar:*\n" + err.message);
                   return;
                 }
+                
+                // Resetar memória da IA para forçar perguntas de nome
+                try {
+                  const contextData = { ownerPreferredName: "Marcos", resetFlag: true };
+                  const CONTEXT_FILE = './database/ai_context.json';
+                  let allContexts = {};
+                  if (fs.existsSync(CONTEXT_FILE)) {
+                    allContexts = JSON.parse(fs.readFileSync(CONTEXT_FILE));
+                  }
+                  allContexts[from] = contextData;
+                  fs.writeFileSync(CONTEXT_FILE, JSON.stringify(allContexts, null, 2));
+                  
+                  // Limpar histórico de chat do Groq também
+                  if (global.groqChatHistory) global.groqChatHistory[from] = [];
+                } catch (e) {
+                  console.log("Erro ao resetar IA na atualização:", e.message);
+                }
+
                 reply("✅ *Atualização concluída com sucesso!*\n\nLogs:\n" + stdout + "\n\nO bot será reiniciado agora para aplicar as mudanças...");
                 setTimeout(async () => { process.exit() }, 2000);
               });
