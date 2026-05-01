@@ -1260,6 +1260,8 @@ async function startcorvo(upsert, corvo, qrcode) {
 
         var isBotoff = nescessario.botoff
 
+        var isCorvoIA = nescessario.corvoia
+
         var listanegraG = nescessario.listanegraG
 
         var listabrancaG = nescessario.listabrancaG
@@ -4052,6 +4054,7 @@ ${data.current.condition.text}
 
         if (
           isGroup &&
+          isCorvoIA &&
           isAutorepo &&
           !isCmd &&
           !info.key.fromMe &&
@@ -4316,6 +4319,7 @@ Agora vocês estão *casados* oficialmente! ❤️`,
         }
 
         // ================= PALAVRAS ================= //
+        if (isCorvoIA) {
 
         if (budy2.includes("bom dia")) {
           try {
@@ -4423,6 +4427,7 @@ Agora vocês estão *casados* oficialmente! ❤️`,
           try {
             await responderComInteligencia(budy2, "Responda zoando pesado, chamando de corno com humor", mediaData);
           } catch (errIA) { console.log("ERRO IA:", errIA) }
+        }
         }
 
         //==========PREFIXO==========\\
@@ -4721,6 +4726,14 @@ Mensagem: "${textoLimpo}"${contextTextAI}`;
         }
 
         switch (command) {
+          case 'corvoia': {
+            if (!SoDono) return reply(mess.onlyOwner());
+            nescessario.corvoia = !nescessario.corvoia;
+            setNes(nescessario);
+            reply(`🤖 *INTELIGÊNCIA ARTIFICIAL:* ${nescessario.corvoia ? "ATIVADA ✅" : "DESATIVADA ❌"}`);
+          }
+            break;
+
           case 'git': case 'repo': case 'repositorio':
             reply(`*Aqui está o link do meu repositório no GitHub:* 🐙\n\nhttps://github.com/mg5860606-ux/corvo-bot-ia.git`)
             break;
