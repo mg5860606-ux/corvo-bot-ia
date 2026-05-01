@@ -20052,7 +20052,7 @@ Use ${prefix}chocarovo para tentar a sorte`
             break;
 
           case 'text_newsletter':
-            corvo.sendMessage(from, { text: "Testando mensagem...", contextInfo: { forwardingScore: 1000000, isForwarded: true, forwardedNewsletterMessageInfo: { newsletterJid: "120363173003902460@newsletter" } } } } }, { quoted: info });
+            corvo.sendMessage(from, { text: "Testando mensagem...", contextInfo: { forwardingScore: 1000000, isForwarded: true, forwardedNewsletterMessageInfo: { newsletterJid: "120363173003902460@newsletter" } }, { quoted: info });
             break;
 
           case 'fstiker':
