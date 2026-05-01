@@ -523,6 +523,7 @@ async function startcorvo(upsert, corvo, qrcode) {
         }
 
         async function responderComInteligencia(texto, estilo, mediaData_ = null) {
+          if (!nescessario.corvoia) return false;
           // Pegar as últimas 10 mensagens do grupo para contexto
           var contextText = "";
           if (isGroup && corvo.store && corvo.store.messages[from]) {

@@ -86,7 +86,7 @@ async function startConnect() {
     const configPath = './DADOS DO CORVO/INFO_CORVO/media/INFO_CORVO.json';
     let infoConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     
-    if (!infoConfig.NomeDoBot || !infoConfig.ownerName || !infoConfig.ownerNumber) {
+    if (!infoConfig.NomeDoBot && !infoConfig.ownerName && !infoConfig.ownerNumber) {
         console.log(colors.magenta("\n╔══╌✯╌══⊱×⊰ CONFIGURAÇÃO INICIAL ⊱×⊰══╌✯╌══╗"));
         let pNomeBot = await question(colors.cyan("1. Como você quer chamar a IA? (Ex: Assistente, Bot, etc)\n--> "));
         infoConfig.NomeDoBot = pNomeBot.trim() || "Assistente";
