@@ -12676,74 +12676,35 @@ Aguarde o dono entrar em contato no privado.`
             try {
               reagir(from, "🕸️");
 
-              var caminhoVideo = "./DADOS DO CORVO/INFO_CORVO/LOGOS/fotomenu.mp4";
-              var caminhoImagem = "./DADOS DO CORVO/INFO_CORVO/LOGOS/fotomenu.png";
-
-              var mediaMenu;
-              if (fs.existsSync(caminhoVideo)) {
-                mediaMenu = await prepareWAMessageMedia({
-                  video: { url: caminhoVideo },
-                  mimetype: "video/mp4",
-                  gifPlayback: true
-                }, { upload: corvo.waUploadToServer });
-              } else {
-                mediaMenu = await prepareWAMessageMedia({
-                  image: { url: caminhoImagem }
-                }, { upload: corvo.waUploadToServer });
-              }
-
-
-              var listaMenus = {
-                title: "📋 𝙼𝙾𝚂𝚃𝚁𝙰𝚁 𝙻𝙸𝚂𝚃𝙰𝚂 📋",
-                sections: [
-                  {
-                    title: "⃞💠 CATEGORIAS PRINCIPAIS ⃞💠",
-                    rows: [
-                      { header: "⃞💠 MENU PRINCIPAL ⃞💠", title: "Comandos gerais", id: prefix + "menu_principal_lista" },
-                      { header: "⃞💠 MENU ADM ⃞💠", title: "Comandos de admin", id: prefix + "menu_adm_lista" },
-                      { header: "⃞💠 MENU DONO ⃞💠", title: "Comandos do dono", id: prefix + "menudono" },
-                    ]
-                  }
-                ]
-              };
-              var botoes = [
-                { name: "single_select", buttonParamsJson: JSON.stringify(listaMenus) }
-              ];
-
               var timeMenu = new Date().toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
               var versao = require("./package.json").version;
 
-              var textok = `𖤐 𝐌𝐄𝐍𝐔 𝐃𝐎 𝐂𝐎𝐑𝐕𝐎 𖤐\n\n✦ 𝗨𝘀𝘂𝗮́𝗿𝗶𝗼: ${pushname}\n✦ 𝗖𝗮𝗿𝗴𝗼: ${isCargo}\n✦ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: 『 ${prefix} 』\n✦ 𝗛𝗼𝗿𝗮́𝗿𝗶𝗼: ${timeMenu}\n✦ 𝗩𝗲𝗿𝘀𝗮̃𝗼: ${versao}`;
+              var textok = `╔══════ஓ๑♡๑ஓ══════╗
+ │  𖤐 𝐌𝐄𝐍𝐔 𝐃𝐎 𝐂𝐎𝐑𝐕𝐎 𖤐
+ │
+ │ ✦ 𝗨𝘀𝘂𝗮́𝗿𝗶𝗼: ${pushname}
+ │ ✦ 𝗖𝗮𝗿𝗴𝗼: ${isCargo}
+ │ ✦ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: 『 ${prefix} 』
+ │ ✦ 𝗛𝗼𝗿𝗮́𝗿𝗶𝗼: ${timeMenu}
+ │ ✦ 𝗩𝗲𝗿𝘀𝗮̃𝗼: ${versao}
+ │
+ │ ☾ 𝐁𝐨𝐭: ${NomeDoBot}
+ │ ☾ 𝐎𝐰𝐧𝐞𝐫: ${ownerName}
+ ╚══════ஓ๑♡๑ஓ══════╝
+ 
+${linguagem.menu(prefix)}
 
+> ──⟢ 𝑪𝒐𝒓𝒗𝒐 𝑺𝒆𝒄𝒖𝒓𝒊𝒕𝒚 𝑽𝒊𝒆𝒒 🦇`;
 
-              const msg = generateWAMessageFromContent(from, {
-                viewOnceMessage: {
-                  message: {
-                    interactiveMessage: {
-                      header: {
-                        title: "𖤐 𝐌𝐄𝐍𝐔 𝐃𝐎 𝐂𝐎𝐑𝐕𝐎 𖤐",
-                        hasMediaAttachment: true,
-                        ...(mediaMenu.videoMessage ? { videoMessage: mediaMenu.videoMessage } : { imageMessage: mediaMenu.imageMessage })
-                      },
-                      body: {
-                        text: textok
-                      },
-                      footer: {
-                        text: "© Corvo Security"
-                      },
-                      nativeFlowMessage: {
-                        buttons: botoes
-                      }
-                    }
-                  }
-                }
-              }, { quoted: info });
-
-              await corvo.relayMessage(from, msg.message, { messageId: msg.key.id });
+              await sendMenu(from, selo, {
+                reaction: "🕸️",
+                caption: textok,
+                sendAudio: true
+              });
 
             } catch (error) {
-              console.error("!!! ERRO NO MENU !!!", error);
-              await corvo.sendMessage(from, { text: "❌ Ocorreu um erro ao abrir o menu interativo.\n\nDetalhes do Erro:\n" + String(error.stack || error) + "\n\n*FALLBACK MENU*:\nUse " + prefix + "menu_principal_lista para ver os comandos." }, { quoted: info });
+              console.error("Erro menu:", error);
+              await corvo.sendMessage(from, { text: "❌ Ocorreu um erro ao abrir o menu.\nUse " + prefix + "comandos para ver a lista." }, { quoted: selo });
             }
             break;
           }
