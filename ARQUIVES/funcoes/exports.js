@@ -48,28 +48,57 @@ const { wait, getExtension, generateMessageID, getMembros, getGroupAdmins, norma
 const { writeExifImg } = require('../../ARQUIVES/sticker/exif.js')
 const { writeExif2 } = require('../../ARQUIVES/sticker/exif2.js')
 const { isFiltered, addFilter } = require('../../ARQUIVES/funcoes/functions.js');
+function loadJson(file, fallback = {}) {
+  try {
+    if (!fs.existsSync(file)) {
+      fs.mkdirSync(require('path').dirname(file), { recursive: true });
+      fs.writeFileSync(file, JSON.stringify(fallback, null, 2));
+      return fallback;
+    }
+    return JSON.parse(fs.readFileSync(file));
+  } catch (err) {
+    return fallback;
+  }
+}
+
 // [JSON] - Funções Abaixo >>> :
-const pushnames = JSON.parse(fs.readFileSync('./DADOS DO CORVO/usuarios/users.json'));
-const obrigadoEXT = JSON.parse(fs.readFileSync('./DADOS DO CORVO/INFO_CORVO/media/nescessario.json'))
-const rgtake = JSON.parse(fs.readFileSync('./DADOS DO CORVO/usuarios/take.json'));
-const sotoy = JSON.parse(fs.readFileSync('./ARQUIVES/json/sotoy.json'));
-const countMessage = JSON.parse(fs.readFileSync('./DADOS DO CORVO/INFO_CORVO/media/countmsg.json'));
-const comandos = JSON.parse(fs.readFileSync('./DADOS DO CORVO/INFO_CORVO/media/comandos.json'));
-const daily = JSON.parse(fs.readFileSync('./DADOS DO CORVO/usuarios/diario.json'));
-const nescessario = JSON.parse(fs.readFileSync('./DADOS DO CORVO/INFO_CORVO/media/nescessario.json'));
-const vip = JSON.parse(fs.readFileSync('./DADOS DO CORVO/usuarios/vip.json'));
-const ban = JSON.parse(fs.readFileSync('./DADOS DO CORVO/usuarios/banned.json'));
-const muted = JSON.parse(fs.readFileSync('./DADOS DO CORVO/grupos/muted.json'))
-const limitefll = JSON.parse(fs.readFileSync('./DADOS DO CORVO/usuarios/flood.json'));
-const joguinhodavelhajs = JSON.parse(fs.readFileSync('./DADOS DO CORVO/usuarios/joguinhodavelha.json'));
-const joguinhodavelhajs2 = JSON.parse(fs.readFileSync('./DADOS DO CORVO/usuarios/joguinhodavelha2.json'));
-const antispam = JSON.parse(fs.readFileSync('./DADOS DO CORVO/INFO_CORVO/media/antispam.json'));
-const anotar = JSON.parse(fs.readFileSync("./DADOS DO CORVO/func/anotar.json"));
-const setting = JSON.parse(fs.readFileSync('./DADOS DO CORVO/INFO_CORVO/media/INFO_CORVO.json'));
-const logoslink = JSON.parse(fs.readFileSync('./DADOS DO CORVO/INFO_CORVO/LOGOS/links_img.json'));
-const Limit_CMD = JSON.parse(fs.readFileSync("./DADOS DO CORVO/func/limitarcmd.json"))
-const tools = JSON.parse(fs.readFileSync('./ARQUIVES/json/tools.json'));
-const advices = JSON.parse(fs.readFileSync('./ARQUIVES/json/advices.json'));
+const pushnames = loadJson('./DADOS DO CORVO/usuarios/users.json', []);
+const obrigadoEXT = loadJson('./DADOS DO CORVO/INFO_CORVO/media/nescessario.json');
+const rgtake = loadJson('./DADOS DO CORVO/usuarios/take.json', []);
+const sotoy = loadJson('./ARQUIVES/json/sotoy.json', []);
+const countMessage = loadJson('./DADOS DO CORVO/INFO_CORVO/media/countmsg.json', []);
+const comandos = loadJson('./DADOS DO CORVO/INFO_CORVO/media/comandos.json', []);
+const daily = loadJson('./DADOS DO CORVO/usuarios/diario.json', []);
+const nescessario = loadJson('./DADOS DO CORVO/INFO_CORVO/media/nescessario.json', {});
+const vip = loadJson('./DADOS DO CORVO/usuarios/vip.json', []);
+const ban = loadJson('./DADOS DO CORVO/usuarios/banned.json', []);
+const muted = loadJson('./DADOS DO CORVO/grupos/muted.json', []);
+const limitefll = loadJson('./DADOS DO CORVO/usuarios/flood.json', []);
+const joguinhodavelhajs = loadJson('./DADOS DO CORVO/usuarios/joguinhodavelha.json', []);
+const joguinhodavelhajs2 = loadJson('./DADOS DO CORVO/usuarios/joguinhodavelha2.json', []);
+const antispam = loadJson('./DADOS DO CORVO/INFO_CORVO/media/antispam.json', []);
+const anotar = loadJson("./DADOS DO CORVO/func/anotar.json", []);
+
+const INFO_CORVO_PATH = './DADOS DO CORVO/INFO_CORVO/media/INFO_CORVO.json';
+const setting = loadJson(INFO_CORVO_PATH, {
+    NomeDoBot: "Corvo",
+    ownerName: "Mestre",
+    ownerNumber: "5521990167037",
+    prefix: "/",
+    channel: "https://whatsapp.com/channel/...",
+    channelnk: "https://whatsapp.com/channel/...",
+    group: "https://chat.whatsapp.com/...",
+    TOKEN: "seu_token",
+    CREDENTIALS_USER: {
+      API_KEY_SANDRO: "",
+      API_URL: "https://api.minhabucetinha.com.br"
+    }
+});
+
+const logoslink = loadJson('./DADOS DO CORVO/INFO_CORVO/LOGOS/links_img.json', {});
+const Limit_CMD = loadJson("./DADOS DO CORVO/func/limitarcmd.json", []);
+const tools = loadJson('./ARQUIVES/json/tools.json', []);
+const advices = loadJson('./ARQUIVES/json/advices.json', []);
 
 // ARQUIVES - JS - Menus / Informações:
 const { linguagem, mess, getInfo } = require('../../DADOS DO CORVO/INFO_CORVO/lib');

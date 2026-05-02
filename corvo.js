@@ -401,7 +401,8 @@ const Jimp = require('jimp');
 const JimpClass = Jimp.Jimp
 const { v4: uuidv4 } = require('uuid');
 const directory = `./DADOS DO CORVO/anti_sp.json`;
-const ANT_SP = JSON.parse(fs.readFileSync(directory));
+const ANT_SP = fs.existsSync(directory) ? JSON.parse(fs.readFileSync(directory)) : [];
+if (!fs.existsSync(directory)) fs.writeFileSync(directory, JSON.stringify([]));
 
 //////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 const yts = require('yt-search');
