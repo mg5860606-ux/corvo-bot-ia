@@ -1619,12 +1619,15 @@ ${listaPrefixos}
           });
         };
         async function sendAudioMenu(from) {
-          var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/menu.mp3');
-          await corvo.sendMessage(from, {
-            audio: soundft,
-            mimetype: "audio/mpeg",
-            contextInfo: gerarContextNewsletter(),
-          }, { quoted: selo });
+          const menuAudioPath = './DADOS DO CORVO/data/media/audios/menu.mp3';
+          if (fs.existsSync(menuAudioPath)) {
+            var soundft = fs.readFileSync(menuAudioPath);
+            await corvo.sendMessage(from, {
+              audio: soundft,
+              mimetype: "audio/mpeg",
+              contextInfo: gerarContextNewsletter(),
+            }, { quoted: selo });
+          }
         }
         var NkChannelKk = gerarContextNewsletter();
 
