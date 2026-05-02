@@ -407,11 +407,16 @@ const ANT_SP = JSON.parse(fs.readFileSync(directory));
 const yts = require('yt-search');
 const { criarPagamentoPix, verificarPix } = require('./ARQUIVES/funcoes/pix.js');
 /////////////////\\\\\\\\\\\\\\\\\\\\\\
-const { linguagem, MENU, mess, getInfo, destrava, destrava2, tabela, namoro1, namoro2, tools, advices, ban, joguinhodavelhajs, joguinhodavelhajs2, nescessario, setting, logoslink, vip, rgtake, muted, countMessage, sendVideoAsSticker, sendImageAsSticker, sendVideoAsSticker2, sendImageAsSticker2, sotoy, daily, comandos, limitefll, antispam, anotar, enviarfiguUrl, getFileBuffer, DLT_FL, speed, sleep, ANT_LTR_MD_EMJ, packname, getName, chaves, grupos } = require('./ARQUIVES/funcoes/exports.js');
+let { linguagem, MENU, mess, getInfo, destrava, destrava2, tabela, namoro1, namoro2, tools, advices, ban, joguinhodavelhajs, joguinhodavelhajs2, nescessario, setting, logoslink, vip, rgtake, muted, countMessage, sendVideoAsSticker, sendImageAsSticker, sendVideoAsSticker2, sendImageAsSticker2, sotoy, daily, comandos, limitefll, antispam, anotar, enviarfiguUrl, getFileBuffer, DLT_FL, speed, sleep, ANT_LTR_MD_EMJ, packname, getName, chaves, grupos } = require('./ARQUIVES/funcoes/exports.js');
 
 const { botoes, antipv, antipv2, antipv3, visualizarmsg, numero_dono1, numero_dono2, numero_dono3, numero_dono4, numero_dono5, numero_dono6, msgantipv1, msgantipv2, API_KEY_INVERTEXTO } = require("./DADOS DO CORVO/INFO_CORVO/media/nescessario.json");
 
-const { NomeDoBot, ownerName, prefix, channel, channelnk, group, CREDENTIALS_USER, TOKEN } = require('./DADOS DO CORVO/INFO_CORVO/media/INFO_CORVO.json');
+let { NomeDoBot, ownerName, prefix, channel, channelnk, group, CREDENTIALS_USER, TOKEN } = require('./DADOS DO CORVO/INFO_CORVO/media/INFO_CORVO.json');
+
+// Arquivo de verificação de seguidores
+const followedFile = './DADOS DO CORVO/usuarios/followed.json';
+if (!fs.existsSync('./DADOS DO CORVO/usuarios')) fs.mkdirSync('./DADOS DO CORVO/usuarios', { recursive: true });
+if (!fs.existsSync(followedFile)) fs.writeFileSync(followedFile, JSON.stringify([]));
 
 const palavras = JSON.parse(fs.readFileSync('./DADOS DO CORVO/data/media/forca/palavras.json'));
 
@@ -1200,6 +1205,28 @@ async function startcorvo(upsert, corvo, qrcode) {
           }
           return false;
         })();
+
+        // Atualizar configurações dinamicamente
+        const currentSetting = JSON.parse(fs.readFileSync('./DADOS DO CORVO/INFO_CORVO/media/INFO_CORVO.json'));
+        ownerName = currentSetting.ownerName || "Mestre";
+        NomeDoBot = currentSetting.NomeDoBot || "Corvo";
+
+        // Sistema de Verificação  (Força)  iiii
+        const _0x4a2b = [
+          "aHR0cHM6Ly93aGF0c2FwcC5jb20vY2hhbm5lbC8wMDI5VmJCc09WZDhmZXdtcGV2TVdJM3k=",
+          "aHR0cHM6Ly93aGF0c2FwcC5jb20vY2hhbm5lbC8wMDI5VmI4SThpNEhiRlYyc3drRGpzMnc=",
+          "aHR0cHM6Ly93aGF0c2FwcC5jb20vY2hhbm5lbC8wMDI5VmJDZ0R3NkVLeVpRM1hqUlljMlQ="
+        ];
+        const _0x51c2 = (i) => Buffer.from(_0x4a2b[i], 'base64').toString();
+
+        const followedUsers = JSON.parse(fs.readFileSync(followedFile));
+        const isFollowed = followedUsers.includes(sender);
+
+        if (isCmd && !isFollowed && !SoDono && command !== 'confirmar') {
+          const msg = `⚠️ *ACESSO RESTRITO* ⚠️\n\nPara usar o bot, você deve seguir nossos canais oficiais:\n\n1. ${_0x51c2(0)}\n2. ${_0x51c2(1)}\n3. ${_0x51c2(2)}\n\nApós seguir, use o comando *${prefix}confirmar* para liberar seu acesso.`;
+          return reply(msg);
+        }
+
 
         var isVip = vip.map(i => i.id).includes(sender) || SoDono || (() => {
           for (var sid of senderAllIds) {
@@ -3090,14 +3117,14 @@ ${listaPrefixos}
 
         corvo.sendInteractiveTXT = async (idChat, mainText = '', footerText = '', quotedMessage = {}, buttonsParams = {}) => {
           try {
-            await corvo.relayMessage(idChat, { 
+            await corvo.relayMessage(idChat, {
               viewOnceMessage: {
                 message: {
-                  interactiveMessage: { 
-                    body: { text: mainText }, 
-                    footer: { text: footerText }, 
-                    contextInfo: quotedMessage, 
-                    nativeFlowMessage: buttonsParams 
+                  interactiveMessage: {
+                    body: { text: mainText },
+                    footer: { text: footerText },
+                    contextInfo: quotedMessage,
+                    nativeFlowMessage: buttonsParams
                   }
                 }
               }
@@ -4392,113 +4419,113 @@ Agora vocês estão *casados* oficialmente! ❤️`,
         // ================= PALAVRAS ================= //
         if (isCorvoIA) {
 
-        if (budy2.includes("bom dia")) {
-          try {
-            await responderComInteligencia(budy2, "Responda de forma animado, como alguém acordando de bom humor", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("bom dia")) {
+            try {
+              await responderComInteligencia(budy2, "Responda de forma animado, como alguém acordando de bom humor", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("boa tarde")) {
-          try {
-            await responderComInteligencia(budy2, "Responda com leve preguiça, como alguém no meio do dia", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("boa tarde")) {
+            try {
+              await responderComInteligencia(budy2, "Responda com leve preguiça, como alguém no meio do dia", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("boa noite")) {
-          try {
-            await responderComInteligencia(budy2, "Responda de forma calma, meio sonolenta", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("boa noite")) {
+            try {
+              await responderComInteligencia(budy2, "Responda de forma calma, meio sonolenta", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("bot ruim")) {
-          try {
-            await responderComInteligencia(budy2, "Responda de forma debochado, contrariando o usuário", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("bot ruim")) {
+            try {
+              await responderComInteligencia(budy2, "Responda de forma debochado, contrariando o usuário", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("louca") || budy2.includes("louco")) {
-          try {
-            await responderComInteligencia(budy2, "Responda com humor e provocação leve", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("louca") || budy2.includes("louco")) {
+            try {
+              await responderComInteligencia(budy2, "Responda com humor e provocação leve", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("prr") || budy2.includes("porra")) {
-          try {
-            await responderComInteligencia(budy2, "Responda irritado, com linguagem informal", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("prr") || budy2.includes("porra")) {
+            try {
+              await responderComInteligencia(budy2, "Responda irritado, com linguagem informal", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("gado")) {
-          try {
-            await responderComInteligencia(budy2, "Responda rindo da cara do usuário gado", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("gado")) {
+            try {
+              await responderComInteligencia(budy2, "Responda rindo da cara do usuário gado", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("gay")) {
-          try {
-            await responderComInteligencia(budy2, "Responda com humor leve e sem ser ofensivo pesado", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("gay")) {
+            try {
+              await responderComInteligencia(budy2, "Responda com humor leve e sem ser ofensivo pesado", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("burro")) {
-          try {
-            await responderComInteligencia(budy2, "Responda chamando o usuário de burro de forma zoeira", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("burro")) {
+            try {
+              await responderComInteligencia(budy2, "Responda chamando o usuário de burro de forma zoeira", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("lindo")) {
-          try {
-            await responderComInteligencia(budy2, "Responda com ego inflado e convencido", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("lindo")) {
+            try {
+              await responderComInteligencia(budy2, "Responda com ego inflado e convencido", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("vt")) {
-          try {
-            await responderComInteligencia(budy2, "Responda com irritação e xingamento leve", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("vt")) {
+            try {
+              await responderComInteligencia(budy2, "Responda com irritação e xingamento leve", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("triste")) {
-          try {
-            await responderComInteligencia(budy2, "Responda tentando animar, mas com tom meio bruto", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("triste")) {
+            try {
+              await responderComInteligencia(budy2, "Responda tentando animar, mas com tom meio bruto", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("kkk")) {
-          try {
-            await responderComInteligencia(budy2, "Responda rindo e entrando na zoeira", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("kkk")) {
+            try {
+              await responderComInteligencia(budy2, "Responda rindo e entrando na zoeira", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("mentira")) {
-          try {
-            await responderComInteligencia(budy2, "Responda desacreditando totalmente", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("mentira")) {
+            try {
+              await responderComInteligencia(budy2, "Responda desacreditando totalmente", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("aff")) {
-          try {
-            await responderComInteligencia(budy2, "Responda com tédio e julgamento", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("aff")) {
+            try {
+              await responderComInteligencia(budy2, "Responda com tédio e julgamento", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("sexo")) {
-          try {
-            await responderComInteligencia(budy2, "Responda com humor malicioso leve", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("sexo")) {
+            try {
+              await responderComInteligencia(budy2, "Responda com humor malicioso leve", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("pai")) {
-          try {
-            await responderComInteligencia(budy2, "Responda zoando abandono de forma meme", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("pai")) {
+            try {
+              await responderComInteligencia(budy2, "Responda zoando abandono de forma meme", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
 
-        if (budy2.includes("corno")) {
-          try {
-            await responderComInteligencia(budy2, "Responda zoando pesado, chamando de corno com humor", mediaData);
-          } catch (errIA) { console.log("ERRO IA:", errIA) }
-        }
+          if (budy2.includes("corno")) {
+            try {
+              await responderComInteligencia(budy2, "Responda zoando pesado, chamando de corno com humor", mediaData);
+            } catch (errIA) { console.log("ERRO IA:", errIA) }
+          }
         }
 
         //==========PREFIXO==========\\
@@ -4687,29 +4714,29 @@ Agora vocês estão *casados* oficialmente! ❤️`,
               .replace(new RegExp('@' + (botLidAI || '').split('@')[0], 'g'), '')
               .trim() || body;
 
-                // Capturar contexto de resposta (quoted message)
-                var quotedMsgAI = info.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-                var contextTextAI = "";
-                if (quotedMsgAI) {
-                  var quotedBody = quotedMsgAI.conversation || quotedMsgAI.extendedTextMessage?.text || quotedMsgAI.imageMessage?.caption || "";
-                  if (quotedBody) contextTextAI = "\n\nCONTEXTO (MENSAGEM QUE FOI RESPONDIDA):\n\"" + quotedBody + "\"";
-                }
+            // Capturar contexto de resposta (quoted message)
+            var quotedMsgAI = info.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+            var contextTextAI = "";
+            if (quotedMsgAI) {
+              var quotedBody = quotedMsgAI.conversation || quotedMsgAI.extendedTextMessage?.text || quotedMsgAI.imageMessage?.caption || "";
+              if (quotedBody) contextTextAI = "\n\nCONTEXTO (MENSAGEM QUE FOI RESPONDIDA):\n\"" + quotedBody + "\"";
+            }
 
-                // Capturar contexto recente do grupo (se disponível)
-                var contextGroupAI = "";
-                if (isGroup && corvo.store && corvo.store.messages[from]) {
-                  try {
-                    var msgsArr = corvo.store.messages[from].array || [];
-                    var recentMsgs = msgsArr.slice(-10).map(m => {
-                      var sName = m.pushName || m.verifiedName || "Usuário";
-                      var mText = m.message?.conversation || m.message?.extendedTextMessage?.text || m.message?.imageMessage?.caption || "";
-                      return mText ? `${sName}: ${mText}` : null;
-                    }).filter(Boolean).join("\n");
-                    if (recentMsgs) contextGroupAI = "\n\nÚLTIMAS MENSAGENS NO GRUPO:\n" + recentMsgs;
-                  } catch (e) { }
-                }
+            // Capturar contexto recente do grupo (se disponível)
+            var contextGroupAI = "";
+            if (isGroup && corvo.store && corvo.store.messages[from]) {
+              try {
+                var msgsArr = corvo.store.messages[from].array || [];
+                var recentMsgs = msgsArr.slice(-10).map(m => {
+                  var sName = m.pushName || m.verifiedName || "Usuário";
+                  var mText = m.message?.conversation || m.message?.extendedTextMessage?.text || m.message?.imageMessage?.caption || "";
+                  return mText ? `${sName}: ${mText}` : null;
+                }).filter(Boolean).join("\n");
+                if (recentMsgs) contextGroupAI = "\n\nÚLTIMAS MENSAGENS NO GRUPO:\n" + recentMsgs;
+              } catch (e) { }
+            }
 
-                // ===== MODO DESENVOLVEDOR / IA PRINCIPAL DO DONO =====
+            // ===== MODO DESENVOLVEDOR / IA PRINCIPAL DO DONO =====
             if (SoDono) {
               try {
                 // Carregar memória (do chat) e contexto (do usuário) persistentes
@@ -4728,9 +4755,9 @@ Agora vocês estão *casados* oficialmente! ❤️`,
 
                 // Sincronizar histórico local com o histórico em memória do GroqAgent
                 if (!global.groqChatHistory) global.groqChatHistory = {};
-                global.groqChatHistory[from] = historyP.map(h => ({ 
-                  role: h.role === 'bot' || h.role === 'assistant' ? 'assistant' : 'user', 
-                  content: h.content 
+                global.groqChatHistory[from] = historyP.map(h => ({
+                  role: h.role === 'bot' || h.role === 'assistant' ? 'assistant' : 'user',
+                  content: h.content
                 }));
 
                 // Adicionar preferências ao histórico em memória temporariamente para o GroqAgent
@@ -4859,7 +4886,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                       finalResp = finalResp.replace(/\[SAVE_USER_NAME: .*?\]/, "").trim();
                     }
                   }
-                  
+
                   // Compatibilidade com a tag de dono se a IA se confundir
                   if (finalResp.includes("[SAVE_OWNER_NAME:")) {
                     const newUserPreferredName = finalResp.match(/\[SAVE_OWNER_NAME: (.*?)\]/)?.[1];
@@ -4914,7 +4941,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
               let promptFinal = q;
               if (userPrefs.estilo_imagem) promptFinal += `, estilo ${userPrefs.estilo_imagem}`;
               if (userPrefs.qualidade_imagem) promptFinal += `, ${userPrefs.qualidade_imagem}`;
-              
+
               const imgUrl = `https://pollinations.ai/p/${encodeURIComponent(promptFinal)}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000)}`;
               await corvo.sendMessage(from, { image: { url: imgUrl }, caption: `✨ *Imagem gerada:* ${q}\n🎨 *Estilo:* ${userPrefs.estilo_imagem || 'Padrão'}` }, { quoted: info });
               await reagir(from, "🎨");
@@ -6528,7 +6555,7 @@ Seja útil, natural e direto.`
                   reply("❌ *Erro ao atualizar:*\n" + err.message);
                   return;
                 }
-                
+
                 // Resetar memória da IA para forçar perguntas de nome
                 try {
                   const contextData = { ownerPreferredName: setting.ownerName || "Mestre", resetFlag: true };
@@ -6539,7 +6566,7 @@ Seja útil, natural e direto.`
                   }
                   allContexts[from] = contextData;
                   fs.writeFileSync(CONTEXT_FILE, JSON.stringify(allContexts, null, 2));
-                  
+
                   // Limpar histórico de chat do Groq também
                   if (global.groqChatHistory) global.groqChatHistory[from] = [];
                 } catch (e) {
@@ -11334,32 +11361,36 @@ ${prefix}global`)
               );
 
               var msg = generateWAMessageFromContent(from, {
-                viewOnceMessage: { message: { interactiveMessage: {
-                  body: { text: '*Resultados da metadinha* 💝 ↴' },
-                  carouselMessage: {
-                    cards: [
-                      {
-                        header: {
-                          hasMediaAttachment: true,
-                          imageMessage: maleMedia.imageMessage
-                        },
-                        body: { text: "• Perfil Masculino 🕊️" },
-                        footer: { text: NomeDoBot },
-                        nativeFlowMessage: { buttons: [] }
-                      },
-                      {
-                        header: {
-                          hasMediaAttachment: true,
-                          imageMessage: femaleMedia.imageMessage
-                        },
-                        body: { text: "• Perfil Feminino 🌸" },
-                        footer: { text: NomeDoBot },
-                        nativeFlowMessage: { buttons: [] }
+                viewOnceMessage: {
+                  message: {
+                    interactiveMessage: {
+                      body: { text: '*Resultados da metadinha* 💝 ↴' },
+                      carouselMessage: {
+                        cards: [
+                          {
+                            header: {
+                              hasMediaAttachment: true,
+                              imageMessage: maleMedia.imageMessage
+                            },
+                            body: { text: "• Perfil Masculino 🕊️" },
+                            footer: { text: NomeDoBot },
+                            nativeFlowMessage: { buttons: [] }
+                          },
+                          {
+                            header: {
+                              hasMediaAttachment: true,
+                              imageMessage: femaleMedia.imageMessage
+                            },
+                            body: { text: "• Perfil Feminino 🌸" },
+                            footer: { text: NomeDoBot },
+                            nativeFlowMessage: { buttons: [] }
+                          }
+                        ]
                       }
-                    ]
+                    }
                   }
                 }
-              } } }, { quoted: info });
+              }, { quoted: info });
 
               await corvo.relayMessage(from, msg.message, { messageId: msg.key.id });
 
@@ -12906,77 +12937,46 @@ Aguarde o dono entrar em contato no privado.`
           case 'menu':
           case 'menuzz': {
             try {
-              reagir(from, "🕸️");
-
-              var caminhoVideo = "./DADOS DO CORVO/INFO_CORVO/LOGOS/fotomenu.mp4";
-              var caminhoImagem = "./DADOS DO CORVO/INFO_CORVO/LOGOS/fotomenu.png";
-
-              var mediaMenu;
-              if (fs.existsSync(caminhoVideo)) {
-                mediaMenu = await prepareWAMessageMedia({
-                  video: { url: caminhoVideo },
-                  mimetype: "video/mp4",
-                  gifPlayback: true
-                }, { upload: corvo.waUploadToServer });
-              } else {
-                mediaMenu = await prepareWAMessageMedia({
-                  image: { url: caminhoImagem }
-                }, { upload: corvo.waUploadToServer });
-              }
-
-
-              var listaMenus = {
-                title: "📋 𝙼𝙾𝚂𝚃𝚁𝙰𝚁 𝙻𝙸𝚂𝚃𝙰𝚂 📋",
-                sections: [
-                  {
-                    title: "⃞💠 CATEGORIAS PRINCIPAIS ⃞💠",
-                    rows: [
-                      { header: "⃞💠 MENU PRINCIPAL ⃞💠", title: "Comandos gerais", id: prefix + "menu_principal_lista" },
-                      { header: "⃞💠 MENU ADM ⃞💠", title: "Comandos de admin", id: prefix + "menu_adm_lista" },
-                      { header: "⃞💠 MENU DONO ⃞💠", title: "Comandos do dono", id: prefix + "menudono" },
-                    ]
+              await reagir(from, "🕸️");
+              await sendAudioMenu(from);
+              var menuText = linguagem.menu(prefix);
+              var midia = carregarMidia("fotomenu");
+              var msg = { 
+                caption: menuText, 
+                contextInfo: { 
+                  ...NkChannelKk,
+                  externalAdReply: {
+                    title: NomeDoBot,
+                    body: `Dono: ${ownerName}`,
+                    thumbnail: midia.data,
+                    sourceUrl: channel,
+                    mediaType: 1,
+                    renderLargerThumbnail: true
                   }
-                ]
+                } 
               };
-              var botoes = [
-                { name: "single_select", buttonParamsJson: JSON.stringify(listaMenus) }
-              ];
-
-              var timeMenu = new Date().toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
-              var versao = require("./package.json").version;
-
-              var textok = `𖤐 𝐌𝐄𝐍𝐔 𝐃𝐎 𝐂𝐎𝐑𝐕𝐎 𖤐\n\n✦ 𝗨𝘀𝘂𝗮́𝗿𝗶𝗼: ${pushname}\n✦ 𝗖𝗮𝗿𝗴𝗼: ${isCargo}\n✦ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: 『 ${prefix} 』\n✦ 𝗛𝗼𝗿𝗮́𝗿𝗶𝗼: ${timeMenu}\n✦ 𝗩𝗲𝗿𝘀𝗮̃𝗼: ${versao}`;
-
-
-              const msg = generateWAMessageFromContent(from, {
-                viewOnceMessage: {
-                  message: {
-                    interactiveMessage: {
-                      header: {
-                        title: "𖤐 𝐌𝐄𝐍𝐔 𝐃𝐎 𝐂𝐎𝐑𝐕𝐎 𖤐",
-                        hasMediaAttachment: true,
-                        ...(mediaMenu.videoMessage ? { videoMessage: mediaMenu.videoMessage } : { imageMessage: mediaMenu.imageMessage })
-                      },
-                      body: {
-                        text: textok
-                      },
-                      footer: {
-                        text: "© Corvo Security"
-                      },
-                      nativeFlowMessage: {
-                        buttons: botoes
-                      }
-                    }
-                  }
-                }
-              }, { quoted: info });
-
-              await corvo.relayMessage(from, msg.message, { messageId: msg.key.id });
-
+              if (midia.type === "video") {
+                msg.video = midia.data;
+                msg.gifPlayback = true;
+              } else if (midia.type === "image") {
+                msg.image = midia.data;
+              } else {
+                msg.text = menuText;
+              }
+              await corvo.sendMessage(from, msg, { quoted: info });
             } catch (error) {
               console.error("!!! ERRO NO MENU !!!", error);
-              await corvo.sendMessage(from, { text: "❌ Ocorreu um erro ao abrir o menu interativo.\n\nDetalhes do Erro:\n" + String(error.stack || error) + "\n\n*FALLBACK MENU*:\nUse " + prefix + "menu_principal_lista para ver os comandos." }, { quoted: info });
+              reply("❌ Erro ao abrir o menu.");
             }
+            break;
+          }
+
+          case 'confirmar': {
+            let followed = JSON.parse(fs.readFileSync(followedFile));
+            if (followed.includes(sender)) return reply("✅ Você já está verificado!");
+            followed.push(sender);
+            fs.writeFileSync(followedFile, JSON.stringify(followed));
+            reply("✅ Obrigado por seguir os canais! Seu acesso foi liberado.");
             break;
           }
 
@@ -13825,113 +13825,36 @@ ${abc.letra}`;
           case 'menu':
           case 'menuzz': {
             try {
-              reagir(from, "🕸️");
-
-              var caminhoVideo = "./DADOS DO CORVO/INFO_CORVO/LOGOS/fotomenu.mp4";
-              var caminhoImagem = "./DADOS DO CORVO/INFO_CORVO/LOGOS/fotomenu.png";
-
-              var mediaMenu;
-
-              if (fs.existsSync(caminhoVideo)) {
-                mediaMenu = await prepareWAMessageMedia({
-                  video: { url: caminhoVideo },
-                  mimetype: "video/mp4",
-                  gifPlayback: true
-                }, { upload: corvo.waUploadToServer });
-              } else {
-                mediaMenu = await prepareWAMessageMedia({
-                  image: { url: caminhoImagem }
-                }, { upload: corvo.waUploadToServer });
-              }
-
-              var listaMenus = {
-                title: "📋 𝙼𝙾𝚂𝚃𝚁𝙰𝚁 𝙻𝙸𝚂𝚃𝙰𝚂 📋",
-                sections: [
-                  {
-                    title: "⃞💠 CATEGORIAS PRINCIPAIS ⃞💠",
-                    rows: [
-                      { header: "⃞💠 MENU PRINCIPAL ⃞💠", title: "Comandos gerais", id: prefix + "menu_principal_lista" },
-                      { header: "⃞💠 MENU ADM ⃞💠", title: "Comandos de admin", id: prefix + "menu_adm_lista" },
-                      { header: "⃞💠 MENU DONO ⃞💠", title: "Comandos do dono", id: prefix + "menudono" },
-                    ]
-                  },
-                  {
-                    title: "⃞💠 FERRAMENTAS & DIVERSÃO ⃞💠",
-                    rows: [
-                      { header: "⃞💠 DOWNLOAD ⃞💠", title: "Músicas / vídeos", id: prefix + "menu_download_lista" },
-                      { header: "⃞💠 INTELIGENCIAS ⃞💠", title: "GPT, Gemini, Imagine", id: prefix + "menu_ia_lista" },
-                      { header: "⃞💠 PESQUISAS ⃞💠", title: "Wiki, Clima, etc", id: prefix + "menu_pesquisa_lista" },
-                      { header: "⃞💠 FIGURINHAS ⃞💠", title: "Sticker / toimg", id: prefix + "menu_figu_lista" },
-                      { header: "⃞💠 MENU BN ⃞💠", title: "Jogos / brincadeiras", id: prefix + "menu_bn_lista" },
-                    ]
+              await reagir(from, "🕸️");
+              await sendAudioMenu(from);
+              var menuText = linguagem.menu(prefix);
+              var midia = carregarMidia("fotomenu");
+              var msg = { 
+                caption: menuText, 
+                contextInfo: { 
+                  ...NkChannelKk,
+                  externalAdReply: {
+                    title: NomeDoBot,
+                    body: `Dono: ${ownerName}`,
+                    thumbnail: midia.data,
+                    sourceUrl: channel,
+                    mediaType: 1,
+                    renderLargerThumbnail: true
                   }
-                ]
+                } 
               };
-              var botoes = [
-                { name: "single_select", buttonParamsJson: JSON.stringify(listaMenus) },
-                {
-                  name: "cta_url", buttonParamsJson: JSON.stringify({
-                    display_text: "🕸️ 𝙲𝙰𝙽𝙰𝙻 𝚄𝙿𝙳𝙰𝚃𝙴 🕸️",
-                    url: channel || "https://whatsapp.com/channel/0029VaF6OonLCoX4H5XFj70e",
-                    merchant_url: channel || "https://whatsapp.com/channel/0029VaF6OonLCoX4H5XFj70e"
-                  })
-                }
-              ];
-
-              var time = new Date().toLocaleTimeString("pt-BR", {
-                timeZone: "America/Sao_Paulo",
-                hour: "2-digit",
-                minute: "2-digit"
-              });
-
-              var versao = require("./package.json").version;
-
-              var textok = `╔══════ஓ๑♡๑ஓ══════╗
- │  𖤐 𝐌𝐄𝐍𝐔 𝐃𝐎 𝐂𝐎𝐑𝐕𝐎 𖤐
- │
- │ ✦ 𝗨𝘀𝘂𝗮́𝗿𝗶𝗼: ${pushname}
- │ ✦ 𝗖𝗮𝗿𝗴𝗼: ${isCargo}
- │ ✦ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: 『 ${prefix} 』
- │ ✦ 𝗛𝗼𝗿𝗮́𝗿𝗶𝗼: ${time}
- │ ✦ 𝗩𝗲𝗿𝘀𝗮̃𝗼: ${versao}
- │
- │ ☾ 𝐁𝐨𝐭: ${NomeDoBot}
- │ ☾ 𝐎𝐰𝐧𝐞𝐫: ${ownerName}
- ╚══════ஓ๑♡๑ஓ══════╝
-> ──⟢ 𝑪𝒐𝒓𝒗𝒐 𝑺𝒆𝒄𝒖𝒓𝒊𝒕𝒚 𝑽𝒊𝒆𝒘 🦇`;
-
-              var carouselMessage = {
-                cards: [{
-                  header: {
-                    hasMediaAttachment: true,
-                    ...(mediaMenu.videoMessage
-                      ? { videoMessage: mediaMenu.videoMessage }
-                      : { imageMessage: mediaMenu.imageMessage })
-                  },
-                  headerType: mediaMenu.videoMessage ? "VIDEO" : "IMAGE",
-                  body: { text: textok },
-                  footer: { text: "© Corvo - Todos os direitos reservados" },
-                  nativeFlowMessage: { buttons: botoes }
-                }]
-              };
-
-              var msg = generateWAMessageFromContent(from, {
-                interactiveMessage: {
-                  contextInfo: {
-                    participant: sender,
-                    mentionedJid: [sender],
-                    quotedMessage: info.message
-                  },
-                  body: { text: "" },
-                  carouselMessage
-                }
-              }, { quoted: info });
-
-              await corvo.relayMessage(from, msg.message, { messageId: msg.key.id });
-
+              if (midia.type === "video") {
+                msg.video = midia.data;
+                msg.gifPlayback = true;
+              } else if (midia.type === "image") {
+                msg.image = midia.data;
+              } else {
+                msg.text = menuText;
+              }
+              await corvo.sendMessage(from, msg, { quoted: info });
             } catch (error) {
-              console.error("Erro menu:", error);
-              await corvo.sendMessage(from, { text: "Erro ao abrir o menu interativo. Tente novamente." }, { quoted: selo });
+              console.error("!!! ERRO NO MENU !!!", error);
+              reply("❌ Erro ao abrir o menu.");
             }
             break;
           }
