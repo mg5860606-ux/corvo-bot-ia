@@ -3070,14 +3070,14 @@ ${listaPrefixos}
 
         if (isCmd && isBanned) return reply(mess.bannedUser())
 
-        var totalhit = JSON.parse(fs.readFileSync('./DADOS DO CORVO/data/totalcmd.json'))
+        var totalhit = loadJson('./DADOS DO CORVO/data/totalcmd.json', [{ totalcmd: 0 }])
         var CmdUsedBOT = () => {
           totalhit[0].totalcmd += 1
           fs.writeFileSync('./DADOS DO CORVO/data/totalcmd.json', JSON.stringify(totalhit))
         }
         if (isCmd) CmdUsedBOT()
 
-        var reqcmd = JSON.parse(fs.readFileSync('./DADOS DO CORVO/data/totalcmd.json'))
+        var reqcmd = loadJson('./DADOS DO CORVO/data/totalcmd.json', [{ totalcmd: 0 }])
 
         if (isGroup && isCmd && !isGroupAdmins && !SoDono && !isVip && dataGp[0]?.Limitar_CMD) {
           var TEMPO_A = Math.floor(Date.now() / 1000)
