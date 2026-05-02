@@ -12942,24 +12942,29 @@ Aguarde o dono entrar em contato no privado.`
               await sendAudioMenu(from);
               var menuText = linguagem.menu(prefix);
               var midia = carregarMidia("fotomenu");
+              
+              var extAd = {
+                title: NomeDoBot,
+                body: `Dono: ${ownerName}`,
+                sourceUrl: channel,
+                mediaType: 1,
+                renderLargerThumbnail: true
+              };
+              if (midia.type !== "text") extAd.thumbnail = midia.data;
+
               var msg = { 
-                caption: menuText, 
                 contextInfo: { 
                   ...NkChannelKk,
-                  externalAdReply: {
-                    title: NomeDoBot,
-                    body: `Dono: ${ownerName}`,
-                    thumbnail: midia.data,
-                    sourceUrl: channel,
-                    mediaType: 1,
-                    renderLargerThumbnail: true
-                  }
+                  externalAdReply: extAd
                 } 
               };
+
               if (midia.type === "video") {
+                msg.caption = menuText;
                 msg.video = midia.data;
                 msg.gifPlayback = true;
               } else if (midia.type === "image") {
+                msg.caption = menuText;
                 msg.image = midia.data;
               } else {
                 msg.text = menuText;
