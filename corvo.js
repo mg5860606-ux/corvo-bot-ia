@@ -180,16 +180,11 @@ try {
 
 // =========================================================================
 
-global.modoAI = JSON.parse(
-  fs.readFileSync("./database/modoai.json")
-)
-
-global.antiFlood = {}
-global.floodData = {}
-
 function loadJson(file, fallback = {}) {
   try {
     if (!fs.existsSync(file)) {
+      const path = require('path');
+      fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file, JSON.stringify(fallback, null, 2))
       return fallback
     }
@@ -199,6 +194,11 @@ function loadJson(file, fallback = {}) {
     return fallback
   }
 }
+
+global.modoAI = loadJson("./database/modoai.json", {})
+
+global.antiFlood = {}
+global.floodData = {}
 
 function saveJson(file, data) {
   try {
@@ -419,10 +419,10 @@ const followedFile = './DADOS DO CORVO/usuarios/followed.json';
 if (!fs.existsSync('./DADOS DO CORVO/usuarios')) fs.mkdirSync('./DADOS DO CORVO/usuarios', { recursive: true });
 if (!fs.existsSync(followedFile)) fs.writeFileSync(followedFile, JSON.stringify([]));
 
-const palavras = JSON.parse(fs.readFileSync('./DADOS DO CORVO/data/media/forca/palavras.json'));
+const palavras = loadJson('./DADOS DO CORVO/data/media/forca/palavras.json', []);
 
 const forca = require('./DADOS DO CORVO/data/media/forca/index.js');
-const frames = JSON.parse(fs.readFileSync('./DADOS DO CORVO/data/media/forca/frames.json'));
+const frames = loadJson('./DADOS DO CORVO/data/media/forca/frames.json', []);
 const { sendButton, sendListB } = require(`./ARQUIVES/funcoes/botoes.js`)
 const { fundolevel, fundo2, fundo1, linklogos, imgnazista, imggay, imgcorno, imggostosa, imggostoso, imgfeio, imggado, imgvesgo, imgbebado, tapacmd, matarcmd, beijocmd, chutecmd, cmdmenu, deathcmd, rnkgay, rnkgado, rnkcorno, rnkgostoso, rnkgostosa, rnknazista, rnkotaku, errocmd, rnkpau, suruba, minado_bomb, thumbnail, imgsigma, imgbeta, imgbaiano, imgbaiana, imgcarioca, imglouco, imglouca, imgsafada, imgsafado, imgmacaco, imgmacaca, imgputa, rnksigma, rnkbeta, rnkbaiano, rnkbaiana, rnkcarioca, rnklouco, rnklouca, rnksafada, rnksafado, rnkmacaco, rnkmacaca, rnkputa, img1, img2, img3, rankbct, rankcu, rankfalido, rankcasal, casal, Gozar, imgperfil, enigma, rvenigma, semimg, comer, capinarlote, pgpeito, pgbunda, morder, sentar, tirarft, carinho, soco, namorar, getcase, criador, fundo, idade, Pix, status, donos, infodono, boquete, cagar, cu, abraco, lavarlouca, matar, leitada, lindacmd, lindocmd, fielcmd, pgpau } = require("./DADOS DO CORVO/INFO_CORVO/LOGOS/links_img.json");
 
