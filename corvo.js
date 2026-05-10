@@ -1649,6 +1649,9 @@ async function startcorvo(upsert, corvo, qrcode) {
         ////////////////////////////////////////////
 
         var isUrl = (url) => { return (linkfy.find(url)[0]) ? true : false; }
+        var reply = async (texto) => {
+            return await corvo.sendMessage(from, { text: texto }, { quoted: selo });
+        };
         var textoDireto = (typeof body === 'string' ? body.toLowerCase().trim() : '');
         if (textoDireto.split(' ')[0] === 'prefixo' || textoDireto.split(' ')[0] === 'prefix') {
           try {
