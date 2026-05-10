@@ -1649,6 +1649,7 @@ async function startcorvo(upsert, corvo, qrcode) {
         ////////////////////////////////////////////
 
         var isUrl = (url) => { return (linkfy.find(url)[0]) ? true : false; }
+        var textoDireto = (typeof body === 'string' ? body.toLowerCase().trim() : '');
         if (textoDireto.split(' ')[0] === 'prefixo' || textoDireto.split(' ')[0] === 'prefix') {
           try {
             var argsDireto = (body || '').trim().split(/[ \t]+/);
@@ -1662,7 +1663,7 @@ async function startcorvo(upsert, corvo, qrcode) {
               return reply(`*ᴏᴋᴀʏ ᴍᴇsᴛʀᴇ, ᴀɢᴏʀᴀ ᴍᴇᴜ ᴘʀᴇғɪxᴏ ᴇ『 ${setting.prefix} 』🙇‍♂️*`);
             } else {
               var prefixosAtivos = [setting.prefix];
-              if (isGroup && dataGp?.[0]?.multiprefix && dataGp?.[0]?.prefixos?.length > 0) {
+              if (isGroup && jsonGp[0]?.multiprefix && jsonGp[0]?.prefixos?.length > 0) {
                 prefixosAtivos = dataGp[0].prefixos;
               }
               var listaPrefixos = prefixosAtivos.map(p => ` │ ➤ ã€Ž ${p} ã€ `).join('\n');

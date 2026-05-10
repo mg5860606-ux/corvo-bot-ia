@@ -1,7 +1,7 @@
 {
     "antipv": false,
     "antipv2": false,
-    "antipv3": true,
+    "antipv3": false,
     "consoleoff": true,
     "menu_audio": true,
     "verificado": false,
