@@ -175,6 +175,13 @@ async function startConnect() {
         syncFullHistory: false,
         keepAliveIntervalMs: 60000,
         markOnlineOnConnect: true,
+        getMessage: async (key) => {
+            if (store) {
+                const msg = await store.loadMessage(key.remoteJid, key.id);
+                return msg?.message || undefined;
+            }
+            return { conversation: "" };
+        }
     });
 
     if (usePairingCode && !hasSession && botNumber) {

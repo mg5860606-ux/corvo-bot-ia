@@ -1,7 +1,7 @@
 
 const axios = require("axios");
 
-const ACCESS_TOKEN = 'APP_USR-4913356679055981-122308-4ba3fe9aac67a0451de578e6e7dea9a6-1203777754'; 
+const ACCESS_TOKEN = global.MERCADOPAGO_TOKEN || ''; 
 
 async function criarPagamentoPix(valorCompra, descricao, idempotencyKey) {
     const payment_data = {

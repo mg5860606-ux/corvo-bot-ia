@@ -61,6 +61,10 @@ exports.wait = () => {
 return '*ᴀɢᴜᴀʀᴅᴇ ᴜᴍ ᴍᴏᴍᴇɴᴛᴏ ǫᴜᴇ ᴊᴀ ᴇsᴛᴏᴜ ᴇɴᴠɪᴀɴᴅᴏ ᴏ sᴇᴜ ᴘᴇᴅɪᴅᴏ 🙇‍♂️*'
 }
 
+exports.iaOff = () => {
+return '🤖 *INTELIGÊNCIA ARTIFICIAL DESATIVADA!* ❌\n\n- Peça ao meu dono para ativar usando o comando: */corvoia*'
+}
+
 exports.onlyAdmins = () => {
 return '*sᴏᴍᴇɴᴛᴇs ᴀᴅᴍs ᴘᴏᴅᴇᴍ ᴜsᴀʀ ᴇssᴇ ᴄᴏᴍᴀɴᴅᴏ 🙇‍♂️*'
 }

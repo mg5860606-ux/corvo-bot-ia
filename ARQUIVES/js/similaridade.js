@@ -1,42 +1,33 @@
-const rmLetras = (txt) =>
-  txt.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+const fuzzySimilarity = (word1, word2) => {
+    const generateNGrams = (word, n) => {
+        const nGrams = [];
+        for (let i = 0; i < word.length - n + 1; i++) {
+            nGrams.push(word.slice(i, i + n));
+        }
+        return nGrams;
+    };
+    const nGrams1 = generateNGrams(word1, 2);
+    const nGrams2 = generateNGrams(word2, 2);
+    const commonNGrams = nGrams1.filter(nGram => nGrams2.includes(nGram));
+    return Math.round((2 * commonNGrams.length) / (nGrams1.length + nGrams2.length) * 100) || 0;
+};
 
-const getdistance = (a, b) => {
-  const lenA = a.length, lenB = b.length
-  if (!lenA) return lenB
-  if (!lenB) return lenA
+module.exports = (allCases, targetWord, prefix = '/') => {
+    let mostSimilarCommand = "";
+    let highestSimilarity = -1;
+    const cleanTarget = targetWord.toLowerCase().trim();
 
-  const matrix = Array.from({ length: lenB + 1 }, (_, i) => [i])
-  for (let j = 1; j <= lenA; j++) matrix[0][j] = j
-
-  for (let i = 1; i <= lenB; i++) {
-    for (let j = 1; j <= lenA; j++) {
-      matrix[i][j] = b[i - 1] === a[j - 1]
-        ? matrix[i - 1][j - 1]
-        : Math.min(matrix[i - 1][j - 1], matrix[i][j - 1], matrix[i - 1][j]) + 1
+    for (const cmd of allCases) {
+        if (!cmd) continue;
+        const similarity = fuzzySimilarity(cleanTarget, cmd.toLowerCase());
+        if (similarity > highestSimilarity) {
+            highestSimilarity = similarity;
+            mostSimilarCommand = cmd;
+        }
     }
-  }
-  return matrix[lenB][lenA]
-}
 
-const getSimilarity = (array, txt, prefix) => {
-  let melhorNome = `${prefix}ᴍᴇɴᴜ`, melhorScore = 0
-  const base = rmLetras(txt)
-
-  for (const word of array) {
-    const distance = getdistance(base, word.toLowerCase())
-    const maxLen = Math.max(base.length, word.length)
-    const score = 1 - distance / maxLen
-    if (score > melhorScore) {
-      melhorScore = score
-      melhorNome = word
-    }
-  }
-
-  return {
-    nome: melhorNome,
-    porcentagem: melhorScore * 100
-  }
-}
-
-module.exports = getSimilarity
+    return {
+        nome: mostSimilarCommand,
+        porcentagem: highestSimilarity
+    };
+};

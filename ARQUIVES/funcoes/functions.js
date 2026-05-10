@@ -28,7 +28,14 @@ const cor3 = corzinhas[Math.floor(Math.random() * (corzinhas.length))];
 const cor4 = corzinhas[Math.floor(Math.random() * (corzinhas.length))];	
 const cor5 = corzinhas[Math.floor(Math.random() * (corzinhas.length))];
 
-const ceemde = JSON.parse(fs.readFileSync('./DADOS DO CORVO/data/totalcmd.json'));
+let ceemde = [{ totalcmd: 0 }];
+try {
+  if (fs.existsSync('./DADOS DO CORVO/data/totalcmd.json')) {
+    ceemde = JSON.parse(fs.readFileSync('./DADOS DO CORVO/data/totalcmd.json'));
+  }
+} catch (e) {
+  console.error("Error reading totalcmd.json:", e);
+}
 
 const getpc = async function(totalchat){
 pc = [];

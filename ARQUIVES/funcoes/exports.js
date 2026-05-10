@@ -37,13 +37,13 @@ const { awaitMessage } = require('../../ARQUIVES/funcoes/awaitMessage.js');
 const { extractMetadata } = require('../../ARQUIVES/funcoes/extractMetadata.js')
 const LoggerB = require('@whiskeysockets/baileys/lib/Utils/logger').default;
 const packname = JSON.parse(fs.readFileSync('./package.json'));
-const { arcloud, identificarMusica } = require('../../ARQUIVES/js/arcc.js');
-const { addBanned, unBanned, BannedExpired, cekBannedUser } = require("../../ARQUIVES/js/banned.js");
+// const { arcloud, identificarMusica } = require('../../src/scrapers/arcc.js');
+// const { addBanned, unBanned, BannedExpired, cekBannedUser } = require("../../src/database/banned.js");
     const namoro1 = JSON.parse(fs.readFileSync("./DADOS DO CORVO/func/namoro1.json"));
 const namoro2 = JSON.parse(fs.readFileSync("./DADOS DO CORVO/func/namoro2.json"));
 const { validmove, setGame } = require('../../ARQUIVES/tictactoe');
-const { addComandosId, deleteComandos, getComandoBlock, getComandos, addComandos } =  require('../../ARQUIVES/js/addcmd.js');
-const { palavrasANA, quizanimais, enigmaArchive, garticArchives, whatMusicAr, quizFutebol } = require('../../ARQUIVES/js/jogos.js');
+// const { addComandosId, deleteComandos, getComandoBlock, getComandos, addComandos } =  require('../../src/database/addcmd.js');
+// const { palavrasANA, quizanimais, enigmaArchive, garticArchives, whatMusicAr, quizFutebol } = require('../../src/utils/jogos.js');
 const { wait, getExtension, generateMessageID, getMembros, getGroupAdmins, normalizeJid, getRandom, banner, banner2, banner3, temporizador, chyt, getBuffer, fetchJson, fetchText, createExif, getBase64, convertSticker, upload, nit, getpc, supre, recognize, color, pegarCases, carregarMidia } = require('../../ARQUIVES/funcoes/functions.js'); // É necessário para algumas funções funcionar perfeitamente.
 const { writeExifImg } = require('../../ARQUIVES/sticker/exif.js')
 const { writeExif2 } = require('../../ARQUIVES/sticker/exif2.js')
@@ -104,7 +104,30 @@ const advices = loadJson('./ARQUIVES/json/advices.json', []);
 const { linguagem, mess, getInfo } = require('../../DADOS DO CORVO/INFO_CORVO/lib');
 const { psycatgames, vyroEngine } = require('../../ARQUIVES/funcoes/scrapper.js');
 const { destrava, destrava2 } = require('../../ARQUIVES/funcoes/destrava.js');
-const { tabela } = require('../../ARQUIVES/js/tabela.js');
+// const { tabela } = require('../../src/utils/tabela.js');
+
+
+// Placeholder functions for missing modules
+const addBanned = () => {};
+const unBanned = () => {};
+const BannedExpired = () => {};
+const cekBannedUser = () => false;
+const addComandosId = () => {};
+const deleteComandos = () => {};
+const getComandoBlock = () => [];
+const getComandos = () => true;
+const addComandos = () => {};
+const palavrasANA = () => {};
+const quizanimais = () => {};
+const enigmaArchive = () => {};
+const garticArchives = () => {};
+const whatMusicAr = () => {};
+const quizFutebol = () => {};
+const tabela = () => {};
+const arcloud = () => {};
+const identificarMusica = () => {};
+// Removed validmove and setGame from undefined since they are already declared at line 44
+
 
 // Deletar ARQUIVES:
 function DLT_FL(file) {
@@ -136,7 +159,7 @@ headerType: 1, mentions: [MR]};
 var buttonMessage = {
 video: {url: X.split("|")[1]},
 caption: text1, footer: desc1,
-buttons: QNT_B, headerType: 1, mentions: [ME]}}
+buttons: QNT_B, headerType: 1, mentions: [corvo]}}
 corvo.sendMessage(id, buttonMessage, {quoted: vr}).catch(e => {
 return console.log("Erro no botão, Tente novamente ou avalie o que pode está errando.. "+e);
 })}}
