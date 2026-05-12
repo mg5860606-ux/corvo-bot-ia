@@ -24,7 +24,7 @@ const getUserName = getName;
 const moment = require('moment-timezone');
 const path = require('path');
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+
 const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const dama = require('./ARQUIVES/games/dama.js');
 const lig4 = require('./ARQUIVES/games/lig4.js');
@@ -468,7 +468,7 @@ global.APIS = {
     // 4. GOOGLE GEMINI
     // Serve para: Respostas alternativas e visão computacional.
     // Onde pegar: https://aistudio.google.com/app/apikey (Gratuito)
-    GEMINI_KEY: "AIzaSyDy24oHhwBaEiu-8Y9VOPQmQfwKlPhDVGg",
+    GEMINI_KEY: "COLOQUE_SUA_API_KEY_AQUI",
 
     // 5. OPENROUTER
     // Serve para: Acesso a dezenas de modelos de IA no comando /chatgpt.
@@ -619,8 +619,167 @@ async function startcorvo(upsert, corvo, qrcode) {
         var info = upsert.messages[0];
         if (!info.message) return;
 
+async function startcorvo(upsert, corvo, qrcode) {
+    try {
+        if (!upsert || !upsert.messages || upsert.messages.length === 0) return;
+        var info = upsert.messages[0];
+        if (!info.message) return;
+
         async function startFunctionNaga() {
             var ownerNumber = setting.ownerNumber.replace(new RegExp("[()+-/ +/]", "gi"), "")
+
+            //========================================================================
+            // INICIO DE COMANDOS DE FECHAR E ABRIR GRUPO NO HORÁRIO PROGRAMADO!!
+            // (Movido para fora do loop para evitar vazamento de recursos)
+            //========================================================================
+            var horarios = {};
+            var horariosPath = './ARQUIVES/tictactoe/grupo.json';
+            var ultimaExecucao = {};
+
+            if (fs.existsSync(horariosPath)) {
+                try {
+                    horarios = JSON.parse(fs.readFileSync(horariosPath));
+                } catch (e) {
+                    console.error('erro ao carregar horarios:', e);
+                    horarios = {};
+                }
+            }
+
+            var salvarHorarios = () => {
+                fs.writeFileSync(horariosPath, JSON.stringify(horarios, null, 2));
+            };
+
+            var definirFechamento = (from, horario) => {
+                horarios[from] = horarios[from] || {};
+                horarios[from].fechamento = horario;
+                salvarHorarios();
+            };
+
+            var definirAbertura = (from, horario) => {
+                horarios[from] = horarios[from] || {};
+                horarios[from].abertura = horario;
+                salvarHorarios();
+            };
+
+            var removerHorarios = (from) => {
+                if (horarios[from]) {
+                    delete horarios[from];
+                    salvarHorarios();
+                }
+            };
+
+            if (global.intervalHorarios) clearInterval(global.intervalHorarios);
+            global.intervalHorarios = setInterval(async () => {
+                var time2 = moment().tz('America/Sao_Paulo').format('HH:mm:ss');
+                if (fs.existsSync(horariosPath)) {
+                    try {
+                        horarios = JSON.parse(fs.readFileSync(horariosPath));
+                    } catch (e) {
+                        horarios = {};
+                    }
+                }
+
+                for (var fromIdx in horarios) {
+                    var horario = horarios[fromIdx];
+                    if (!horario) continue;
+                    try {
+                        if (horario.fechamento && time2 === horario.fechamento) {
+                            if (ultimaExecucao[fromIdx + '_fechamento'] !== horario.fechamento) {
+                                await corvo.groupSettingUpdate(fromIdx, 'announcement');
+                                await corvo.sendMessage(fromIdx, { text: mess.abertura() });
+                                ultimaExecucao[fromIdx + '_fechamento'] = horario.fechamento;
+                            }
+                        }
+                        if (horario.abertura && time2 === horario.abertura) {
+                            if (ultimaExecucao[fromIdx + '_abertura'] !== horario.abertura) {
+                                await corvo.groupSettingUpdate(fromIdx, 'not_announcement');
+                                await corvo.sendMessage(fromIdx, { text: mess.fechamento(horario) });
+                                ultimaExecucao[fromIdx + '_abertura'] = horario.abertura;
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }, 1000);
+
+            //========================================================================
+            // FUNÇÕES DE MENU (Movidas para fora do loop para escopo estável)
+            //========================================================================
+            async function sendMenu(from, selo, opt = {}, context = {}) {
+                var {
+                    reaction = "⚡",
+                    caption = mess.error(),
+                    isGroupRequired = false,
+                    isAdminRequired = false,
+                    isOwnerRequired = false,
+                    isModoCoinsRequired = false,
+                    isModoBnRequired = false,
+                    sendAudio = true
+                } = opt;
+
+                // Extrair contexto (necessário agora que a função está fora do loop)
+                var { isGroup, isGroupAdmins, SoDono, isModoCoins, isModobn, prefix, sender, isAudioMenu, reagir, reply } = context;
+
+                try {
+                    if (reagir) reagir(from, reaction);
+                    if (isGroupRequired && !isGroup) return reply(mess.onlyGroup());
+                    if (isAdminRequired && !isGroupAdmins && !SoDono) return reply(mess.onlyAdmins());
+                    if (isOwnerRequired && !SoDono) return reply(mess.onlyOwner());
+                    if (isModoCoinsRequired && !isModoCoins) return reply(`*ᴇssᴇ ᴄᴏᴍᴀɴᴅᴏ só ᴘᴏᴅᴇ sᴇʀ ᴀᴛɪᴠᴏ ǫᴜᴀɴᴅᴏ ᴏ sɪᴛᴇᴍᴀ ${prefix}ᴍᴏᴅᴏᴄᴏɪɴs ᴇsᴛɪᴠᴇʀ ᴀᴛɪᴠᴏ.*`);
+                    if (isModoBnRequired && !isModobn) return reply(mess.onlyGroupFun(prefix));
+
+                    const cargo = SoDono ? "Dono" : isGroupAdmins ? "Admin" : (context.isVip ? "Vip" : "Membro");
+                    const data = moment.tz('America/Sao_Paulo').format('DD/MM/YYYY');
+                    const hora = moment.tz('America/Sao_Paulo').format('HH:mm:ss');
+                    const totalCmds = Object.keys(megaAliases).length;
+
+                    const header = `╭━━━❃ ° • ° ๑ ۩ ๑ ° • ° ❃━━━╮\n` +
+                        `│ 👤 Usuário: @${sender.split('@')[0]}\n` +
+                        `│ 🔰 Cargo: ${cargo}\n` +
+                        `│ 📅 Data: ${data}\n` +
+                        `│ ⏰ Hora: ${hora}\n` +
+                        `│ 🗃️ Comandos: ${totalCmds}\n` +
+                        `╰━━━❃ ° • ° ๑ ۩ ๑ ° • ° ❃━━━╯\n\n`;
+
+                    const finalCaption = header + caption;
+
+                    if (sendAudio && isAudioMenu) await sendAudioMenu(from);
+                    var midia = carregarMidia("fotomenu");
+                    var msg = { caption: finalCaption, contextInfo: { ...NkChannelKk, mentionedJid: [sender] } };
+                    if (midia.type === "video") {
+                        msg.video = midia.data;
+                        msg.gifPlayback = true;
+                    } else if (midia.type === "image") {
+                        msg.image = midia.data;
+                    } else {
+                        msg.text = finalCaption;
+                    }
+                    await corvo.sendMessage(from, msg, { quoted: selo });
+                } catch (e) {
+                    console.error(e);
+                    await corvo.sendMessage(from, { text: caption, contextInfo: { ...NkChannelKk } }, { quoted: selo });
+                }
+            }
+
+            async function sendMenuWithMedia(from, selo, menuKey, menuFunc, context = {}) {
+                var reaction = "⚡";
+                if (menuKey === 'admin') reaction = "👮";
+                if (menuKey === 'ia') reaction = "🤖";
+                if (menuKey === 'downloads') reaction = "📥";
+                
+                var caption = "";
+                if (typeof menuFunc === 'function') {
+                    caption = menuFunc(context.prefix);
+                } else {
+                    caption = menuFunc; // Já é string
+                }
+
+                await sendMenu(from, selo, {
+                    reaction: reaction,
+                    caption: caption,
+                    sendAudio: true
+                }, context);
+            }
+
             for (var info of upsert?.messages || []) {
                 var from = info.key.remoteJid;
                 var isGroup = from.endsWith('@g.us');
@@ -2116,9 +2275,9 @@ async function startcorvo(upsert, corvo, qrcode) {
                                     var chatAccept = `
 *『 🎮 』ᒍOᘜO ᗪᗩ ᐯᗴᒪᕼᗩ『 🕹 』*
 
-❌ : @${boardnow.X}
-⭕ : @${boardnow.O}
-• Sua vez : @${boardnow.turn == "X" ? boardnow.X : boardnow.O}\n\n${matrix[0][0]}  ${matrix[0][1]}  ${matrix[0][2]}\n${matrix[1][0]}  ${matrix[1][1]}  ${matrix[1][2]}\n${matrix[2][0]}  ${matrix[2][1]}  ${matrix[2][2]}`;
+❌ : @${boardnow.X} (${getName(boardnow.X + '@s.whatsapp.net')})
+⭕ : @${boardnow.O} (${getName(boardnow.O + '@s.whatsapp.net')})
+• Sua vez : @${boardnow.turn == "X" ? boardnow.X : boardnow.O} (${getName((boardnow.turn == "X" ? boardnow.X : boardnow.O) + '@s.whatsapp.net')})\n\n${matrix[0][0]}  ${matrix[0][1]}  ${matrix[0][2]}\n${matrix[1][0]}  ${matrix[1][1]}  ${matrix[1][2]}\n${matrix[2][0]}  ${matrix[2][1]}  ${matrix[2][2]}`;
                                     mention(chatAccept);
                                 }
                             } else if (
@@ -2129,7 +2288,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                                 if (boardnow.O == sender.replace("@s.whatsapp.net", "")) {
                                     if (boardnow.status) return reply(`O jogo começou ou já existe uma partida aberta neste grupo! Por favor, caso ninguém esteja jogando ou houve um erro desconhecido na função, entre em contato com o criador ou solicite à um adm para usar o  comando '${prefix}resetvelha' no grupo.`);
                                     DLT_FL(`./ARQUIVES/tictactoe/db/${from}.json`);
-                                    mention(`Nossa @${boardnow.X}, infelizmente o seu oponente não aceitou seu desafio!, ❌😕`)
+                                    mention(`Nossa @${boardnow.X} (${getName(boardnow.X + '@s.whatsapp.net')}), infelizmente o seu oponente não aceitou seu desafio!, ❌😕`)
                                     joguinhodavelhajs.splice([])
                                     fs.writeFileSync('./DADOS DO CORVO/usuarios/joguinhodavelha.json', JSON.stringify(joguinhodavelhajs))
                                     joguinhodavelhajs2.splice([])
@@ -2169,7 +2328,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                                     joguinhodavelhajs2.splice([])
                                     fs.writeFileSync('./DADOS DO CORVO/usuarios/joguinhodavelha2.json', JSON.stringify(joguinhodavelhajs2))
                                 }, 300000) //5 minutos
-                                await mention(`Parabéns *@${winnerJID}*, você ganhou a partida do jogo da velha! 😍🎯`)
+                                await mention(`Parabéns *@${winnerJID}* (${getName(winnerJID + '@s.whatsapp.net')}), você ganhou a partida do jogo da velha! 😍🎯`)
                                 DLT_FL(`./ARQUIVES/tictactoe/db/${from}.json`);
                                 joguinhodavelhajs.splice([])
                                 fs.writeFileSync('./DADOS DO CORVO/usuarios/joguinhodavelha.json', JSON.stringify(joguinhodavelhajs))
@@ -4531,7 +4690,7 @@ Aviso ${user.avisos}/${maxAvisos}`,
                                 image: { url: imgCasamento },
                                 caption: `💒 *CASAMENTO ACEITO!* 💒
 
-@${meuNum} disse *SIM* para @${remetenteNum}!
+@${meuNum} (${getName(sender)}) disse *SIM* para @${remetenteNum} (${getName(remetente)})!
 
 Agora vocês estão *casados* oficialmente! ❤️`,
                                 mentions: [sender, remetente],
@@ -4550,7 +4709,7 @@ Agora vocês estão *casados* oficialmente! ❤️`,
                             await reagir(from, '💔')
 
                             await corvo.sendMessage(from, {
-                                text: `💔 @${meuNum} recusou o pedido de casamento de @${remetenteNum}.`,
+                                text: `💔 @${meuNum} (${getName(sender)}) recusou o pedido de casamento de @${remetenteNum} (${getName(remetente)}).`,
                                 mentions: [sender, remetente],
                                 contextInfo: { ...NkChannelKk, mentionedJid: [sender, remetente] }
                             }, { quoted: selo })
@@ -5111,7 +5270,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         const challenge = global.gameChallenges[from];
                         if (sender === challenge.target) {
                             if (isReject) {
-                                mention(`❌ @${challenge.target.split('@')[0]} recusou o desafio de @${challenge.host.split('@')[0]}!`, [challenge.target, challenge.host]);
+                                mention(`❌ @${challenge.target.split('@')[0]} (${getName(challenge.target)}) recusou o desafio de @${challenge.host.split('@')[0]} (${getName(challenge.host)})!`, [challenge.target, challenge.host]);
                                 delete global.gameChallenges[from];
                                 return;
                             }
@@ -5411,7 +5570,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         const target = mentioned[0];
 
                         const game = rimas.initGame(from, sender, target);
-                        mention(`🎤 *BATALHA DE RIMAS!*\n\n🔥 @${sender.split('@')[0]} vs @${target.split('@')[0]}\n\n*PALAVRA BASE:* ${game.word.toUpperCase()}\n\n👉 Quem rimar primeiro ganha! Digite \`r-rima palavra\``);
+                        mention(`🎤 *BATALHA DE RIMAS!*\n\n🔥 ${getName(sender)} (@${sender.split('@')[0]}) vs ${getName(target)} (@${target.split('@')[0]})\n\n*PALAVRA BASE:* ${game.word.toUpperCase()}\n\n👉 Quem rimar primeiro ganha! Digite \`r-rima palavra\``);
                     }
                         break;
 
@@ -5420,7 +5579,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         const result = rimas.play(from, sender, q);
                         if (result.error) return reply(`❌ ${result.error}`);
                         
-                        mention(`🏆 *TEMOS UM VENCEDOR!* @${sender.split('@')[0]} rimou corretamente!\n\nPalavra rima: ${q.toUpperCase()}`);
+                        mention(`🏆 *TEMOS UM VENCEDOR!* @${sender.split('@')[0]} (${getName(sender)}) rimou corretamente!\n\nPalavra rima: ${q.toUpperCase()}`);
                     }
                         break;
 
@@ -5478,7 +5637,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         const result = stop.play(from, sender, q);
                         if (result.error) return reply(`❌ ${result.error}`);
                         
-                        mention(`🎉 *STOP!!!* 🎉\n\n@${result.winner.split('@')[0]} completou primeiro!\n\nLetra: *${result.letter}*\nRespostas aceitas:\n${result.categories.map((c, i) => `- ${c}: ${result.answers[i]}`).join('\n')}`);
+                        mention(`🎉 *STOP!!!* 🎉\n\n@${result.winner.split('@')[0]} (${getName(result.winner)}) completou primeiro!\n\nLetra: *${result.letter}*\nRespostas aceitas:\n${result.categories.map((c, i) => `- ${c}: ${result.answers[i]}`).join('\n')}`);
                     }
                         break;
 
@@ -32746,7 +32905,10 @@ BELE KAFFER
                             akinator.push({ id: from, jogador: sender, finish: 0, dia: dateAKI })
                             fs.writeFileSync("./DADOS DO CORVO/grupos/games/akinator.json", JSON.stringify(akinator, null, 2))
                             reply(`🧞‍♂️ *𝐀𝐊𝐈𝐍𝐀𝐓𝐎𝐑 𝐐𝐔𝐄𝐒𝐓𝐈𝐎𝐍𝐒:*\n• Questão: *${aki.question}*`)
-                        } else return mention(`@${akinator[akinator.map(i => i.id).indexOf(from)].jogador.split('@')[0]} já iniciou uma partida, espere ele(a) finalizar a atual para iniciar outra...`)
+                        } else {
+                            const curAkiPlayer = akinator[akinator.map(i => i.id).indexOf(from)].jogador;
+                            return mention(`@${curAkiPlayer.split('@')[0]} (${getName(curAkiPlayer)}) já iniciou uma partida, espere ele(a) finalizar a atual para iniciar outra...`);
+                        }
                         break
 
                     case 'resetaki':
