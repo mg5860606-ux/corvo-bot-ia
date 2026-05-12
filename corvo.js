@@ -795,7 +795,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                         var jidLimpo = jid.replace(/:.*(?=@)/, '');
                         for (var p of participants) {
                             var pIds = [p.id, p.jid, p.lid, p.phoneNumber, p.participant]
-                                .filter(Boolean).map(x => x.replace(/:.*(?=@)/, ''));
+                                .filter(Boolean).map(x => String(x).replace(/:.*(?=@)/, ''));
                             if (pIds.includes(jidLimpo) || pIds.some(x => x.split('@')[0] === jidLimpo.split('@')[0])) {
                                 if (p.notify) return p.notify;
                                 if (p.name) return p.name;
@@ -1220,7 +1220,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                 function senderMatchesParticipant(p) {
                     var pIds = [p.id, p.jid, p.lid, p.phoneNumber, p.participant]
                         .filter(Boolean)
-                        .map(x => x.replace(/:.*(?=@)/, ''));
+                        .map(x => String(x).replace(/:.*(?=@)/, ''));
                     return pIds.some(pid => senderAllIds.has(pid));
                 }
 
@@ -1335,7 +1335,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                         for (var sid of senderAllIds) {
                             var sidLimpo = sid.replace(/:.*(?=@)/, '');
                             for (var p of groupMetadata.participants) {
-                                var pIds = [p.id, p.jid, p.lid, p.phoneNumber, p.participant].filter(Boolean).map(x => x.replace(/:.*(?=@)/, ''));
+                                var pIds = [p.id, p.jid, p.lid, p.phoneNumber, p.participant].filter(Boolean).map(x => String(x).replace(/:.*(?=@)/, ''));
                                 if (pIds.includes(sidLimpo)) {
                                     var pNums = pIds.map(x => x.split('@')[0]);
                                     if (pNums.some(n => donoNums.includes(n))) return true;
@@ -1365,7 +1365,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                         for (var sid of senderAllIds) {
                             var sidLimpo = sid.replace(/:.*(?=@)/, '');
                             for (var p of groupMetadata.participants) {
-                                var pIds = [p.id, p.jid, p.lid, p.phoneNumber, p.participant].filter(Boolean).map(x => x.replace(/:.*(?=@)/, ''));
+                                var pIds = [p.id, p.jid, p.lid, p.phoneNumber, p.participant].filter(Boolean).map(x => String(x).replace(/:.*(?=@)/, ''));
                                 if (pIds.includes(sidLimpo)) {
                                     var pNums = pIds.map(x => x.split('@')[0]);
                                     if (pNums.includes(donoNum)) return true;
@@ -1421,7 +1421,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                         if (p.admin !== 'admin' && p.admin !== 'superadmin') return false;
                         var pIds = [p.id, p.jid, p.lid, p.phoneNumber, p.participant]
                             .filter(Boolean)
-                            .map(x => x.replace(/:.*(?=@)/, ''));
+                            .map(x => String(x).replace(/:.*(?=@)/, ''));
                         return pIds.some(pid => botIds.has(pid) || pid.split('@')[0] === botNumber.split('@')[0]);
                     });
                 })();
@@ -1621,7 +1621,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                     var mencNum = (mencId || '').replace(/:.*(?=@)/, '').split('@')[0];
                     for (var p of groupMetadata.participants) {
                         var pIds = [p.id, p.jid, p.lid, p.phoneNumber, p.participant].filter(Boolean);
-                        var pNums = pIds.map(x => x.replace(/:.*(?=@)/, '').split('@')[0]);
+                        var pNums = pIds.map(x => String(x).replace(/:.*(?=@)/, '').split('@')[0]);
                         if (pNums.includes(mencNum)) {
                             // Retornar o ID principal do participante (o que a API do WhatsApp reconhece)
                             return p.id;
@@ -1858,7 +1858,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                         if (p.admin !== 'admin' && p.admin !== 'superadmin') return false;
                         var pIds = [p.id, p.jid, p.lid, p.phoneNumber, p.participant]
                             .filter(Boolean)
-                            .map(x => x.replace(/:.*(?=@)/, ''));
+                            .map(x => String(x).replace(/:.*(?=@)/, ''));
                         return pIds.includes(jidClean);
                     });
                 }
@@ -5154,7 +5154,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                             }
                         }
                     }
-                }
+
 
                 switch (command) {
                     case 'corvoia': {
@@ -7035,7 +7035,7 @@ Seja útil, natural e direto.`
                             // Verificação melhorada: comparar número limpo contra todos os campos do participante
                             var mencNumBan = (menc_os2 || '').replace(/:.*(?=@)/, '').split('@')[0];
                             var participanteExiste = groupMembers.some(p => {
-                                var ids = [p.id, p.jid, p.lid, p.phoneNumber, p.participant].filter(Boolean).map(x => x.replace(/:.*(?=@)/, '').split('@')[0]);
+                                var ids = [p.id, p.jid, p.lid, p.phoneNumber, p.participant].filter(Boolean).map(x => String(x).replace(/:.*(?=@)/, '').split('@')[0]);
                                 return ids.includes(mencNumBan) || ids.some(id => id === mencNumBan);
                             });
                             if (!participanteExiste) return reply("*ᴇsᴛᴇ ᴜsᴜᴀʀɪᴏ sᴀɪᴜ ᴅᴏ ɢʀᴜᴘᴏ ᴏᴜ ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ 🤷‍♂️*")
@@ -7113,7 +7113,7 @@ Seja útil, natural e direto.`
                         // Verificação melhorada para rebaixar
                         var mencNumReb = (menc_os2 || '').replace(/:.*(?=@)/, '').split('@')[0];
                         var participanteExisteReb = groupMembers.some(p => {
-                            var ids = [p.id, p.jid, p.lid, p.phoneNumber, p.participant].filter(Boolean).map(x => x.replace(/:.*(?=@)/, '').split('@')[0]);
+                            var ids = [p.id, p.jid, p.lid, p.phoneNumber, p.participant].filter(Boolean).map(x => String(x).replace(/:.*(?=@)/, '').split('@')[0]);
                             return ids.includes(mencNumReb);
                         });
                         if (!participanteExisteReb) return reply("este usuário saiu do grupo ou foi removido 🤷‍♂️")
@@ -10643,7 +10643,7 @@ ${prefix}global`)
                                 // CORREÇÃO: buscar nome real usando todos os campos (LID, id, jid, etc)
                                 var alvoLimpo = alvo.replace(/:.*(?=@)/, '');
                                 var participante = groupMembers.find(v => {
-                                    var pIds = [v.id, v.jid, v.lid, v.phoneNumber, v.participant].filter(Boolean).map(x => x.replace(/:.*(?=@)/, ''));
+                                    var pIds = [v.id, v.jid, v.lid, v.phoneNumber, v.participant].filter(Boolean).map(x => String(x).replace(/:.*(?=@)/, ''));
                                     return pIds.includes(alvoLimpo) || pIds.some(x => x.split('@')[0] === alvoLimpo.split('@')[0]);
                                 })
                                 nomeUser = participante?.notify || participante?.name || participante?.subject || resolverNumeroReal(alvo, groupMembers)
@@ -49177,6 +49177,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             }
                         }
 
+                }
                 }
             }
         //=================
