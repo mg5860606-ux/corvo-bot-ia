@@ -178,11 +178,12 @@ return (bytes / Math.pow(1024, i)).toFixed(1) + " " + sizes[i];
 };
 
 const getName = (number) => {
+  if (!number) return "usuário(a)"
   ps = number.includes(`@s.whatsapp.net`) ? number : number.replace(new RegExp("[()+-/ +/]", "gi"), "") + `@s.whatsapp.net`
   // CORREÇÃO: Buscar pelo número exato ou pelo número limpo (suporte a LID)
   var numClean = ps.split('@')[0]
   var found = pushnames.find(i => i.id === ps || (i.id && i.id.split('@')[0] === numClean))
-  returnPush = found ? found.nick : "usuário(a)"
+  returnPush = found ? found.nick : numClean
   return returnPush
 }
 

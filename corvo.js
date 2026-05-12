@@ -18,7 +18,8 @@ if (!global.donoLidMap) global.donoLidMap = {};
 // Limpar cache de dependências para o hot-reload funcionar corretamente
 delete require.cache[require.resolve('./ARQUIVES/funcoes/exports.js')];
 delete require.cache[require.resolve('./ARQUIVES/funcoes/functions.js')];
-const { fs, Boom, axios, crypto, util, P, linkfy, request, cheerio, ms, ffmpeg, qrterminal, exec, spawn, execSync, color, time, hora, date, getBuffer, convertSticker, recognize, fetchJson, fetchText, fetch, getBase64, createExif, writeExifImg, upload, nit, addBanned, unBanned, BannedExpired, cekBannedUser, validmove, setGame, addComandosId, deleteComandos, getComandoBlock, getComandos, addComandos, palavrasANA, quizanimais, garticArchives, whatMusicAr, enigmaArchive, quizFutebol, getpc, supre, wait, getExtension, generateMessageID, vyroEngine, getGroupAdmins, normalizeJid, getMembros, emoji, sendPoll, getRandom, banner2, banner3, temporizador, chyt, kyun, TimeCount, botoff, colors, os, arcloud, identificarMusica, addFilter, isFiltered, ytdl, psycatgames, MultiDownload, AssemblyAI, obeso, countDays, timeDate, Limit_CMD, capitalizeFirstLetter, shuffle, pushnames, formatNumber, formatNumberDecimal, awaitMessage, listCommands, extractMetadata, extractDDD, extractStateFromNumber, extractStateFromDDD, obrigadoEXT, addNumberMais, identArroba, pegarCases, carregarMidia } = require('./ARQUIVES/funcoes/exports.js');
+const { fs, Boom, axios, crypto, util, P, linkfy, request, cheerio, ms, ffmpeg, qrterminal, exec, spawn, execSync, color, time, hora, date, getBuffer, convertSticker, recognize, fetchJson, fetchText, fetch, getBase64, createExif, writeExifImg, upload, nit, addBanned, unBanned, BannedExpired, cekBannedUser, validmove, setGame, addComandosId, deleteComandos, getComandoBlock, getComandos, addComandos, palavrasANA, quizanimais, garticArchives, whatMusicAr, enigmaArchive, quizFutebol, getpc, supre, wait, getExtension, generateMessageID, vyroEngine, getGroupAdmins, normalizeJid, getMembros, emoji, sendPoll, getRandom, banner2, banner3, temporizador, chyt, kyun, TimeCount, botoff, colors, os, arcloud, identificarMusica, addFilter, isFiltered, ytdl, psycatgames, MultiDownload, AssemblyAI, obeso, countDays, timeDate, Limit_CMD, capitalizeFirstLetter, shuffle, pushnames, formatNumber, formatNumberDecimal, awaitMessage, listCommands, extractMetadata, extractDDD, extractStateFromNumber, extractStateFromDDD, obrigadoEXT, addNumberMais, identArroba, pegarCases, carregarMidia, getName } = require('./ARQUIVES/funcoes/exports.js');
+const getUserName = getName;
 const moment = require('moment-timezone');
 const path = require('path');
 
@@ -35,6 +36,9 @@ const monopoly = require('./ARQUIVES/games/monopoly.js');
 const lobisomem = require('./ARQUIVES/games/lobisomem.js');
 const corridaMp = require('./ARQUIVES/games/corrida_mp.js');
 const detetive = require('./ARQUIVES/games/detetive.js');
+const batalha_naval = require('./ARQUIVES/games/batalha_naval.js');
+const verdade_desafio = require('./ARQUIVES/games/verdade_desafio.js');
+const rimas = require('./ARQUIVES/games/rimas.js');
 const megaAliases = require('./ARQUIVES/5000_commands.json');
 
 // [ APIs DE CONSULTAS ]
@@ -2667,8 +2671,8 @@ async function startcorvo(upsert, corvo, qrcode) {
 
                 //========(ANTI STATUS)========\\
                 if (isGroup && dataGp[0]?.antistatus === true && isBotGroupAdmins && !SoDono && !isGroupAdmins) {
-                    var strMsg = JSON.stringify(info.message || {});
-                    if (strMsg.includes('groupStatusMentionMessage') || strMsg.includes('groupStatusMessageV2') || strMsg.includes('status@broadcast')) {
+                    var isStatusMsg = type === 'groupStatusMentionMessage' || type === 'groupStatusMessageV2' || from === 'status@broadcast';
+                    if (isStatusMsg) {
                         await corvo.sendMessage(from, {
                             text: `*ᴜꜱᴜᴀʀɪᴏ ʙᴀɴɪᴅᴏ ᴩᴏʀ ᴩᴏꜱᴛᴀʀ ꜱᴛᴀᴛᴜꜱ ɴᴏ ɢʀᴜᴩᴏ* 🗣️`,
                             mentions: [sender]
@@ -5073,7 +5077,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
 
                 if (isGroup && body && !isCmd && !info.key.fromMe) {
                     var mBody = body.trim().toLowerCase();
-                    if (mBody === 'vai') {
+                    if (mBody === 'corvo') {
                         await corvo.sendMessage(from, { text: 'eu' }, { quoted: info });
                         return;
                     }
@@ -5086,9 +5090,67 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         if (res.error) {
                             reply(`❌ ${res.error}`);
                         } else {
-                            mention(`✅ @${sender.split('@')[0]} entrou no lobby de *${lobby.gameName}*! (${lobby.players.length} jogadores)`);
+                            mention(`✅ @${sender.split('@')[0]} (${getName(sender)}) entrou no lobby de *${lobby.gameName}*! (${lobby.players.length} jogadores)`, [sender]);
                         }
                         return;
+                    }
+                }
+
+                if (isGroup && body && !info.key.fromMe) {
+                    const mBody = body.trim().toLowerCase();
+                    const acceptWords = ['sim', 'aceito', 'bora', 'start', 's'];
+                    const rejectWords = ['nao', 'não', 'recuso', 'cancelar', 'n'];
+                    
+                    const isAccept = acceptWords.includes(mBody) || (info.message?.extendedTextMessage?.contextInfo?.participant === info.botNumber && acceptWords.includes(mBody));
+                    const isReject = rejectWords.includes(mBody) || (info.message?.extendedTextMessage?.contextInfo?.participant === info.botNumber && rejectWords.includes(mBody));
+
+                    if ((isAccept || isReject) && global.gameChallenges && global.gameChallenges[from]) {
+                        const challenge = global.gameChallenges[from];
+                        if (sender === challenge.target) {
+                            if (isReject) {
+                                mention(`❌ @${challenge.target.split('@')[0]} recusou o desafio de @${challenge.host.split('@')[0]}!`, [challenge.target, challenge.host]);
+                                delete global.gameChallenges[from];
+                                return;
+                            }
+                            const gameType = challenge.gameType;
+                                let boardText = '';
+                                let game;
+                                
+                                switch(gameType) {
+                                    case 'dama':
+                                        game = dama.initGame(from, challenge.host, challenge.target);
+                                        boardText = dama.renderBoard(game.board);
+                                        mention(`🎲 *PARTIDA DE DAMA INICIADA!* 🎲\n\n⚪ Brancas: @${game.players[0].split('@')[0]} (${getName(game.players[0])})\n🔴 Vermelhas: @${game.players[1].split('@')[0]} (${getName(game.players[1])})\n\n*TABULEIRO:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]} (${getName(game.players[game.turn])})\n\n*Como jogar:* Digite o movimento como \`d-mov 5,1 4,2\``, game.players);
+                                        break;
+                                    case 'lig4':
+                                        game = lig4.initGame(from, challenge.host, challenge.target);
+                                        boardText = lig4.renderBoard(game.board);
+                                        mention(`🔵🔴 *LIG 4 INICIADO!* 🔵🔴\n\n🔵 Jogador 1: @${challenge.host.split('@')[0]} (${getName(challenge.host)})\n🔴 Jogador 2: @${challenge.target.split('@')[0]} (${getName(challenge.target)})\n\n*TABULEIRO:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]} (${getName(game.players[game.turn])})\n\n*Como jogar:* Escolha uma coluna de 1 a 7.\nEx: ${prefix}l-col 3`, game.players);
+                                        break;
+                                    case 'velha':
+                                        game = velha.initGame(from, challenge.host, challenge.target);
+                                        boardText = velha.renderBoard(game.board);
+                                        mention(`⭕❌ *JOGO DA VELHA INICIADO!* ⭕❌\n\n❌ Jogador 1: @${challenge.host.split('@')[0]} (${getName(challenge.host)})\n⭕ Jogador 2: @${challenge.target.split('@')[0]} (${getName(challenge.target)})\n\n*TABULEIRO:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]} (${getName(game.players[game.turn])})\n\n*Como jogar:* Escolha uma posição de 1 a 9.\nEx: ${prefix}v-pos 5`, game.players);
+                                        break;
+                                    case 'forca':
+                                        game = forcaMp.initGame(from, challenge.host, challenge.target, challenge.extra);
+                                        boardText = forcaMp.renderGame(game);
+                                        mention(`💀 *JOGO DA FORCA INICIADO!* 💀\n\n👤 Desafiador: @${challenge.host.split('@')[0]} (${getName(challenge.host)})\n👤 Desafiado: @${challenge.target.split('@')[0]} (${getName(challenge.target)})\n\n*STATUS:*\n${boardText}\n\n👉 Vez de: @${challenge.target.split('@')[0]} (${getName(challenge.target)}) tentar uma letra!\n\n*Como jogar:* Digite uma letra.\nEx: ${prefix}f-letra a`, [challenge.host, challenge.target]);
+                                        break;
+                                    case 'batalha':
+                                        game = batalha_naval.initGame(from, challenge.host, challenge.target);
+                                        boardText = batalha_naval.renderView(game.views[1]);
+                                        mention(`🚢 *BATALHA NAVAL INICIADA!* 🚢\n\n🟦 Jogador 1: @${challenge.host.split('@')[0]} (${getName(challenge.host)})\n🟥 Jogador 2: @${challenge.target.split('@')[0]} (${getName(challenge.target)})\n\n*TABULEIRO DO OPONENTE:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]} (${getName(game.players[game.turn])})\n\n*Como jogar:* Atire usando \`b-tiro linha,coluna\`\nEx: ${prefix}b-tiro 2,3`, [challenge.host, challenge.target]);
+                                        break;
+                                    case 'verdade_desafio':
+                                        game = verdade_desafio.initGame(from, challenge.host, challenge.target);
+                                        mention(`❓ *VERDADE OU DESAFIO!* ❓\n\n👉 @${challenge.host.split('@')[0]} (${getName(challenge.host)}) desafiou @${challenge.target.split('@')[0]} (${getName(challenge.target)})!\n\n@${challenge.target.split('@')[0]}, escolha: \`${prefix}v-escolha verdade\` ou \`${prefix}v-escolha desafio\``, [challenge.host, challenge.target]);
+                                        break;
+                                }
+                                delete global.gameChallenges[from];
+                                return;
+                            }
+                        }
                     }
                 }
 
@@ -5148,9 +5210,10 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         const target = mentioned[0];
                         if (target === sender) return reply('❌ *Você não pode jogar consigo mesmo!*');
 
-                        const game = dama.initGame(from, sender, target);
-                        const boardText = dama.renderBoard(game.board);
-                        mention(`🎲 *DESAFIO DE DAMA ACEITO!*\n\n⚪ Brancas: @${sender.split('@')[0]}\n🔴 Vermelhas: @${target.split('@')[0]}\n\n*TABULEIRO:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]}\n\n*Como jogar:* Digite o movimento como \`d-mov 5,1 4,2\` (linha,coluna para linha,coluna)`);
+                        if (!global.gameChallenges) global.gameChallenges = {};
+                        global.gameChallenges[from] = { gameType: 'dama', host: sender, target: target, timestamp: Date.now() };
+
+                        mention(`🎲 *DESAFIO DE DAMA!* 🎲\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`, [sender, target]);
                     }
                         break;
 
@@ -5167,7 +5230,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         if (result.error) return reply(`❌ ${result.error}`);
 
                         const boardText = dama.renderBoard(result.game.board);
-                        mention(`🎲 *MOVIMENTO REALIZADO!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]}`);
+                        mention(`🎲 *MOVIMENTO REALIZADO!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]} (${getName(result.game.players[result.game.turn])})`, result.game.players);
                     }
                         break;
 
@@ -5178,9 +5241,10 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         const target = mentioned[0];
                         if (target === sender) return reply('❌ *Você não pode jogar consigo mesmo!*');
 
-                        const game = lig4.initGame(from, sender, target);
-                        const boardText = lig4.renderBoard(game.board);
-                        mention(`🔵🔴 *LIG 4 INICIADO!*\n\n🔵 Jogador 1: @${sender.split('@')[0]}\n🔴 Jogador 2: @${target.split('@')[0]}\n\n*TABULEIRO:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]}\n\n*Como jogar:* Escolha uma coluna de 1 a 7.\nEx: ${prefix}l-col 3`);
+                        if (!global.gameChallenges) global.gameChallenges = {};
+                        global.gameChallenges[from] = { gameType: 'lig4', host: sender, target: target, timestamp: Date.now() };
+
+                        mention(`🔵🔴 *DESAFIO DE LIG 4!* 🔵🔴\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`, [sender, target]);
                     }
                         break;
 
@@ -5194,11 +5258,11 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
 
                         const boardText = lig4.renderBoard(result.game.board);
                         if (result.win) {
-                            mention(`🎉 *VITÓRIA!* @${sender.split('@')[0]} ganhou o Lig 4!\n\n${boardText}`);
+                            mention(`🎉 *VITÓRIA!* @${sender.split('@')[0]} (${getName(sender)}) ganhou o Lig 4!\n\n${boardText}`, [sender]);
                         } else if (result.draw) {
                             mention(`🤝 *EMPATE!* O tabuleiro encheu.\n\n${boardText}`);
                         } else {
-                            mention(`🔵🔴 *JOGADA REALIZADA!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]}`);
+                            mention(`🔵🔴 *JOGADA REALIZADA!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]} (${getName(result.game.players[result.game.turn])})`, result.game.players);
                         }
                     }
                         break;
@@ -5210,9 +5274,10 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         const target = mentioned[0];
                         if (target === sender) return reply('❌ *Você não pode jogar consigo mesmo!*');
 
-                        const game = velha.initGame(from, sender, target);
-                        const boardText = velha.renderBoard(game.board);
-                        mention(`⭕❌ *JOGO DA VELHA INICIADO!*\n\n❌ Jogador 1: @${sender.split('@')[0]}\n⭕ Jogador 2: @${target.split('@')[0]}\n\n*TABULEIRO:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]}\n\n*Como jogar:* Escolha uma posição de 1 a 9.\nEx: ${prefix}v-pos 5`);
+                        if (!global.gameChallenges) global.gameChallenges = {};
+                        global.gameChallenges[from] = { gameType: 'velha', host: sender, target: target, timestamp: Date.now() };
+
+                        mention(`⭕❌ *DESAFIO DE JOGO DA VELHA!* ⭕❌\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`, [sender, target]);
                     }
                         break;
 
@@ -5229,10 +5294,10 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                             if (result.game.winner === 'draw') {
                                 mention(`🤝 *DEU VELHA!* O jogo empatou.\n\n${boardText}`);
                             } else {
-                                mention(`🎉 *VITÓRIA!* @${result.game.winner.split('@')[0]} ganhou o Jogo da Velha!\n\n${boardText}`);
+                                mention(`🎉 *VITÓRIA!* @${result.game.winner.split('@')[0]} (${getName(result.game.winner)}) ganhou o Jogo da Velha!\n\n${boardText}`, [result.game.winner]);
                             }
                         } else {
-                            mention(`⭕❌ *JOGADA REALIZADA!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]}`);
+                            mention(`⭕❌ *JOGADA REALIZADA!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]} (${getName(result.game.players[result.game.turn])})`, result.game.players);
                         }
                     }
                         break;
@@ -5248,14 +5313,14 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         const argsWithoutMention = q.replace(/@[0-9]+/g, '').trim();
                         if (!argsWithoutMention) return reply('❌ *Você precisa informar a palavra secreta!*');
 
-                        const game = forcaMp.initGame(from, sender, target, argsWithoutMention);
-                        const boardText = forcaMp.renderGame(game);
+                        if (!global.gameChallenges) global.gameChallenges = {};
+                        global.gameChallenges[from] = { gameType: 'forca', host: sender, target: target, extra: argsWithoutMention, timestamp: Date.now() };
 
                         if (info.key.fromMe === false) {
                             corvo.sendMessage(from, { delete: info.key }).catch(e => console.log('Erro ao apagar forca:', e));
                         }
 
-                        mention(`💀 *JOGO DA FORCA INICIADO!*\n\nDesafiador: @${sender.split('@')[0]}\nDesafiado: @${target.split('@')[0]}\n\n*STATUS:*\n${boardText}\n\n👉 Vez de: @${target.split('@')[0]} tentar uma letra!\n\n*Como jogar:* Digite uma letra.\nEx: ${prefix}f-letra a`);
+                        mention(`💀 *DESAFIO DE JOGO DA FORCA!* 💀\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`, [sender, target]);
                     }
                         break;
 
@@ -5275,6 +5340,84 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         } else {
                             mention(`💀 *TENTATIVA REALIZADA!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[1].split('@')[0]}`);
                         }
+                    }
+                        break;
+
+                    case 'batalha': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        const mentioned = info.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+                        if (mentioned.length === 0) return reply(`❌ *Mencione o seu oponente!* Ex: ${prefix}batalha @user`);
+                        const target = mentioned[0];
+                        if (target === sender) return reply('❌ *Você não pode jogar consigo mesmo!*');
+
+                        if (!global.gameChallenges) global.gameChallenges = {};
+                        global.gameChallenges[from] = { gameType: 'batalha', host: sender, target: target, timestamp: Date.now() };
+
+                        mention(`🚢 *DESAFIO DE BATALHA NAVAL!* 🚢\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`, [sender, target]);
+                    }
+                        break;
+
+                    case 'b-tiro': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        const args = q.split(',');
+                        if (args.length < 2) return reply(`❌ *Formato inválido!* Use: ${prefix}b-tiro linha,coluna\nEx: ${prefix}b-tiro 2,3`);
+                        
+                        const r = parseInt(args[0]);
+                        const c = parseInt(args[1]);
+                        const result = batalha_naval.play(from, sender, r, c);
+                        if (result.error) return reply(`❌ ${result.error}`);
+
+                        const boardText = batalha_naval.renderView(result.game.views[1 - result.game.turn]);
+                        if (result.win) {
+                            mention(`🎉 *VITÓRIA!* @${sender.split('@')[0]} (${getName(sender)}) afundou todos os navios!\n\n${boardText}`, [sender]);
+                        } else if (result.hit) {
+                            mention(`💥 *FOGO!* @${sender.split('@')[0]} (${getName(sender)}) acertou um navio!\n\n${boardText}\n\n👉 Jogue novamente!`, [sender]);
+                        } else {
+                            mention(`💨 *ÁGUA!* @${sender.split('@')[0]} (${getName(sender)}) errou o alvo.\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]} (${getName(result.game.players[result.game.turn])})`, result.game.players);
+                        }
+                    }
+                        break;
+
+                    case 'verdade':
+                    case 'desafio': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        const mentioned = info.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+                        if (mentioned.length === 0) return reply(`❌ *Mencione alguém!* Ex: ${prefix}${command} @user`);
+                        const target = mentioned[0];
+                        
+                        if (!global.gameChallenges) global.gameChallenges = {};
+                        global.gameChallenges[from] = { gameType: 'verdade_desafio', host: sender, target: target, timestamp: Date.now() };
+
+                        mention(`❓ *DESAFIO DE VERDADE OU DESAFIO!* ❓\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`, [sender, target]);
+                    }
+                        break;
+
+                    case 'v-escolha': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        const result = verdade_desafio.play(from, sender, q);
+                        if (result.error) return reply(`❌ ${result.error}`);
+                        
+                        mention(`🎲 *${q.toUpperCase()} ESCOLHIDO!* 🎲\n\nPara @${sender.split('@')[0]} (${getName(sender)}):\n\n> *${result.prompt}*`, [sender]);
+                    }
+                        break;
+
+                    case 'rimas': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        const mentioned = info.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+                        if (mentioned.length === 0) return reply(`❌ *Mencione o seu oponente!* Ex: ${prefix}rimas @user`);
+                        const target = mentioned[0];
+
+                        const game = rimas.initGame(from, sender, target);
+                        mention(`🎤 *BATALHA DE RIMAS!*\n\n🔥 @${sender.split('@')[0]} vs @${target.split('@')[0]}\n\n*PALAVRA BASE:* ${game.word.toUpperCase()}\n\n👉 Quem rimar primeiro ganha! Digite \`r-rima palavra\``);
+                    }
+                        break;
+
+                    case 'r-rima': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        const result = rimas.play(from, sender, q);
+                        if (result.error) return reply(`❌ ${result.error}`);
+                        
+                        mention(`🏆 *TEMOS UM VENCEDOR!* @${sender.split('@')[0]} rimou corretamente!\n\nPalavra rima: ${q.toUpperCase()}`);
                     }
                         break;
 
@@ -5300,7 +5443,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         if (existingLobby) return reply(`❌ Já existe um lobby ativo de *${existingLobby.gameName}* neste grupo!`);
 
                         lobbyManager.createLobby(from, lobbyName, sender);
-                        mention(`🎲 *Lobby de ${lobbyName} criado!* 🎲\n\n👉 Digite *eu* para entrar na sala!\n\n👑 Dono da sala (@${sender.split('@')[0]}): Digite *${prefix}start${command}* para começar quando todos estiverem prontos.`);
+                        mention(`🎲 *Lobby de ${lobbyName} criado!* 🎲\n\n👉 Digite *eu* para entrar na sala!\n\n👑 Dono da sala (@${sender.split('@')[0]} - ${getName(sender)}): Digite *${prefix}start${command}* para começar quando todos estiverem prontos.`, [sender]);
                     }
                         break;
 
