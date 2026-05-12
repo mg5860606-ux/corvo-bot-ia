@@ -179,12 +179,30 @@ return (bytes / Math.pow(1024, i)).toFixed(1) + " " + sizes[i];
 
 const getName = (number) => {
   if (!number) return "usuário(a)"
-  ps = number.includes(`@s.whatsapp.net`) ? number : number.replace(new RegExp("[()+-/ +/]", "gi"), "") + `@s.whatsapp.net`
-  // CORREÇÃO: Buscar pelo número exato ou pelo número limpo (suporte a LID)
-  var numClean = ps.split('@')[0]
-  var found = pushnames.find(i => i.id === ps || (i.id && i.id.split('@')[0] === numClean))
-  returnPush = found ? found.nick : numClean
-  return returnPush
+  let jid = number.includes(`@s.whatsapp.net`) ? number : number.replace(new RegExp("[()+-/ +/]", "gi"), "") + `@s.whatsapp.net`
+  let numClean = jid.split('@')[0]
+  
+  // Buscar no array de pushnames (users.json)
+  let found = pushnames.find(i => i.id === jid || (i.id && i.id.split('@')[0] === numClean))
+  
+  // Validar se o nick existe e não é apenas espaço ou "Desconhecido"
+  if (found && found.nick && found.nick.trim().length > 0 && found.nick.toLowerCase() !== 'desconhecido') {
+    return found.nick
+  }
+  
+  return numClean
+}
+
+const registerName = (jid, nick) => {
+  if (!jid || !nick || nick.toLowerCase() === 'desconhecido') return
+  let foundIndex = pushnames.findIndex(i => i.id === jid)
+  if (foundIndex === -1) {
+    pushnames.push({ id: jid, nick: nick })
+    fs.writeFileSync('./DADOS DO CORVO/usuarios/users.json', JSON.stringify(pushnames, null, 2))
+  } else if (pushnames[foundIndex].nick !== nick) {
+    pushnames[foundIndex].nick = nick
+    fs.writeFileSync('./DADOS DO CORVO/usuarios/users.json', JSON.stringify(pushnames, null, 2))
+  }
 }
 
 // ANTI NOME MODIFICADA / EMOJI
@@ -412,4 +430,4 @@ function extractDDD(phoneNumber) {
     }
 }
 
-module.exports = { extractDDD, extractStateFromNumber, extractStateFromDDD, formatDateOriginal, awaitMessage, LoggerB, readline, P, fs, util, Boom, axios, linkfy, request, ms, ffmpeg, fetch, qrterminal, exec, extractMetadata, spawn, execSync, limitefll, moment, time, hora, date, os, getBuffer, convertSticker, fetchJson, fetchText, getBase64, createExif, writeExifImg, upload, nit, addBanned, unBanned, BannedExpired, cekBannedUser, validmove, setGame, addComandosId, deleteComandos, getComandoBlock, getComandos, addComandos, palavrasANA, quizanimais, getpc, supre, wait, getExtension, generateMessageID, getGroupAdmins, normalizeJid, getMembros, getRandom, banner, banner2, banner3, temporizador, chyt, simih, antispam, anotar, sotoy, countMessage, comandos, daily, muted, nescessario, vip, ban, joguinhodavelhajs, joguinhodavelhajs2, setting, logoslink, linguagem, getInfo, mess, destrava, destrava2, tabela, recognize, colors, color, cheerio, NodeCache, kyun, TimeCount, sendVideoAsSticker, sendImageAsSticker, sendVideoAsSticker2,sendImageAsSticker2, enviarfiguUrl, sendPoll, getFileBuffer, DLT_FL, sleep, ANT_LTR_MD_EMJ, convertBytes, arcloud, identificarMusica, os, garticArchives, enigmaArchive, isFiltered, addFilter, psycatgames, speed, vyroEngine, AssemblyAI, whatMusicAr, quizFutebol, obeso, countDays, timeDate, writeExif2, Limit_CMD, capitalizeFirstLetter, emoji, formatNumber, formatNumberDecimal, isJsonIncludes, pushnames, shuffle, packname, advices, tools, getName, listCommands, namoro1, namoro2, obrigadoEXT, addNumberMais, identArroba, pegarCases, carregarMidia }
+module.exports = { registerName, extractDDD, extractStateFromNumber, extractStateFromDDD, formatDateOriginal, awaitMessage, LoggerB, readline, P, fs, util, Boom, axios, linkfy, request, ms, ffmpeg, fetch, qrterminal, exec, extractMetadata, spawn, execSync, limitefll, moment, time, hora, date, os, getBuffer, convertSticker, fetchJson, fetchText, getBase64, createExif, writeExifImg, upload, nit, addBanned, unBanned, BannedExpired, cekBannedUser, validmove, setGame, addComandosId, deleteComandos, getComandoBlock, getComandos, addComandos, palavrasANA, quizanimais, getpc, supre, wait, getExtension, generateMessageID, getGroupAdmins, normalizeJid, getMembros, getRandom, banner, banner2, banner3, temporizador, chyt, simih, antispam, anotar, sotoy, countMessage, comandos, daily, muted, nescessario, vip, ban, joguinhodavelhajs, joguinhodavelhajs2, setting, logoslink, linguagem, getInfo, mess, destrava, destrava2, tabela, recognize, colors, color, cheerio, NodeCache, kyun, TimeCount, sendVideoAsSticker, sendImageAsSticker, sendVideoAsSticker2,sendImageAsSticker2, enviarfiguUrl, sendPoll, getFileBuffer, DLT_FL, sleep, ANT_LTR_MD_EMJ, convertBytes, arcloud, identificarMusica, os, garticArchives, enigmaArchive, isFiltered, addFilter, psycatgames, speed, vyroEngine, AssemblyAI, whatMusicAr, quizFutebol, obeso, countDays, timeDate, writeExif2, Limit_CMD, capitalizeFirstLetter, emoji, formatNumber, formatNumberDecimal, isJsonIncludes, pushnames, shuffle, packname, advices, tools, getName, listCommands, namoro1, namoro2, obrigadoEXT, addNumberMais, identArroba, pegarCases, carregarMidia }

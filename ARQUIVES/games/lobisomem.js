@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { getName } = require('../funcoes/exports.js');
 
 const DB_PATH = './DADOS DO CORVO/games/lobisomem/';
 
@@ -76,7 +77,7 @@ function play(id, player, target, actionCmd) {
         if (game.phase === 'day_vote') {
             game.players = game.players.filter(p => p !== game.deadTonight);
             game.dead.push(game.deadTonight);
-            actionLog += `\n🌅 O dia amanheceu. A vila encontrou o corpo de @${game.deadTonight.split('@')[0]}!`;
+            actionLog += `\n🌅 O dia amanheceu. A vila encontrou o corpo de ${getName(game.deadTonight)} (@${game.deadTonight.split('@')[0]})!`;
             
             const win = checkWinCondition(game);
             if (win) {
@@ -90,12 +91,12 @@ function play(id, player, target, actionCmd) {
         if (!game.players.includes(target)) return { error: 'Alvo inválido.' };
 
         const role = game.roles[target] === 'lobisomem' ? '🔴 LOBISOMEM' : '🔵 INOCENTE';
-        actionLog = `Você olhou na bola de cristal e viu que @${target.split('@')[0]} é: ${role}.`;
+        actionLog = `Você olhou na bola de cristal e viu que ${getName(target)} (@${target.split('@')[0]}) é: ${role}.`;
         
         game.phase = 'day_vote';
         game.players = game.players.filter(p => p !== game.deadTonight);
         game.dead.push(game.deadTonight);
-        game.log = `🌅 O dia amanheceu. O corpo de @${game.deadTonight.split('@')[0]} foi encontrado dilacerado!`;
+        game.log = `🌅 O dia amanheceu. O corpo de ${getName(game.deadTonight)} (@${game.deadTonight.split('@')[0]}) foi encontrado dilacerado!`;
         
         const win = checkWinCondition(game);
         if (win) {
@@ -110,7 +111,7 @@ function play(id, player, target, actionCmd) {
         if (!game.players.includes(target)) return { error: 'Alvo inválido.' };
 
         game.votes[player] = target;
-        actionLog = `@${player.split('@')[0]} votou em @${target.split('@')[0]}.`;
+        actionLog = `${getName(player)} (@${player.split('@')[0]}) votou em ${getName(target)} (@${target.split('@')[0]}).`;
 
         // Check if everyone voted
         if (Object.keys(game.votes).length === game.players.length) {
@@ -129,7 +130,7 @@ function play(id, player, target, actionCmd) {
 
             game.players = game.players.filter(p => p !== lynched);
             game.dead.push(lynched);
-            actionLog += `\n🔥 A vila decidiu linchar @${lynched.split('@')[0]}!`;
+            actionLog += `\n🔥 A vila decidiu linchar ${getName(lynched)} (@${lynched.split('@')[0]})!`;
             
             const win = checkWinCondition(game);
             if (win) {
@@ -151,11 +152,11 @@ function play(id, player, target, actionCmd) {
 function renderBoard(game) {
     let txt = `🐺 *LOBISOMEM* 🌕\n\n`;
     txt += `*Vivos (${game.players.length}):*\n`;
-    game.players.forEach(p => txt += `👤 @${p.split('@')[0]}\n`);
+    game.players.forEach(p => txt += `👤 ${getName(p)} (@${p.split('@')[0]})\n`);
     
     if (game.dead.length > 0) {
         txt += `\n*Cemitério:*\n`;
-        game.dead.forEach(p => txt += `💀 @${p.split('@')[0]} (${game.roles[p]})\n`);
+        game.dead.forEach(p => txt += `💀 ${getName(p)} (@${p.split('@')[0]}) (${game.roles[p]})\n`);
     }
 
     txt += `\nFase Atual: *${game.phase.includes('night') ? '🌃 NOITE' : '☀️ DIA (Votação)'}*\n`;

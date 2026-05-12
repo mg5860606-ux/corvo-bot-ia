@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { getName } = require('../funcoes/exports.js');
 
 const DB_PATH = './DADOS DO CORVO/games/detetive/';
 
@@ -63,7 +64,7 @@ function play(id, player, palpiteStr) {
     if (game.crime.arma.toLowerCase() === pArma.toLowerCase()) acertos++;
     if (game.crime.local.toLowerCase() === pLocal.toLowerCase()) acertos++;
 
-    let actionLog = `@${player.split('@')[0]} palpitou:\n🕵️ ${pSuspeito}\n🗡️ ${pArma}\n📍 ${pLocal}\n\n`;
+    let actionLog = `${getName(player)} (@${player.split('@')[0]}) palpitou:\n🕵️ ${pSuspeito}\n🗡️ ${pArma}\n📍 ${pLocal}\n\n`;
 
     if (acertos === 3) {
         actionLog += `🎉 EXCELENTE DETETIVE! Você desvendou o crime perfeitamente!`;
@@ -87,7 +88,7 @@ function renderBoard(game) {
     txt += `*Locais:* ${LOCAIS.join(', ')}\n\n`;
 
     if (game.status === 'playing') {
-        txt += `👉 Vez de: @${game.players[game.turn].split('@')[0]}\n`;
+        txt += `👉 Vez de: ${getName(game.players[game.turn])} (@${game.players[game.turn].split('@')[0]})\n`;
         txt += `Comando: /palpite Suspeito | Arma | Local\nExemplo: /palpite Dona Branca | Corda | Cozinha`;
     }
     return txt;

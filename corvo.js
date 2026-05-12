@@ -1,3 +1,4 @@
+/* TESTE */
 /*
 ========================================================
              ⭐ CORVO-BOT-MD ⭐
@@ -18,7 +19,7 @@ if (!global.donoLidMap) global.donoLidMap = {};
 // Limpar cache de dependências para o hot-reload funcionar corretamente
 delete require.cache[require.resolve('./ARQUIVES/funcoes/exports.js')];
 delete require.cache[require.resolve('./ARQUIVES/funcoes/functions.js')];
-const { fs, Boom, axios, crypto, util, P, linkfy, request, cheerio, ms, ffmpeg, qrterminal, exec, spawn, execSync, color, time, hora, date, getBuffer, convertSticker, recognize, fetchJson, fetchText, fetch, getBase64, createExif, writeExifImg, upload, nit, addBanned, unBanned, BannedExpired, cekBannedUser, validmove, setGame, addComandosId, deleteComandos, getComandoBlock, getComandos, addComandos, palavrasANA, quizanimais, garticArchives, whatMusicAr, enigmaArchive, quizFutebol, getpc, supre, wait, getExtension, generateMessageID, vyroEngine, getGroupAdmins, normalizeJid, getMembros, emoji, sendPoll, getRandom, banner2, banner3, temporizador, chyt, kyun, TimeCount, botoff, colors, os, arcloud, identificarMusica, addFilter, isFiltered, ytdl, psycatgames, MultiDownload, AssemblyAI, obeso, countDays, timeDate, Limit_CMD, capitalizeFirstLetter, shuffle, pushnames, formatNumber, formatNumberDecimal, awaitMessage, listCommands, extractMetadata, extractDDD, extractStateFromNumber, extractStateFromDDD, obrigadoEXT, addNumberMais, identArroba, pegarCases, carregarMidia, getName } = require('./ARQUIVES/funcoes/exports.js');
+const { fs, Boom, axios, crypto, util, P, linkfy, request, cheerio, ms, ffmpeg, qrterminal, exec, spawn, execSync, color, time, hora, date, getBuffer, convertSticker, recognize, fetchJson, fetchText, fetch, getBase64, createExif, writeExifImg, upload, nit, addBanned, unBanned, BannedExpired, cekBannedUser, validmove, setGame, addComandosId, deleteComandos, getComandoBlock, getComandos, addComandos, palavrasANA, quizanimais, garticArchives, whatMusicAr, enigmaArchive, quizFutebol, getpc, supre, wait, getExtension, generateMessageID, vyroEngine, getGroupAdmins, normalizeJid, getMembros, emoji, sendPoll, getRandom, banner2, banner3, temporizador, chyt, kyun, TimeCount, botoff, colors, os, arcloud, identificarMusica, addFilter, isFiltered, ytdl, psycatgames, MultiDownload, AssemblyAI, obeso, countDays, timeDate, Limit_CMD, capitalizeFirstLetter, shuffle, pushnames, formatNumber, formatNumberDecimal, awaitMessage, listCommands, extractMetadata, extractDDD, extractStateFromNumber, extractStateFromDDD, obrigadoEXT, addNumberMais, identArroba, pegarCases, carregarMidia, getName, registerName } = require('./ARQUIVES/funcoes/exports.js');
 const getUserName = getName;
 const moment = require('moment-timezone');
 const path = require('path');
@@ -16078,7 +16079,7 @@ ${abc.letra}`;
                         var jogadorX = normalizar(boardnow.X + '@s.whatsapp.net');
                         var jogadorO = normalizar(boardnow.O + '@s.whatsapp.net');
 
-                        var mensagem = `*『 ⚠ 』ᗴՏᑭᗴᖇᗩᑎᗪO O OᑭOᑎᗴᑎTᗴ『 ⚠ 』* \n• *_「 @${jogadorX.split('@')[0]} 」 Está te convidando para jogar um jogo da velha【 👩🏻‍🦳】_*\n\n• *_『 @${jogadorO.split('@')[0]} 』 Use 『 S 』 pra aceitar 『 N 』 pra rejeitar._*\n\n> Caso queira cancelar use o 『 ${prefix}rv  』`;
+                        var mensagem = `*『 ⚠ 』ᗴՏᑭᗴᖇᗩᑎᗪO O OᑭOᑎᗴᑎTᗴ『 ⚠ 』* \n• *_「 @${jogadorX.split('@')[0]} (${getName(jogadorX)}) 」 Está te convidando para jogar um jogo da velha【 👩🏻‍🦳】_*\n\n• *_『 @${jogadorO.split('@')[0]} (${getName(jogadorO)}) 』 Use 『 S 』 pra aceitar 『 N 』 pra rejeitar._*\n\n> Caso queira cancelar use o 『 ${prefix}rv  』`;
                         await mentions(mensagem, [jogadorX, jogadorO], true);
                         break;
 

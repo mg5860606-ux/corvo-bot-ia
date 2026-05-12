@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { getName } = require('../funcoes/exports.js');
 
 const dataPath = path.join(__dirname, '../../DADOS DO CORVO/games/roleta.json');
 
@@ -54,7 +55,8 @@ module.exports = {
         }
 
         if (game.players[game.turn] !== playerJid) {
-            return { error: `Não é a sua vez! Vez de: @${game.players[game.turn].split('@')[0]}` };
+            const current = game.players[game.turn];
+            return { error: `Não é a sua vez! Vez de: ${getName(current)} (@${current.split('@')[0]})` };
         }
 
         // Verifica se atirou a bala

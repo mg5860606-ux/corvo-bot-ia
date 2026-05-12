@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { getName } = require('../funcoes/exports.js');
 
 const DB_PATH = './DADOS DO CORVO/games/corrida/';
 
@@ -97,11 +98,11 @@ function renderBoard(game) {
         let pPos = data.pos >= trackLength ? trackLength - 1 : data.pos;
         let visualTrack = track.substring(0, pPos) + data.car + track.substring(pPos + 1);
         
-        txt += `@${p.split('@')[0]}\n[${visualTrack}] 🏁\n\n`;
+        txt += `@${p.split('@')[0]} (${getName(p)})\n[${visualTrack}] 🏁\n\n`;
     });
 
     if (game.status === 'playing') {
-        txt += `\n👉 Vez de: @${game.players[game.turn].split('@')[0]}\nComandos: /acelerar`;
+        txt += `\n👉 Vez de: @${game.players[game.turn].split('@')[0]} (${getName(game.players[game.turn])})\nComandos: /acelerar`;
     }
     return txt;
 }

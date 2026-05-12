@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { getName } = require('../funcoes/exports.js');
 
 const DB_PATH = './DADOS DO CORVO/games/roleta_mp/';
 
@@ -48,14 +49,14 @@ function play(id, player) {
     let action = '';
 
     if (isDead) {
-        action = `💥 *POW!* @${player.split('@')[0]} disparou e M-O-R-R-E-U! 💀`;
+        action = `💥 *POW!* @${player.split('@')[0]} (${getName(player)}) disparou e M-O-R-R-E-U! 💀`;
         game.dead.push(player);
         game.players.splice(game.turn, 1);
         
         if (game.players.length === 1) {
             game.status = 'finished';
             game.winner = game.players[0];
-            action += `\n\n🎉 O grande sobrevivente foi @${game.winner.split('@')[0]}!`;
+            action += `\n\n🎉 O grande sobrevivente foi @${game.winner.split('@')[0]} (${getName(game.winner)})!`;
         } else {
             // Reload the gun
             game.chambers = 6;
@@ -66,7 +67,7 @@ function play(id, player) {
             if (game.turn >= game.players.length) game.turn = 0; 
         }
     } else {
-        action = `✨ *CLIQUE!* Câmara vazia. @${player.split('@')[0]} sobreviveu! 🍀`;
+        action = `✨ *CLIQUE!* Câmara vazia. @${player.split('@')[0]} (${getName(player)}) sobreviveu! 🍀`;
         game.currentChamber++;
         game.turn = (game.turn + 1) % game.players.length;
     }
@@ -80,16 +81,16 @@ function renderBoard(game) {
     txt += `*Sobreviventes:*\n`;
     game.players.forEach((p, i) => {
         const turnMarker = i === game.turn ? '👉' : '  ';
-        txt += `${turnMarker} @${p.split('@')[0]} 😰\n`;
+        txt += `${turnMarker} @${p.split('@')[0]} (${getName(p)}) 😰\n`;
     });
     if (game.dead.length > 0) {
         txt += `\n*Presuntos:*\n`;
         game.dead.forEach(p => {
-            txt += `💀 @${p.split('@')[0]}\n`;
+            txt += `💀 @${p.split('@')[0]} (${getName(p)})\n`;
         });
     }
     
-    txt += `\n👉 Vez de: @${game.players[game.turn].split('@')[0]}\n`;
+    txt += `\n👉 Vez de: @${game.players[game.turn].split('@')[0]} (${getName(game.players[game.turn])})\n`;
     txt += `Envie */atirar* para puxar o gatilho!`;
     return txt;
 }

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { getName } = require('../funcoes/exports.js');
 
 const DB_PATH = './DADOS DO CORVO/games/monopoly/';
 
@@ -95,7 +96,7 @@ function play(id, player, actionCmd) {
                 if (owner && owner !== player) {
                     pState.money -= space.rent;
                     game.pData[owner].money += space.rent;
-                    actionLog += `\n💸 Pagou R$${space.rent} de aluguel para @${owner.split('@')[0]}.`;
+                    actionLog += `\n💸 Pagou R$${space.rent} de aluguel para ${getName(owner)} (@${owner.split('@')[0]}).`;
                 } else if (!owner) {
                     actionLog += `\n💰 Propriedade à venda por R$${space.cost}. Envie /comprar ou /passar.`;
                     game.log = actionLog;
@@ -155,14 +156,14 @@ function renderBoard(game) {
     
     for (let i = 0; i < 16; i++) {
         let playersHere = game.players.filter(p => game.pData[p].pos === i).map(p => game.pData[p].icon).join('');
-        let ownerTag = game.properties[i] ? `(Dono: @${game.properties[i].split('@')[0]})` : '';
+        let ownerTag = game.properties[i] ? `(Dono: ${getName(game.properties[i])} @${game.properties[i].split('@')[0]})` : '';
         txt += `${boardConfig[i].emoji} ${i}. ${boardConfig[i].name} ${playersHere} ${ownerTag}\n`;
     }
 
     txt += `\n*Status dos Jogadores:*\n`;
     game.players.forEach((p, idx) => {
         const turnMarker = idx === game.turn ? '👉' : '  ';
-        txt += `${turnMarker} ${game.pData[p].icon} @${p.split('@')[0]} - R$${game.pData[p].money}\n`;
+        txt += `${turnMarker} ${game.pData[p].icon} ${getName(p)} (@${p.split('@')[0]}) - R$${game.pData[p].money}\n`;
     });
 
     txt += `\nÚltima Ação: ${game.log}\n\nComandos: /rolar, /comprar, /passar`;

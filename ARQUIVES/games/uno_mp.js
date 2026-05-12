@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { getName } = require('../funcoes/exports.js');
 
 const DB_PATH = './DADOS DO CORVO/games/uno_mp/';
 
@@ -171,7 +172,7 @@ function renderBoard(game) {
     txt += `*Jogadores:*\n`;
     game.players.forEach((p, i) => {
         const turnMarker = i === game.turn ? '👉' : '  ';
-        txt += `${turnMarker} @${p.split('@')[0]} - ${game.hands[p].length} cartas\n`;
+        txt += `${turnMarker} ${getName(p)} (@${p.split('@')[0]}) - ${game.hands[p].length} cartas\n`;
     });
     return txt;
 }
