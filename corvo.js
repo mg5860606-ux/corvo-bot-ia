@@ -412,7 +412,7 @@ if (!fs.existsSync(directory)) fs.writeFileSync(directory, JSON.stringify([]));
 const yts = require('yt-search');
 const { criarPagamentoPix, verificarPix } = require('./ARQUIVES/funcoes/pix.js');
 /////////////////\\\\\\\\\\\\\\\\\\\\\\
-let { linguagem, MENU, mess, getInfo, destrava, destrava2, tabela, namoro1, namoro2, tools, advices, ban, joguinhodavelhajs, joguinhodavelhajs2, nescessario, setting, logoslink, vip, rgtake, muted, countMessage, sendVideoAsSticker, sendImageAsSticker, sendVideoAsSticker2, sendImageAsSticker2, sotoy, daily, comandos, limitefll, antispam, anotar, enviarfiguUrl, getFileBuffer, DLT_FL, speed, sleep, ANT_LTR_MD_EMJ, packname, getName, chaves, grupos } = require('./ARQUIVES/funcoes/exports.js');
+let { linguagem, MENU, mess, getInfo, destrava, destrava2, tabela, namoro1, namoro2, tools, advices, ban, joguinhodavelhajs, joguinhodavelhajs2, nescessario, setting, logoslink, vip, rgtake, muted, countMessage, sendVideoAsSticker, sendImageAsSticker, sendVideoAsSticker2, sendImageAsSticker2, sotoy, daily, comandos, limitefll, antispam, anotar, enviarfiguUrl, getFileBuffer, DLT_FL, speed, sleep, ANT_LTR_MD_EMJ, packname, chaves, grupos } = require('./ARQUIVES/funcoes/exports.js');
 
 const { botoes, antipv, antipv2, antipv3, visualizarmsg, numero_dono1, numero_dono2, numero_dono3, numero_dono4, numero_dono5, numero_dono6, msgantipv1, msgantipv2, API_KEY_INVERTEXTO } = require("./DADOS DO CORVO/INFO_CORVO/media/nescessario.json");
 
@@ -5513,15 +5513,6 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                     }
                         break;
 
-                    case 'startcorrida_mp': {
-                        if (!isGroup) return reply(mess.onlyGroup());
-                        const res = lobbyManager.startLobby(from, sender, 2);
-                        if (res.error) return reply(`❌ ${res.error}`);
-                        const game = corridaMp.initGame(from, res.lobby.players);
-                        lobbyManager.deleteLobby(from);
-                        mention(corridaMp.renderBoard(game));
-                    }
-                        break;
 
                     case 'acelerar': {
                         if (!isGroup) return reply(mess.onlyGroup());
@@ -49188,7 +49179,6 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
 
                 }
             }
-        }
         //=================
 
         var nmrdn = setting.ownerNumber.replace(new RegExp("[()+-/ +/]", "gi"), "") + `@s.whatsapp.net`;
