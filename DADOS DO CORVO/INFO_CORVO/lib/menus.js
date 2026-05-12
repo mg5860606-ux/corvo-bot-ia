@@ -1011,6 +1011,8 @@ exports.menurpg = (prefix) => {
 ╎♱˖ ▸ ${prefix}Lobisomem (Cidade Dorme)
 ╎♱˖ ▸ ${prefix}Corrida_mp (Corrida Maluca)
 ╎♱˖ ▸ ${prefix}Detetive (Descubra o Assassino)
+╎♱˖ ▸ ${prefix}Stop (Adedonha - Cria Sala)
+╎♱˖ ▸ ${prefix}Vinte_um (Blackjack Solo)
 ╎♱˖ ▸ ${prefix}Ship @user1 @user2
 ╰⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐`
 };

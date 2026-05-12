@@ -39,6 +39,8 @@ const detetive = require('./ARQUIVES/games/detetive.js');
 const batalha_naval = require('./ARQUIVES/games/batalha_naval.js');
 const verdade_desafio = require('./ARQUIVES/games/verdade_desafio.js');
 const rimas = require('./ARQUIVES/games/rimas.js');
+const vinte_um = require('./ARQUIVES/games/vinte_um.js');
+const stop = require('./ARQUIVES/games/stop.js');
 const megaAliases = require('./ARQUIVES/5000_commands.json');
 
 // [ APIs DE CONSULTAS ]
@@ -5427,7 +5429,8 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                     case 'monopoly':
                     case 'lobisomem':
                     case 'corrida_mp':
-                    case 'detetive': {
+                    case 'detetive':
+                    case 'stop': {
                         if (!isGroup) return reply(mess.onlyGroup());
                         const gameNames = {
                             'uno': 'UNO Multiplayer',
@@ -5435,7 +5438,8 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                             'monopoly': 'Monopoly Mini',
                             'lobisomem': 'Lobisomem',
                             'corrida_mp': 'Corrida Maluca',
-                            'detetive': 'Detetive Clássico'
+                            'detetive': 'Detetive Clássico',
+                            'stop': 'Stop! (Adedonha)'
                         };
                         const lobbyName = gameNames[command];
 
@@ -5444,6 +5448,68 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
 
                         lobbyManager.createLobby(from, lobbyName, sender);
                         mention(`🎲 *Lobby de ${lobbyName} criado!* 🎲\n\n👉 Digite *eu* para entrar na sala!\n\n👑 Dono da sala (@${sender.split('@')[0]} - ${getName(sender)}): Digite *${prefix}start${command}* para começar quando todos estiverem prontos.`, [sender]);
+                    }
+                        break;
+
+                    case 'startcorrida_mp': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        const res = lobbyManager.startLobby(from, sender, 2);
+                        if (res.error) return reply(`❌ ${res.error}`);
+                        const game = corridaMp.initGame(from, res.lobby.players);
+                        lobbyManager.deleteLobby(from);
+                        mention(corridaMp.renderBoard(game));
+                    }
+                        break;
+
+                    case 'startstop': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        const res = lobbyManager.startLobby(from, sender, 2);
+                        if (res.error) return reply(`❌ ${res.error}`);
+                        const game = stop.initGame(from, res.lobby.players);
+                        lobbyManager.deleteLobby(from);
+                        mention(`🛑 *O JOGO STOP! COMEÇOU!* 🛑\n\nA letra sorteada é: *${game.letter}*\n\nCategorias:\n1. ${game.categories[0]}\n2. ${game.categories[1]}\n3. ${game.categories[2]}\n4. ${game.categories[3]}\n5. ${game.categories[4]}\n\n👉 Responda com as 5 palavras separadas por vírgula usando:\n${prefix}s-resp Palavra1, Palavra2, Palavra3...`);
+                    }
+                        break;
+
+                    case 's-resp': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        if (!q) return reply(`❌ Informe suas respostas! Ex: ${prefix}s-resp Nome, Animal, Cor, CEP, Fruta`);
+                        const result = stop.play(from, sender, q);
+                        if (result.error) return reply(`❌ ${result.error}`);
+                        
+                        mention(`🎉 *STOP!!!* 🎉\n\n@${result.winner.split('@')[0]} completou primeiro!\n\nLetra: *${result.letter}*\nRespostas aceitas:\n${result.categories.map((c, i) => `- ${c}: ${result.answers[i]}`).join('\n')}`);
+                    }
+                        break;
+
+                    case 'vinte_um': {
+                        const game = vinte_um.initGame(sender);
+                        reply(`🃏 *VINTE E UM (BLACKJACK) INICIADO!* 🃏\n\nSua Mão:\n${vinte_um.renderHand(game.playerHand)} (Total: ${vinte_um.calculateScore(game.playerHand)})\n\nMão do Corvo (Dealer):\n${vinte_um.renderHand(game.dealerHand, true)}\n\n👉 Digite *${prefix}pedir* para mais uma carta, ou *${prefix}parar* para encerrar sua vez.`);
+                    }
+                        break;
+
+                    case 'pedir': {
+                        const result = vinte_um.hit(sender);
+                        if (result.error) return reply(`❌ ${result.error}`);
+                        
+                        if (result.bust) {
+                            reply(`💥 *ESTOUROU!* 💥\n\nSua Mão:\n${vinte_um.renderHand(result.game.playerHand)} (Total: ${vinte_um.calculateScore(result.game.playerHand)})\n\nVocê ultrapassou 21 e perdeu!`);
+                        } else {
+                            reply(`🃏 *Você pediu carta!* 🃏\n\nSua Mão:\n${vinte_um.renderHand(result.game.playerHand)} (Total: ${vinte_um.calculateScore(result.game.playerHand)})\n\n👉 Digite *${prefix}pedir* ou *${prefix}parar*.`);
+                        }
+                    }
+                        break;
+
+                    case 'parar': {
+                        const result = vinte_um.stand(sender);
+                        if (result.error) return reply(`❌ ${result.error}`);
+                        
+                        let msg = `🛑 *VOCÊ PAROU!* 🛑\n\nSua Mão:\n${vinte_um.renderHand(result.game.playerHand)} (Total: ${vinte_um.calculateScore(result.game.playerHand)})\n\nMão do Corvo (Dealer):\n${vinte_um.renderHand(result.game.dealerHand)} (Total: ${vinte_um.calculateScore(result.game.dealerHand)})\n\n`;
+                        
+                        if (result.result === 'player_win') msg += `🏆 *VOCÊ VENCEU!* O Corvo perdeu desta vez.`;
+                        else if (result.result === 'dealer_win') msg += `💀 *O CORVO VENCEU!* Sorte na próxima.`;
+                        else msg += `🤝 *EMPATE!* Nem eu, nem você.`;
+                        
+                        reply(msg);
                     }
                         break;
 
