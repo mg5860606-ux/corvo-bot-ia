@@ -1005,6 +1005,12 @@ exports.menurpg = (prefix) => {
 ╎♱˖ ▸ ${prefix}Cassino (valor)
 ╎♱˖ ▸ ${prefix}Slot
 ╎♱˖ ▸ ${prefix}Roletarussa
+╎♱˖ ▸ ${prefix}Uno (Cria Sala)
+╎♱˖ ▸ ${prefix}Roleta_mp (Roleta Multiplayer)
+╎♱˖ ▸ ${prefix}Monopoly (Banco Imobiliário)
+╎♱˖ ▸ ${prefix}Lobisomem (Cidade Dorme)
+╎♱˖ ▸ ${prefix}Corrida_mp (Corrida Maluca)
+╎♱˖ ▸ ${prefix}Detetive (Descubra o Assassino)
 ╎♱˖ ▸ ${prefix}Ship @user1 @user2
 ╰⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐`
 };
