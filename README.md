@@ -1,6 +1,6 @@
-# 🦅 CorvoBot-IA - O Robô Multifuncional para WhatsApp 🦅
+# 🦅 CorvoBot - O Robô Multifuncional para WhatsApp 🦅
 
-Bem-vindo ao **CorvoBot-IA**, a solução definitiva para automação, entretenimento e gerenciamento de grupos no WhatsApp. Construído com tecnologia de ponta e focado em oferecer a melhor experiência para o usuário.
+Bem-vindo ao **CorvoBot**, a solução definitiva para automação, entretenimento e gerenciamento de grupos no WhatsApp. Construído com tecnologia de ponta e focado em oferecer a melhor experiência para o usuário.
 
 ---
 
@@ -97,4 +97,4 @@ O **Aposta de Corrida** é um dos mini-games mais emocionantes do CorvoBot! Veja
 > Mantenha suas chaves de API seguras e nunca as compartilhe publicamente.
 
 ---
-*Criado por [Sandro] - Elevando sua experiência no WhatsApp.*
+*Criado por [Corvo] - Elevando sua experiência no WhatsApp.*
