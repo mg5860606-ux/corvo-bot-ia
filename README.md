@@ -64,13 +64,25 @@ npm start
 ---
 
 ## ⚙️ Funcionalidades
-- **IA Autônoma:** Você pode alterar os prompts base, mas ele já vem com uma personalidade sarcástica e humanizada.
-- **Auto-Reply PV:** Responde automaticamente quando o Dono o chama no privado.
-- **Grupos:** Antifake, Antibot, Boas-Vindas, Banimento, Promoção, etc.
-- **Downloads:** Baixa vídeos e áudios do Instagram, YouTube, TikTok, etc.
-- **Diversão:** Jogos de aposta, RPG básico, níveis, cassino.
+- **IA Autônoma:** Integração com Groq e Gemini. Personalidade sarcástica, inteligente e humanizada.
+- **Auto-Reply PV:** Responde automaticamente a triggers configurados e comandos do dono.
+- **Administração de Grupos:** Antifake, Antibot, Boas-Vindas personalizável, Banimento automático e Promoção.
+- **Downloads:** Suporte completo para Instagram, YouTube, TikTok e Twitter (X).
+- **Games & Diversão:** 
+  - **Aposta de Corrida:** Novo sistema de corrida de cavalos com apostas em tempo real.
+  - **Multiplayer:** Batalha Naval, Dama, Jogo da Velha, Lig 4 e Forca.
+  - **RPG & Economia:** Sistema de níveis, banco, cassino e recompensas.
+
+## 🌟 Novidades Recentes (Maio 2026)
+- **Estabilização do Motor de Jogos:** Otimização completa dos jogos de tabuleiro e integração do novo motor de corridas.
+- **Identidades Reais:** Correção do erro "Desconhecido" em jogos multiplayer; agora o bot identifica corretamente os participantes pelo nome do WhatsApp.
+- **Menus Dinâmicos:** Correção no carregamento dos comandos de menu para maior agilidade na resposta.
+- **Gestão de Cache:** Sistema automatizado para limpeza de sessões de jogos inativas.
 
 ## 📝 Configurações Avançadas
 Para mudar chaves de APIs ou editar manualmente o bot, modifique os arquivos na pasta `DADOS DO CORVO/INFO_CORVO/media/`.
 
-As chaves do **Groq** ficam localizadas em `groq_keys.json` na raiz do projeto. Cole as suas lá para que a IA funcione sem interrupções.
+As chaves do **Groq** ficam localizadas em `database/groq_keys.json`. Cole as suas lá para que a IA funcione sem interrupções.
+
+---
+*Desenvolvido com foco em performance e facilidade de uso.*
