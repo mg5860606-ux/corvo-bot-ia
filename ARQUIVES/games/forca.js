@@ -20,6 +20,11 @@ function loadGame(id) {
     return null;
 }
 
+function deleteGame(id) {
+    const file = path.join(DB_PATH, `${id}.json`);
+    if (fs.existsSync(file)) fs.unlinkSync(file);
+}
+
 function initGame(id, player1, player2, word) {
     const game = {
         id,
@@ -75,4 +80,4 @@ function play(id, player, letter) {
     return { game };
 }
 
-module.exports = { initGame, loadGame, play, renderGame };
+module.exports = { initGame, loadGame, play, renderGame, saveGame, deleteGame };

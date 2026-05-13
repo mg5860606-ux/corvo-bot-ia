@@ -42,7 +42,10 @@ const verdade_desafio = require('./ARQUIVES/games/verdade_desafio.js');
 const rimas = require('./ARQUIVES/games/rimas.js');
 const vinte_um = require('./ARQUIVES/games/vinte_um.js');
 const stop = require('./ARQUIVES/games/stop.js');
+const aposta_corrida = require('./ARQUIVES/games/aposta_corrida.js');
 const megaAliases = require('./ARQUIVES/5000_commands.json');
+
+if (!global.apostaCorridas) global.apostaCorridas = {};
 
 // [ APIs DE CONSULTAS ]
 // (As chaves e fontes estão documentadas na seção de Aliases abaixo)
@@ -1981,9 +1984,25 @@ async function startcorvo(upsert, corvo, qrcode) {
                             }
                         }
                     }
-                    await corvo.sendMessage(from, { text: teks.trim(), contextInfo: { ...NkChannelKk, mentionedJid: memberr } }, { quoted: selo }).catch(async (e) => {
-                        await corvo.sendMessage(from, { text: mess.error() }, { quoted: selo });
-                    });
+                    return await corvo.sendMessage(from, { text: teks.trim(), contextInfo: { ...NkChannelKk, mentionedJid: memberr } }, { quoted: selo }).catch(async (e) => {
+                        return await corvo.sendMessage(from, { text: mess.error() }, { quoted: selo });
+                    })
+                }
+
+                const updateBoard = async (from, game, text, gameModule, players = []) => {
+                    if (game.boardMessageKey) {
+                        try {
+                            await corvo.sendMessage(from, { text: text, edit: game.boardMessageKey, contextInfo: { mentionedJid: players } });
+                        } catch (e) {
+                            const msg = await mention(text);
+                            game.boardMessageKey = msg.key;
+                            gameModule.saveGame(from, game);
+                        }
+                    } else {
+                        const msg = await mention(text);
+                        game.boardMessageKey = msg.key;
+                        gameModule.saveGame(from, game);
+                    }
                 }
 
                 var mentionSemQuoted = async (teks) => {
@@ -3059,6 +3078,22 @@ async function startcorvo(upsert, corvo, qrcode) {
                     }
                 }
 
+                const context = {
+                    prefix,
+                    isGroup,
+                    isGroupAdmins,
+                    SoDono,
+                    isVip,
+                    pushname,
+                    sender,
+                    from,
+                    reagir,
+                    reply,
+                    isModobn,
+                    isModoCoins,
+                    isAudioMenu
+                };
+
                 if (isGroup && fs.existsSync(`./DADOS DO CORVO/grupos/games/quiz-futebol/${from}.json`)) {
                     var dQF = JSON.parse(fs.readFileSync(`./DADOS DO CORVO/grupos/games/quiz-futebol/${from}.json`))
                     if (budy.slice(0, 4).toUpperCase() == dQF.resposta.slice(0, 4).toUpperCase() && budy.toUpperCase() != dQF.resposta) return reply('está perto')
@@ -3184,140 +3219,10 @@ async function startcorvo(upsert, corvo, qrcode) {
                     }
                 }
 
-                //INICIO DE COMANDOS DE FECHAR E ABRIR GRUPO NO HORÁRIO PROGRAMADO!!
+                // REPLACED: Redundant block removed to ensure stability. 
+                // sendMenu and Horarios are now consolidated at the start of startFunctionNaga.
 
-                var horarios = {};
-                var horariosPath = './ARQUIVES/tictactoe/grupo.json';
 
-                if (fs.existsSync(horariosPath)) {
-                    try {
-                        horarios = JSON.parse(fs.readFileSync(horariosPath));
-                    } catch (e) {
-                        console.error('erro ao carregar horarios:', e);
-                        horarios = {};
-                    }
-                }
-
-                var salvarHorarios = () => {
-                    fs.writeFileSync(horariosPath, JSON.stringify(horarios, null, 2));
-                };
-
-                var definirFechamento = (from, horario) => {
-                    horarios[from] = horarios[from] || {};
-                    horarios[from].fechamento = horario;
-                    salvarHorarios();
-                };
-
-                var definirAbertura = (from, horario) => {
-                    horarios[from] = horarios[from] || {};
-                    horarios[from].abertura = horario;
-                    salvarHorarios();
-                };
-
-                var removerHorarios = (from) => {
-                    if (horarios[from]) {
-                        delete horarios[from];
-                        salvarHorarios();
-                    }
-                };
-
-                var ultimaExecucao = {};
-
-                if (global.intervalHorarios) clearInterval(global.intervalHorarios);
-
-                global.intervalHorarios = setInterval(async () => {
-                    var time2 = moment().tz('America/Sao_Paulo').format('HH:mm:ss');
-
-                    if (fs.existsSync(horariosPath)) {
-                        try {
-                            horarios = JSON.parse(fs.readFileSync(horariosPath));
-                        } catch (e) {
-                            console.error(e);
-                            horarios = {};
-                        }
-                    }
-
-                    for (var from in horarios) {
-                        var horario = horarios[from];
-                        if (!horario) continue;
-
-                        try {
-                            if (horario.fechamento && time2 === horario.fechamento) {
-                                if (ultimaExecucao[from + '_fechamento'] !== horario.fechamento) {
-                                    await corvo.groupSettingUpdate(from, 'announcement');
-                                    await corvo.sendMessage(from, {
-                                        text: mess.abertura()
-                                    });
-                                    ultimaExecucao[from + '_fechamento'] = horario.fechamento;
-                                }
-                            }
-
-                            if (horario.abertura && time2 === horario.abertura) {
-                                if (ultimaExecucao[from + '_abertura'] !== horario.abertura) {
-                                    await corvo.groupSettingUpdate(from, 'not_announcement');
-                                    await corvo.sendMessage(from, {
-                                        text: mess.fechamento(horario)
-                                    });
-                                    ultimaExecucao[from + '_abertura'] = horario.abertura;
-                                }
-                            }
-                        } catch (e) {
-                            console.error(e);
-                        }
-                    }
-                }, 1000);
-
-                async function sendMenu(from, selo, opt = {}) {
-                    var {
-                        reaction = "⚡",
-                        caption = mess.error(),
-                        isGroupRequired = false,
-                        isAdminRequired = false,
-                        isOwnerRequired = false,
-                        isModoCoinsRequired = false,
-                        isModoBnRequired = false,
-                        sendAudio = true
-                    } = opt;
-                    try {
-                        reagir(from, reaction);
-                        if (isGroupRequired && !isGroup) return reply(mess.onlyGroup());
-                        if (isAdminRequired && !isGroupAdmins && !SoDono) return reply(mess.onlyAdmins());
-                        if (isOwnerRequired && !SoDono) return reply(mess.onlyOwner());
-                        if (isModoCoinsRequired && !isModoCoins) return reply(`*ᴇssᴇ ᴄᴏᴍᴀɴᴅᴏ só ᴘᴏᴅᴇ sᴇʀ ᴀᴛɪᴠᴏ ǫᴜᴀɴᴅᴏ ᴏ sɪᴛᴇᴍᴀ ${prefix}ᴍᴏᴅᴏᴄᴏɪɴs ᴇsᴛɪᴠᴇʀ ᴀᴛɪᴠᴏ.*`);
-                        if (isModoBnRequired && !isModobn) return reply(mess.onlyGroupFun(prefix));
-
-                        const cargo = SoDono ? "Dono" : isGroupAdmins ? "Admin" : isVip ? "Vip" : "Membro";
-                        const data = moment.tz('America/Sao_Paulo').format('DD/MM/YYYY');
-                        const hora = moment.tz('America/Sao_Paulo').format('HH:mm:ss');
-                        const totalCmds = Object.keys(megaAliases).length;
-
-                        const header = `╭━━━❃ ° • ° ๑ ۩ ๑ ° • ° ❃━━━╮\n` +
-                            `│ 👤 Usuário: @${sender.split('@')[0]}\n` +
-                            `│ 🔰 Cargo: ${cargo}\n` +
-                            `│ 📅 Data: ${data}\n` +
-                            `│ ⏰ Hora: ${hora}\n` +
-                            `│ 🗃️ Comandos: ${totalCmds}\n` +
-                            `╰━━━❃ ° • ° ๑ ۩ ๑ ° • ° ❃━━━╯\n\n`;
-
-                        const finalCaption = header + caption;
-
-                        if (sendAudio && isAudioMenu) await sendAudioMenu(from);
-                        var midia = carregarMidia("fotomenu");
-                        var msg = { caption: finalCaption, contextInfo: { ...NkChannelKk, mentionedJid: [sender] } };
-                        if (midia.type === "video") {
-                            msg.video = midia.data;
-                            msg.gifPlayback = true;
-                        } else if (midia.type === "image") {
-                            msg.image = midia.data;
-                        } else {
-                            msg.text = finalCaption;
-                        }
-                        await corvo.sendMessage(from, msg, { quoted: selo });
-                    } catch (e) {
-                        console.error(e);
-                        await corvo.sendMessage(from, { text: caption, contextInfo: { ...NkChannelKk } }, { quoted: selo });
-                    }
-                }
 
 
                 if (isAutoDl && isGroup && !info.key.fromMe) {
@@ -5260,7 +5165,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         if (res.error) {
                             reply(`❌ ${res.error}`);
                         } else {
-                            mention(`✅ @${sender.split('@')[0]} (${getName(sender)}) entrou no lobby de *${lobby.gameName}*! (${lobby.players.length} jogadores)`, [sender]);
+                            mention(`✅ @${sender.split('@')[0]} (${getName(sender)}) entrou no lobby de *${lobby.gameName}*! (${lobby.players.length} jogadores)`);
                         }
                         return;
                     }
@@ -5278,7 +5183,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         const challenge = global.gameChallenges[from];
                         if (sender === challenge.target) {
                             if (isReject) {
-                                mention(`❌ @${challenge.target.split('@')[0]} (${getName(challenge.target)}) recusou o desafio de @${challenge.host.split('@')[0]} (${getName(challenge.host)})!`, [challenge.target, challenge.host]);
+                                mention(`❌ @${challenge.target.split('@')[0]} (${getName(challenge.target)}) recusou o desafio de @${challenge.host.split('@')[0]} (${getName(challenge.host)})!`);
                                 delete global.gameChallenges[from];
                                 return;
                             }
@@ -5290,31 +5195,41 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                                 case 'dama':
                                     game = dama.initGame(from, challenge.host, challenge.target);
                                     boardText = dama.renderBoard(game.board);
-                                    mention(`🎲 *PARTIDA DE DAMA INICIADA!* 🎲\n\n⚪ Brancas: @${game.players[0].split('@')[0]} (${getName(game.players[0])})\n🔴 Vermelhas: @${game.players[1].split('@')[0]} (${getName(game.players[1])})\n\n*TABULEIRO:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]} (${getName(game.players[game.turn])})\n\n*Como jogar:* Digite o movimento como \`d-mov 5,1 4,2\``, game.players);
+                                    const msgDama = await mention(`🎲 *PARTIDA DE DAMA INICIADA!* 🎲\n\n⚪ Brancas: @${game.players[0].split('@')[0]} (${getName(game.players[0])})\n🔴 Vermelhas: @${game.players[1].split('@')[0]} (${getName(game.players[1])})\n\n*TABULEIRO:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]} (${getName(game.players[game.turn])})\n\n*Como jogar:* Digite o movimento como \`d-mov 5,1 4,2\``);
+                                    game.boardMessageKey = msgDama.key;
+                                    dama.saveGame(from, game);
                                     break;
                                 case 'lig4':
                                     game = lig4.initGame(from, challenge.host, challenge.target);
                                     boardText = lig4.renderBoard(game.board);
-                                    mention(`🔵🔴 *LIG 4 INICIADO!* 🔵🔴\n\n🔵 Jogador 1: @${challenge.host.split('@')[0]} (${getName(challenge.host)})\n🔴 Jogador 2: @${challenge.target.split('@')[0]} (${getName(challenge.target)})\n\n*TABULEIRO:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]} (${getName(game.players[game.turn])})\n\n*Como jogar:* Escolha uma coluna de 1 a 7.\nEx: ${prefix}l-col 3`, game.players);
+                                    const msgLig4 = await mention(`🔵🔴 *LIG 4 INICIADO!* 🔵🔴\n\n🔵 Jogador 1: @${challenge.host.split('@')[0]} (${getName(challenge.host)})\n🔴 Jogador 2: @${challenge.target.split('@')[0]} (${getName(challenge.target)})\n\n*TABULEIRO:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]} (${getName(game.players[game.turn])})\n\n*Como jogar:* Escolha uma coluna de 1 a 7.\nEx: ${prefix}l-col 3`);
+                                    game.boardMessageKey = msgLig4.key;
+                                    lig4.saveGame(from, game);
                                     break;
                                 case 'velha':
                                     game = velha.initGame(from, challenge.host, challenge.target);
                                     boardText = velha.renderBoard(game.board);
-                                    mention(`⭕❌ *JOGO DA VELHA INICIADO!* ⭕❌\n\n❌ Jogador 1: @${challenge.host.split('@')[0]} (${getName(challenge.host)})\n⭕ Jogador 2: @${challenge.target.split('@')[0]} (${getName(challenge.target)})\n\n*TABULEIRO:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]} (${getName(game.players[game.turn])})\n\n*Como jogar:* Escolha uma posição de 1 a 9.\nEx: ${prefix}v-pos 5`, game.players);
+                                    const msgVelha = await mention(`⭕❌ *JOGO DA VELHA INICIADO!* ⭕❌\n\n❌ Jogador 1: @${challenge.host.split('@')[0]} (${getName(challenge.host)})\n⭕ Jogador 2: @${challenge.target.split('@')[0]} (${getName(challenge.target)})\n\n*TABULEIRO:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]} (${getName(game.players[game.turn])})\n\n*Como jogar:* Escolha uma posição de 1 a 9.\nEx: ${prefix}v-pos 5`);
+                                    game.boardMessageKey = msgVelha.key;
+                                    velha.saveGame(from, game);
                                     break;
                                 case 'forca':
                                     game = forcaMp.initGame(from, challenge.host, challenge.target, challenge.extra);
                                     boardText = forcaMp.renderGame(game);
-                                    mention(`💀 *JOGO DA FORCA INICIADO!* 💀\n\n👤 Desafiador: @${challenge.host.split('@')[0]} (${getName(challenge.host)})\n👤 Desafiado: @${challenge.target.split('@')[0]} (${getName(challenge.target)})\n\n*STATUS:*\n${boardText}\n\n👉 Vez de: @${challenge.target.split('@')[0]} (${getName(challenge.target)}) tentar uma letra!\n\n*Como jogar:* Digite uma letra.\nEx: ${prefix}f-letra a`, [challenge.host, challenge.target]);
+                                    const msgForca = await mention(`💀 *JOGO DA FORCA INICIADO!* 💀\n\n👤 Desafiador: @${challenge.host.split('@')[0]} (${getName(challenge.host)})\n👤 Desafiado: @${challenge.target.split('@')[0]} (${getName(challenge.target)})\n\n*STATUS:*\n${boardText}\n\n👉 Vez de: @${challenge.target.split('@')[0]} (${getName(challenge.target)}) tentar uma letra!\n\n*Como jogar:* Digite uma letra.\nEx: ${prefix}f-letra a`);
+                                    game.boardMessageKey = msgForca.key;
+                                    forcaMp.saveGame(from, game);
                                     break;
                                 case 'batalha':
                                     game = batalha_naval.initGame(from, challenge.host, challenge.target);
                                     boardText = batalha_naval.renderView(game.views[1]);
-                                    mention(`🚢 *BATALHA NAVAL INICIADA!* 🚢\n\n🟦 Jogador 1: @${challenge.host.split('@')[0]} (${getName(challenge.host)})\n🟥 Jogador 2: @${challenge.target.split('@')[0]} (${getName(challenge.target)})\n\n*TABULEIRO DO OPONENTE:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]} (${getName(game.players[game.turn])})\n\n*Como jogar:* Atire usando \`b-tiro linha,coluna\`\nEx: ${prefix}b-tiro 2,3`, [challenge.host, challenge.target]);
+                                    const msgBatalha = await mention(`🚢 *BATALHA NAVAL INICIADA!* 🚢\n\n🟦 Jogador 1: @${challenge.host.split('@')[0]} (${getName(challenge.host)})\n🟥 Jogador 2: @${challenge.target.split('@')[0]} (${getName(challenge.target)})\n\n*TABULEIRO DO OPONENTE:*\n${boardText}\n\n👉 Vez de: @${game.players[game.turn].split('@')[0]} (${getName(game.players[game.turn])})\n\n*Como jogar:* Atire usando \`b-tiro linha,coluna\`\nEx: ${prefix}b-tiro 2,3`);
+                                    game.boardMessageKey = msgBatalha.key;
+                                    batalha_naval.saveGame(from, game);
                                     break;
                                 case 'verdade_desafio':
                                     game = verdade_desafio.initGame(from, challenge.host, challenge.target);
-                                    mention(`❓ *VERDADE OU DESAFIO!* ❓\n\n👉 @${challenge.host.split('@')[0]} (${getName(challenge.host)}) desafiou @${challenge.target.split('@')[0]} (${getName(challenge.target)})!\n\n@${challenge.target.split('@')[0]}, escolha: \`${prefix}v-escolha verdade\` ou \`${prefix}v-escolha desafio\``, [challenge.host, challenge.target]);
+                                    mention(`❓ *VERDADE OU DESAFIO!* ❓\n\n👉 @${challenge.host.split('@')[0]} (${getName(challenge.host)}) desafiou @${challenge.target.split('@')[0]} (${getName(challenge.target)})!\n\n@${challenge.target.split('@')[0]}, escolha: \`${prefix}v-escolha verdade\` ou \`${prefix}v-escolha desafio\``);
                                     break;
                             }
                             delete global.gameChallenges[from];
@@ -5383,7 +5298,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         if (!global.gameChallenges) global.gameChallenges = {};
                         global.gameChallenges[from] = { gameType: 'dama', host: sender, target: target, timestamp: Date.now() };
 
-                        mention(`🎲 *DESAFIO DE DAMA!* 🎲\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`, [sender, target]);
+                        mention(`🎲 *DESAFIO DE DAMA!* 🎲\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`);
                     }
                         break;
 
@@ -5400,7 +5315,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         if (result.error) return reply(`❌ ${result.error}`);
 
                         const boardText = dama.renderBoard(result.game.board);
-                        mention(`🎲 *MOVIMENTO REALIZADO!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]} (${getName(result.game.players[result.game.turn])})`, result.game.players);
+                        updateBoard(from, result.game, `🎲 *MOVIMENTO REALIZADO!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]} (${getName(result.game.players[result.game.turn])})`, dama, result.game.players);
                     }
                         break;
 
@@ -5414,7 +5329,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         if (!global.gameChallenges) global.gameChallenges = {};
                         global.gameChallenges[from] = { gameType: 'lig4', host: sender, target: target, timestamp: Date.now() };
 
-                        mention(`🔵🔴 *DESAFIO DE LIG 4!* 🔵🔴\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`, [sender, target]);
+                        mention(`🔵🔴 *DESAFIO DE LIG 4!* 🔵🔴\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`);
                     }
                         break;
 
@@ -5428,11 +5343,11 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
 
                         const boardText = lig4.renderBoard(result.game.board);
                         if (result.win) {
-                            mention(`🎉 *VITÓRIA!* @${sender.split('@')[0]} (${getName(sender)}) ganhou o Lig 4!\n\n${boardText}`, [sender]);
+                            updateBoard(from, result.game, `🎉 *VITÓRIA!* @${sender.split('@')[0]} (${getName(sender)}) ganhou o Lig 4!\n\n${boardText}`, lig4, result.game.players);
                         } else if (result.draw) {
-                            mention(`🤝 *EMPATE!* O tabuleiro encheu.\n\n${boardText}`);
+                            updateBoard(from, result.game, `🤝 *EMPATE!* O tabuleiro encheu.\n\n${boardText}`, lig4, result.game.players);
                         } else {
-                            mention(`🔵🔴 *JOGADA REALIZADA!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]} (${getName(result.game.players[result.game.turn])})`, result.game.players);
+                            updateBoard(from, result.game, `🔵🔴 *JOGADA REALIZADA!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]} (${getName(result.game.players[result.game.turn])})`, lig4, result.game.players);
                         }
                     }
                         break;
@@ -5447,7 +5362,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         if (!global.gameChallenges) global.gameChallenges = {};
                         global.gameChallenges[from] = { gameType: 'velha', host: sender, target: target, timestamp: Date.now() };
 
-                        mention(`⭕❌ *DESAFIO DE JOGO DA VELHA!* ⭕❌\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`, [sender, target]);
+                        mention(`⭕❌ *DESAFIO DE JOGO DA VELHA!* ⭕❌\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`);
                     }
                         break;
 
@@ -5462,12 +5377,12 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         const boardText = velha.renderBoard(result.game.board);
                         if (result.finished) {
                             if (result.game.winner === 'draw') {
-                                mention(`🤝 *DEU VELHA!* O jogo empatou.\n\n${boardText}`);
+                                updateBoard(from, result.game, `🤝 *DEU VELHA!* O jogo empatou.\n\n${boardText}`, velha, result.game.players);
                             } else {
-                                mention(`🎉 *VITÓRIA!* @${result.game.winner.split('@')[0]} (${getName(result.game.winner)}) ganhou o Jogo da Velha!\n\n${boardText}`, [result.game.winner]);
+                                updateBoard(from, result.game, `🎉 *VITÓRIA!* @${result.game.winner.split('@')[0]} (${getName(result.game.winner)}) ganhou o Jogo da Velha!\n\n${boardText}`, velha, result.game.players);
                             }
                         } else {
-                            mention(`⭕❌ *JOGADA REALIZADA!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]} (${getName(result.game.players[result.game.turn])})`, result.game.players);
+                            updateBoard(from, result.game, `⭕❌ *JOGADA REALIZADA!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]} (${getName(result.game.players[result.game.turn])})`, velha, result.game.players);
                         }
                     }
                         break;
@@ -5490,7 +5405,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                             corvo.sendMessage(from, { delete: info.key }).catch(e => console.log('Erro ao apagar forca:', e));
                         }
 
-                        mention(`💀 *DESAFIO DE JOGO DA FORCA!* 💀\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`, [sender, target]);
+                        mention(`💀 *DESAFIO DE JOGO DA FORCA!* 💀\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`);
                     }
                         break;
 
@@ -5504,11 +5419,11 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
 
                         const boardText = forcaMp.renderGame(result.game);
                         if (result.won) {
-                            mention(`🎉 *PARABÉNS!* @${result.game.winner.split('@')[0]} descobriu a palavra e ganhou o jogo!\n\nPalavra: ${result.game.word.toUpperCase()}\n${boardText}`);
+                            updateBoard(from, result.game, `🎉 *PARABÉNS!* @${result.game.winner.split('@')[0]} descobriu a palavra e ganhou o jogo!\n\nPalavra: ${result.game.word.toUpperCase()}\n${boardText}`, forcaMp, [result.game.winner]);
                         } else if (result.lost) {
-                            mention(`💀 *ENFORCADO!* As vidas acabaram. @${result.game.winner.split('@')[0]} ganhou o jogo!\n\nA palavra era: ${result.game.word.toUpperCase()}\n${boardText}`);
+                            updateBoard(from, result.game, `💀 *ENFORCADO!* As vidas acabaram. @${result.game.winner.split('@')[0]} ganhou o jogo!\n\nA palavra era: ${result.game.word.toUpperCase()}\n${boardText}`, forcaMp, [result.game.winner]);
                         } else {
-                            mention(`💀 *TENTATIVA REALIZADA!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[1].split('@')[0]}`);
+                            updateBoard(from, result.game, `💀 *TENTATIVA REALIZADA!*\n\n${boardText}\n\n👉 Vez de: @${result.game.players[1].split('@')[0]}`, forcaMp, result.game.players);
                         }
                     }
                         break;
@@ -5523,7 +5438,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         if (!global.gameChallenges) global.gameChallenges = {};
                         global.gameChallenges[from] = { gameType: 'batalha', host: sender, target: target, timestamp: Date.now() };
 
-                        mention(`🚢 *DESAFIO DE BATALHA NAVAL!* 🚢\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`, [sender, target]);
+                        mention(`🚢 *DESAFIO DE BATALHA NAVAL!* 🚢\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`);
                     }
                         break;
 
@@ -5539,11 +5454,11 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
 
                         const boardText = batalha_naval.renderView(result.game.views[1 - result.game.turn]);
                         if (result.win) {
-                            mention(`🎉 *VITÓRIA!* @${sender.split('@')[0]} (${getName(sender)}) afundou todos os navios!\n\n${boardText}`, [sender]);
+                            updateBoard(from, result.game, `🎉 *VITÓRIA!* @${sender.split('@')[0]} (${getName(sender)}) afundou todos os navios!\n\n${boardText}`, batalha_naval, [sender]);
                         } else if (result.hit) {
-                            mention(`💥 *FOGO!* @${sender.split('@')[0]} (${getName(sender)}) acertou um navio!\n\n${boardText}\n\n👉 Jogue novamente!`, [sender]);
+                            updateBoard(from, result.game, `💥 *FOGO!* @${sender.split('@')[0]} (${getName(sender)}) acertou um navio!\n\n${boardText}\n\n👉 Jogue novamente!`, batalha_naval, [sender]);
                         } else {
-                            mention(`💨 *ÁGUA!* @${sender.split('@')[0]} (${getName(sender)}) errou o alvo.\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]} (${getName(result.game.players[result.game.turn])})`, result.game.players);
+                            updateBoard(from, result.game, `💨 *ÁGUA!* @${sender.split('@')[0]} (${getName(sender)}) errou o alvo.\n\n${boardText}\n\n👉 Vez de: @${result.game.players[result.game.turn].split('@')[0]} (${getName(result.game.players[result.game.turn])})`, batalha_naval, result.game.players);
                         }
                     }
                         break;
@@ -5558,7 +5473,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         if (!global.gameChallenges) global.gameChallenges = {};
                         global.gameChallenges[from] = { gameType: 'verdade_desafio', host: sender, target: target, timestamp: Date.now() };
 
-                        mention(`❓ *DESAFIO DE VERDADE OU DESAFIO!* ❓\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`, [sender, target]);
+                        mention(`❓ *DESAFIO DE VERDADE OU DESAFIO!* ❓\n\n👤 Desafiador: @${sender.split('@')[0]} (${getName(sender)})\n👤 Desafiado: @${target.split('@')[0]} (${getName(target)})\n\n👉 @${target.split('@')[0]}, você aceita o desafio? Responda *sim* para começar ou *não* para recusar!`);
                     }
                         break;
 
@@ -5567,7 +5482,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         const result = verdade_desafio.play(from, sender, q);
                         if (result.error) return reply(`❌ ${result.error}`);
 
-                        mention(`🎲 *${q.toUpperCase()} ESCOLHIDO!* 🎲\n\nPara @${sender.split('@')[0]} (${getName(sender)}):\n\n> *${result.prompt}*`, [sender]);
+                        mention(`🎲 *${q.toUpperCase()} ESCOLHIDO!* 🎲\n\nPara @${sender.split('@')[0]} (${getName(sender)}):\n\n> *${result.prompt}*`);
                     }
                         break;
 
@@ -5615,7 +5530,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                         if (existingLobby) return reply(`❌ Já existe um lobby ativo de *${existingLobby.gameName}* neste grupo!`);
 
                         lobbyManager.createLobby(from, lobbyName, sender);
-                        mention(`🎲 *Lobby de ${lobbyName} criado!* 🎲\n\n👉 Digite *eu* para entrar na sala!\n\n👑 Dono da sala (@${sender.split('@')[0]} - ${getName(sender)}): Digite *${prefix}start${command}* para começar quando todos estiverem prontos.`, [sender]);
+                        mention(`🎲 *Lobby de ${lobbyName} criado!* 🎲\n\n👉 Digite *eu* para entrar na sala!\n\n👑 Dono da sala (@${sender.split('@')[0]} - ${getName(sender)}): Digite *${prefix}start${command}* para começar quando todos estiverem prontos.`);
                     }
                         break;
 
@@ -14232,7 +14147,7 @@ Aguarde o dono entrar em contato no privado.`
                             reaction: "🕸️",
                             caption: linguagem.menu(prefix),
                             sendAudio: true
-                        });
+                        }, context);
                         break;
                     }
 
@@ -14989,7 +14904,7 @@ ${abc.letra}`;
                         if (global.menuAzAtivos[user]) return reply('*ᴅᴇꜱᴄᴜʟᴩᴇ ꜱᴇɴʜᴏʀ(ᴀ), ᴍᴀꜱ ᴠᴏᴄᴇ ᴊᴀ ᴛᴇᴍ ᴜᴍᴀ ʟɪꜱᴛᴀ ᴅᴇ ᴀᴛɪᴠᴀᴄᴀᴏ ᴩᴇɴᴅᴇɴᴛᴇ 🤷‍♂️*');
                         global.menuAzAtivos[user] = true;
                         var texto = linguagem.ativic(prefix);
-                        await sendMenu(from, selo, { caption: texto });
+                        await sendMenu(from, selo, { caption: texto }, context);
                     }
                         break;
 
@@ -15083,7 +14998,7 @@ ${abc.letra}`;
                                 caption: textoStatus,
                                 reaction: '🛡️',
                                 sendAudio: true
-                            });
+                            }, context);
                         } catch (e) {
                             console.log('ERRO STATUS:', e)
                             await corvo.sendMessage(from, {
@@ -15950,7 +15865,7 @@ ${abc.letra}`;
                             reaction: "🎉",
                             caption: linguagem.menu18(prefix),
                             sendAudio: true
-                        });
+                        }, context);
                         break;
 
                     case 'menudono':
@@ -15959,7 +15874,7 @@ ${abc.letra}`;
                             caption: linguagem.menudono(prefix),
                             isOwnerRequired: true,
                             sendAudio: true
-                        });
+                        }, context);
                         break;
 
                     case 'menuadm':
@@ -15968,7 +15883,7 @@ ${abc.letra}`;
                             caption: linguagem.adms(prefix),
                             isAdminRequired: true,
                             sendAudio: true
-                        });
+                        }, context);
                         break;
 
                     case 'menulogos':
@@ -15980,7 +15895,7 @@ ${abc.letra}`;
                             reaction: "🎉",
                             caption: linguagem.menulogos(prefix),
                             sendAudio: true
-                        });
+                        }, context);
                         break;
 
                     case 'menubrincadeira':
@@ -15994,7 +15909,7 @@ ${abc.letra}`;
                             isGroupRequired: true,
                             isModoBnRequired: true,
                             sendAudio: true
-                        });
+                        }, context);
                         break;
 
                     case 'donos': {
@@ -16267,9 +16182,157 @@ ${abc.letra}`;
                         } else {
                             reply(`Não a nenhuma sessão em andamento...`);
                         }
-                        break
+                        break;
 
-                    case 'vord': //Criado do zero Por Nk hackzin
+                    case 'rd':
+                    case 'resetdama': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        const game = dama.loadGame(from);
+                        if (!game) return reply('❌ Não há nenhuma partida de Dama em andamento neste grupo.');
+                        if (!game.players.includes(sender) && !isGroupAdmins && !SoDono) return reply('❌ Apenas os jogadores ou um admin podem resetar o jogo!');
+                        dama.deleteGame(from);
+                        reply('✅ *Partida de Dama resetada com sucesso!*');
+                        break;
+                    }
+
+                    case 'rl':
+                    case 'resetlig4': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        const game = lig4.loadGame(from);
+                        if (!game) return reply('❌ Não há nenhuma partida de Lig 4 em andamento neste grupo.');
+                        if (!game.players.includes(sender) && !isGroupAdmins && !SoDono) return reply('❌ Apenas os jogadores ou um admin podem resetar o jogo!');
+                        lig4.deleteGame(from);
+                        reply('✅ *Partida de Lig 4 resetada com sucesso!*');
+                        break;
+                    }
+
+                    case 'rf':
+                    case 'resetforca': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        const game = forcaMp.loadGame(from);
+                        if (!game) return reply('❌ Não há nenhuma partida de Forca em andamento neste grupo.');
+                        if (!game.players.includes(sender) && !isGroupAdmins && !SoDono) return reply('❌ Apenas os jogadores ou um admin podem resetar o jogo!');
+                        forcaMp.deleteGame(from);
+                        reply('✅ *Partida de Forca resetada com sucesso!*');
+                        break;
+                    }
+
+                    case 'rb':
+                    case 'resetbatalha': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        const game = batalha_naval.loadGame(from);
+                        if (!game) return reply('❌ Não há nenhuma partida de Batalha Naval em andamento neste grupo.');
+                        if (!game.players.includes(sender) && !isGroupAdmins && !SoDono) return reply('❌ Apenas os jogadores ou um admin podem resetar o jogo!');
+                        batalha_naval.deleteGame(from);
+                        reply('✅ *Partida de Batalha Naval resetada com sucesso!*');
+                        break;
+                    }
+
+                    case 'rlb':
+                    case 'resetlobby': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        const lobby = lobbyManager.loadLobby(from);
+                        if (!lobby) return reply('❌ Não há nenhum lobby ativo neste grupo.');
+                        if (lobby.host !== sender && !isGroupAdmins && !SoDono) return reply('❌ Apenas o dono do lobby ou um admin podem resetar!');
+                        lobbyManager.deleteLobby(from);
+                        reply(`✅ *Lobby de ${lobby.gameName} resetado com sucesso!*`);
+                        break;
+                    }
+
+                    case 'acorrida':
+                    case 'betrace': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        if (global.apostaCorridas[from]) return reply('❌ Já existe uma corrida sendo preparada ou em andamento neste grupo.');
+                        
+                        const race = aposta_corrida.createRace(from);
+                        global.apostaCorridas[from] = race;
+                        
+                        let timeLeft = 60;
+                        const msg = await corvo.sendMessage(from, { text: aposta_corrida.renderTrack(race).replace('{tempo}', timeLeft) });
+                        race.messageKey = msg.key;
+
+                        const interval = setInterval(async () => {
+                            try {
+                                timeLeft -= 10;
+                                if (timeLeft <= 0) {
+                                    clearInterval(interval);
+                                    race.status = 'racing';
+                                    await corvo.sendMessage(from, { edit: race.messageKey, text: aposta_corrida.renderTrack(race) });
+                                    
+                                    // Iniciar a corrida animada
+                                    const raceInterval = setInterval(async () => {
+                                        try {
+                                            const winner = aposta_corrida.advanceRace(race);
+                                            await corvo.sendMessage(from, { edit: race.messageKey, text: aposta_corrida.renderTrack(race) });
+                                            
+                                            if (winner) {
+                                                clearInterval(raceInterval);
+                                                // Payouts
+                                                let results = `🏁 *RESULTADO DA CORRIDA* 🏁\n\nVencedor: ${winner.emoji} ${winner.name}\n\n`;
+                                                const winners = race.bets.filter(b => b.competitorId === winner.id);
+                                                if (winners.length > 0) {
+                                                    results += `💰 *GANHADORES:* \n`;
+                                                    winners.forEach(b => {
+                                                        const prize = b.amount * 2;
+                                                        const rpg = getUserRPG(b.user, from);
+                                                        if (rpg.ok) {
+                                                            rpg.user.money += prize;
+                                                        }
+                                                        results += `@${b.user.split('@')[0]} ganhou R$ ${moneyBR(prize)}!\n`;
+                                                    });
+                                                    saveSabrpg();
+                                                } else {
+                                                    results += `😔 Ninguém apostou no vencedor.`;
+                                                }
+                                                await corvo.sendMessage(from, { text: results, contextInfo: { mentionedJid: race.bets.map(b => b.user) } });
+                                                delete global.apostaCorridas[from];
+                                            }
+                                        } catch (e) {
+                                            console.error("Erro no raceInterval:", e);
+                                            clearInterval(raceInterval);
+                                            delete global.apostaCorridas[from];
+                                        }
+                                    }, 3000);
+                                } else {
+                                    await corvo.sendMessage(from, { edit: race.messageKey, text: aposta_corrida.renderTrack(race).replace('{tempo}', timeLeft) });
+                                }
+                            } catch (e) {
+                                console.error("Erro no interval de aposta:", e);
+                                clearInterval(interval);
+                                delete global.apostaCorridas[from];
+                            }
+                        }, 10000);
+                        break;
+                    }
+
+                    case 'apostar': {
+                        if (!isGroup) return reply(mess.onlyGroup());
+                        const race = global.apostaCorridas[from];
+                        if (!race || race.status !== 'betting') return reply('❌ Não há apostas abertas agora.');
+                        
+                        if (!q) return reply(`Uso: ${prefix}apostar <número do competidor> <quantia>`);
+                        const args = q.split(' ');
+                        if (args.length < 2) return reply(`Uso: ${prefix}apostar <número do competidor> <quantia>`);
+                        
+                        const compId = parseInt(args[0]);
+                        const amount = parseInt(args[1]);
+                        
+                        if (isNaN(compId) || isNaN(amount) || amount <= 0) return reply('❌ Informe valores válidos.');
+                        if (!race.competitors.find(c => c.id === compId)) return reply('❌ Competidor inválido.');
+                        
+                        const rpg = getUserRPG(sender, from);
+                        if (!rpg.ok || rpg.user.money < amount) return reply('❌ Você não tem dinheiro suficiente para essa aposta!');
+                        
+                        rpg.user.money -= amount;
+                        saveSabrpg();
+                        
+                        race.bets.push({ user: sender, competitorId: compId, amount });
+                        reply(`✅ Aposta de R$ ${moneyBR(amount)} confirmada no competidor ${compId}! Boa sorte! 🍀`);
+                        break;
+                    }
+
+
+                    case 'vord': //Criado do zero Por corvo
                         if (!isGroup) return reply(mess.onlyGroup())
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         /** Se não conter "verdade" ou "dessfio" */
@@ -19694,7 +19757,7 @@ ${abc.letra}`;
                             reaction: "⬇️",
                             caption: linguagem.menudownload(prefix),
                             sendAudio: true
-                        });
+                        }, context);
                         break;
                     }
 
@@ -19704,7 +19767,7 @@ ${abc.letra}`;
                             reaction: "📋",
                             caption: linguagem.menubasico(prefix),
                             sendAudio: true
-                        });
+                        }, context);
                         break;
                     }
 
@@ -19715,7 +19778,7 @@ ${abc.letra}`;
                             reaction: "🖼️",
                             caption: linguagem.menufig(prefix),
                             sendAudio: true
-                        });
+                        }, context);
                         break;
                     }
 
@@ -19725,7 +19788,7 @@ ${abc.letra}`;
                             reaction: "🔗",
                             caption: linguagem.menulink(prefix),
                             sendAudio: true
-                        });
+                        }, context);
                         break;
                     }
 
@@ -19736,7 +19799,7 @@ ${abc.letra}`;
                             reaction: "👑",
                             caption: linguagem.menuvip(prefix),
                             sendAudio: true
-                        });
+                        }, context);
                         break;
                     }
 
@@ -19746,7 +19809,7 @@ ${abc.letra}`;
                             reaction: "🎌",
                             caption: linguagem.menuanimes(prefix),
                             sendAudio: true
-                        });
+                        }, context);
                         break;
                     }
 
@@ -19755,7 +19818,7 @@ ${abc.letra}`;
                             reaction: "🔥",
                             caption: linguagem.menuff(prefix),
                             sendAudio: true
-                        });
+                        }, context);
                         break;
                     }
 
@@ -19764,7 +19827,7 @@ ${abc.letra}`;
                             reaction: "🔍",
                             caption: linguagem.menupx(prefix),
                             sendAudio: true
-                        });
+                        }, context);
                         break;
                     }
 
@@ -19773,7 +19836,7 @@ ${abc.letra}`;
                             reaction: "💬",
                             caption: linguagem.menusemprefixo(prefix),
                             sendAudio: true
-                        });
+                        }, context);
                         break;
                     }
 
@@ -19782,7 +19845,7 @@ ${abc.letra}`;
                             reaction: "🎮",
                             caption: linguagem.menurpg(prefix),
                             sendAudio: true
-                        });
+                        }, context);
                         break;
                     }
 
@@ -22093,7 +22156,7 @@ ${NomeDoBot} 🤝🏽`, mentions: [menc_os2]
                                 reaction: "💛",
                                 caption: linguagem.menurpg(prefix),
                                 sendAudio: true
-                            });
+                            }, context);
                         } catch (e) {
                             console.error("Erro no comando 'menu':", e);
                         }
@@ -30206,7 +30269,7 @@ https://whatsapp.com/channel/seu_canal`)
                                 reaction: "💛",
                                 caption: linguagem.menupx(prefix),
                                 sendAudio: true
-                            });
+                            }, context);
                         } catch (e) {
                             console.error("Erro no comando 'menu':", e);
                         }
@@ -30227,7 +30290,7 @@ https://youtube.com/@seu_canal?si=DN_gv6NZDBp-x-t7`)
                                 reaction: "💛",
                                 caption: linguagem.efeitos(prefix),
                                 sendAudio: true
-                            });
+                            }, context);
                         } catch (e) {
                             console.error("Erro no comando 'menu':", e);
                         }
@@ -30265,7 +30328,7 @@ Use o comando ${prefix}criador e fale diretamente comigo para adquirir!
                                 reaction: "💛",
                                 caption: linguagem.menudownload(prefix),
                                 sendAudio: true
-                            });
+                            }, context);
                         } catch (e) {
                             console.error("Erro no comando 'menu':", e);
                         }
@@ -30308,7 +30371,7 @@ Use o comando ${prefix}criador e fale diretamente comigo para adquirir!
                                 reaction: "💛",
                                 caption: linguagem.alteradores(prefix),
                                 sendAudio: true
-                            });
+                            }, context);
                         } catch (e) {
                             console.error("Erro no comando 'menu':", e);
                         }
@@ -30322,7 +30385,7 @@ Use o comando ${prefix}criador e fale diretamente comigo para adquirir!
                                 reaction: "💛",
                                 caption: linguagem.menu18(prefix),
                                 sendAudio: true
-                            });
+                            }, context);
                         } catch (e) {
                             console.error("Erro no comando 'menu':", e);
                         }
@@ -33610,7 +33673,7 @@ BELE KAFFER
                                 const listText = `🪩 *Rolês ativos*\n\n${listLines.join('\n\n')}\n\n🙋 Reaja com ${ROLE_GOING_BASE} ou use ${groupPrefix}role.vou CODIGO\n🤷 Reaja com ${ROLE_NOT_GOING_BASE} ou use ${groupPrefix}role.nvou CODIGO`;
 
                                 try {
-                                    await nazu.sendMessage(sendTarget, { text: listText });
+                                    await corvo.sendMessage(sendTarget, { text: listText });
                                     if (sendInPv && sendTarget !== from) {
                                         await reply('📬 Enviei a lista de rolês no seu privado!', { mentions: [sender] });
                                     }
@@ -33714,9 +33777,9 @@ BELE KAFFER
                                                 payload.gifPlayback = true;
                                             }
                                         }
-                                        sentMessage = await nazu.sendMessage(from, payload);
+                                        sentMessage = await corvo.sendMessage(from, payload);
                                     } else {
-                                        sentMessage = await nazu.sendMessage(from, { text: announcementText });
+                                        sentMessage = await corvo.sendMessage(from, { text: announcementText });
                                     }
                                 } catch (sendError) {
                                     console.error('Erro ao divulgar rolê:', sendError);
@@ -33799,7 +33862,7 @@ BELE KAFFER
                                 if (roleData.announcementKey?.id) {
                                     delete groupData.roleMessages[roleData.announcementKey.id];
                                     try {
-                                        await nazu.sendMessage(from, {
+                                        await corvo.sendMessage(from, {
                                             delete: {
                                                 remoteJid: from,
                                                 fromMe: roleData.announcementKey.fromMe !== undefined ? roleData.announcementKey.fromMe : true,
@@ -33842,9 +33905,9 @@ BELE KAFFER
                                                 payload.gifPlayback = true;
                                             }
                                         }
-                                        sentMessage = await nazu.sendMessage(from, payload);
+                                        sentMessage = await corvo.sendMessage(from, payload);
                                     } else {
-                                        sentMessage = await nazu.sendMessage(from, { text: announcementText });
+                                        sentMessage = await corvo.sendMessage(from, { text: announcementText });
                                     }
                                 } catch (updateErr) {
                                     console.error('Erro ao reenviar divulgação do rolê:', updateErr);
@@ -33898,7 +33961,7 @@ BELE KAFFER
                                 if (roleData.announcementKey?.id) {
                                     delete groupData.roleMessages[roleData.announcementKey.id];
                                     try {
-                                        await nazu.sendMessage(from, {
+                                        await corvo.sendMessage(from, {
                                             delete: {
                                                 remoteJid: from,
                                                 fromMe: roleData.announcementKey.fromMe !== undefined ? roleData.announcementKey.fromMe : true,
@@ -34059,15 +34122,15 @@ BELE KAFFER
                                             }
                                         }
 
-                                        await nazu.sendMessage(from, payload, { quoted: info });
+                                        await corvo.sendMessage(from, payload, { quoted: info });
                                     } catch (mediaError) {
                                         console.log('Erro ao enviar mídia do rolê:', mediaError.message);
                                         // Se falhar, envia apenas texto
-                                        await nazu.sendMessage(from, { text: lines.join('\n'), mentions: [...going, ...notGoing] }, { quoted: info });
+                                        await corvo.sendMessage(from, { text: lines.join('\n'), mentions: [...going, ...notGoing] }, { quoted: info });
                                     }
                                 } else {
                                     // Se não tiver mídia, envia apenas texto
-                                    await nazu.sendMessage(from, { text: lines.join('\n'), mentions: [...going, ...notGoing] }, { quoted: info });
+                                    await corvo.sendMessage(from, { text: lines.join('\n'), mentions: [...going, ...notGoing] }, { quoted: info });
                                 }
                             } catch (e) {
                                 console.error('Erro em role.info:', e);
@@ -34078,7 +34141,7 @@ BELE KAFFER
                     }
                     case 'rpg': {
                         {
-                            await sendMenuWithMedia('menurpg', menuRPG);
+                            await sendMenuWithMedia(from, selo, 'menurpg', menuRPG, { prefix });
                             break;
                         }
                     }
@@ -40645,7 +40708,7 @@ BELE KAFFER
                                         return reply(`❌ Erro ao aplicar o efeito *${command}* no áudio. Verifique se o arquivo está válido e tente novamente.`);
                                     }
                                     const hah = fs.readFileSync(ran);
-                                    await nazu.sendMessage(from, {
+                                    await corvo.sendMessage(from, {
                                         audio: hah,
                                         mimetype: 'audio/mpeg'
                                     }, {
@@ -40726,7 +40789,7 @@ BELE KAFFER
                                         video: buffer453,
                                         mimetype: 'video/mp4'
                                     };
-                                    await nazu.sendMessage(from, messageType, {
+                                    await corvo.sendMessage(from, messageType, {
                                         quoted: info
                                     });
                                     await fs.unlinkSync(ran);
@@ -43944,7 +44007,7 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
                                     try {
                                         const groupMeta = await getCachedGroupMetadata(groupId);
                                         const msg = `🎉 Atenção, ${groupMeta.subject}! Adicionados ${extraDays} dias extras de aluguel.\nNova expiração: ${new Date(rentalData.groups[groupId].expiresAt).toLocaleDateString('pt-BR')}.\nMotivo: ${motivo}`;
-                                        await nazu.sendMessage(groupId, {
+                                        await corvo.sendMessage(groupId, {
                                             text: msg
                                         });
                                     } catch (e) {
@@ -44136,7 +44199,7 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
 
                             // Tenta notificar o grupo
                             try {
-                                await nazu.sendMessage(targetGroupId, {
+                                await corvo.sendMessage(targetGroupId, {
                                     text: `⚠️ *AVISO IMPORTANTE*\n\nO aluguel deste grupo foi removido pelo proprietário do bot.\n\n❌ O bot não funcionará mais neste grupo.\n\nPara mais informações, entre em contato com o dono.`
                                 });
                             } catch (e) {
@@ -44213,7 +44276,7 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
 
                             // Notifica o grupo
                             try {
-                                await nazu.sendMessage(targetGroupId, {
+                                await corvo.sendMessage(targetGroupId, {
                                     text: `🎉 *BOA NOTÍCIA!*\n\nSeu aluguel foi estendido!\n\n➕ Dias adicionados: *${daysToAdd}*\n📅 Nova data de expiração: *${newExpirationDate}*\n⏳ Dias restantes: *${daysLeft}*\n\n✨ Continue aproveitando o bot!`
                                 });
                             } catch (e) {
@@ -44402,7 +44465,7 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
                                 groupsLeft.push(groupId);
 
                                 try {
-                                    await nazu.sendMessage(groupId, {
+                                    await corvo.sendMessage(groupId, {
                                         text: `⏰ O aluguel deste grupo (${groupMetadata.subject}) expirou. Estou saindo, mas vocês podem renovar o aluguel entrando em contato com o dono! Até mais! 😊${symbols[Math.floor(Math.random() * symbols.length)]}`
                                     });
 
@@ -44411,7 +44474,7 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
                                         const delay = Math.floor(Math.random() * (500 - 100 + 1)) + 100;
                                         await new Promise(resolve => setTimeout(resolve, delay));
                                         try {
-                                            await nazu.sendMessage(admin, {
+                                            await corvo.sendMessage(admin, {
                                                 text: `⚠️ Olá, admin do grupo *${groupMetadata.subject}*! O aluguel do grupo expirou, e por isso saí. Para renovar, entre em contato com o dono. Obrigado! ${symbols[Math.floor(Math.random() * symbols.length)]}`
                                             });
                                             adminsNotified++;
@@ -44459,7 +44522,7 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
                                         const groupMetadata = await getCachedGroupMetadata(groupId).catch(() => null);
                                         const groupName = groupMetadata?.subject || 'Grupo desconhecido';
 
-                                        await nazu.sendMessage(groupId, {
+                                        await corvo.sendMessage(groupId, {
                                             text: `👋 Este grupo não possui aluguel registrado. Estou saindo. Até mais! ${symbols[Math.floor(Math.random() * symbols.length)]}`
                                         });
 
@@ -45675,7 +45738,7 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
                                     if (groupDescMediaTest) caption = caption.replace(/\{(?:groupdesc|descricao|desc)\}/gi, groupDescMediaTest);
                                     if (latencyMediaTest !== null) caption = caption.replace(/\{(?:velocidade|speed|latency)\}/gi, `${latencyMediaTest}s`);
 
-                                    await nazu.sendMessage(from, {
+                                    await corvo.sendMessage(from, {
                                         image: imageBuffer,
                                         caption: caption
                                     }, { quoted: info, mentions: mentionsToIncludeTest });
@@ -45716,7 +45779,7 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
                                     const quotedTextTest = (quotedMessageContent && (quotedMessageContent.conversation || quotedMessageContent.extendedTextMessage?.text)) || '';
                                     caption = caption.replace(/\{quoted\}/gi, quotedTextTest);
 
-                                    await nazu.sendMessage(from, {
+                                    await corvo.sendMessage(from, {
                                         video: videoBuffer,
                                         caption: caption
                                     }, { quoted: info, mentions: mentionsToIncludeTest });
@@ -45724,7 +45787,7 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
                             } else if (processedResponse.type === 'audio') {
                                 const audioBuffer = processedResponse.buffer ? Buffer.from(processedResponse.buffer, 'base64') : null;
                                 if (audioBuffer) {
-                                    await nazu.sendMessage(from, {
+                                    await corvo.sendMessage(from, {
                                         audio: audioBuffer,
                                         mimetype: 'audio/mp4',
                                         ptt: processedResponse.ptt || false
@@ -45733,7 +45796,7 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
                             } else if (processedResponse.type === 'sticker') {
                                 const stickerBuffer = processedResponse.buffer ? Buffer.from(processedResponse.buffer, 'base64') : null;
                                 if (stickerBuffer) {
-                                    await nazu.sendMessage(from, {
+                                    await corvo.sendMessage(from, {
                                         sticker: stickerBuffer
                                     }, { quoted: info });
                                 }
@@ -45936,7 +45999,7 @@ As consultas de dados (CPF, Vizinhos, Proprietário, Empregos, Vacinas, Benefíc
 • Use o comando: !apikey suachave
 • Reinicie o bot após configurar`;
 
-                                        nazu.sendMessage(nmrdn, { text: ownerMessage }).catch(notifyErr => {
+                                        corvo.sendMessage(nmrdn, { text: ownerMessage }).catch(notifyErr => {
                                             console.error('Erro ao notificar dono:', notifyErr.message);
                                         });
 
@@ -45977,7 +46040,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
 • Entre em contato para fazer upgrade do seu plano
 • Configure a nova API key após o upgrade`;
 
-                                        nazu.sendMessage(nmrdn, { text: ownerMessage }).catch(notifyErr => {
+                                        corvo.sendMessage(nmrdn, { text: ownerMessage }).catch(notifyErr => {
                                             console.error('Erro ao notificar dono:', notifyErr.message);
                                         });
 
@@ -46041,7 +46104,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 if (response.data && response.data.success === false && response.data.error === "Acesso negado") {
                                     const errorData = response.data;
                                     if (errorData.required_limit && errorData.required_limit > 500) {
-                                        nazu.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE* 🚨\n\nConsulta: ${consultaInfo.name}\nLimite necessário: ${errorData.required_limit}` }).catch(() => { });
+                                        corvo.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE* 🚨\n\nConsulta: ${consultaInfo.name}\nLimite necessário: ${errorData.required_limit}` }).catch(() => { });
                                         return reply(`❌ *Plano insuficiente*\n\n⚠️ As consultas de dados estão disponíveis apenas no plano ilimitado.\n\n📞 O dono do bot foi notificado.`);
                                     }
                                 }
@@ -46103,7 +46166,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 if (response.data && response.data.success === false && response.data.error === "Acesso negado") {
                                     const errorData = response.data;
                                     if (errorData.required_limit && errorData.required_limit > 500) {
-                                        nazu.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
+                                        corvo.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
                                         return reply(`❌ *Plano insuficiente*\n\n⚠️ Consultas de dados disponíveis apenas no plano ilimitado.\n\n📞 O dono foi notificado.`);
                                     }
                                 }
@@ -46124,7 +46187,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 if (apiError.response?.data && apiError.response.data.success === false && apiError.response.data.error === "Acesso negado") {
                                     const errorData = apiError.response.data;
                                     if (errorData.required_limit && errorData.required_limit > 500) {
-                                        nazu.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
+                                        corvo.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
                                         return reply(`❌ *Plano insuficiente*\n\n⚠️ Consultas de dados disponíveis apenas no plano ilimitado.\n\n📞 O dono foi notificado.`);
                                     }
                                 }
@@ -46180,7 +46243,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 if (response.data && response.data.success === false && response.data.error === "Acesso negado") {
                                     const errorData = response.data;
                                     if (errorData.required_limit && errorData.required_limit > 500) {
-                                        nazu.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
+                                        corvo.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
                                         return reply(`❌ *Plano insuficiente*\n\n⚠️ Consultas de dados disponíveis apenas no plano ilimitado.\n\n📞 O dono foi notificado.`);
                                     }
                                 }
@@ -46201,7 +46264,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 if (apiError.response?.data && apiError.response.data.success === false && apiError.response.data.error === "Acesso negado") {
                                     const errorData = apiError.response.data;
                                     if (errorData.required_limit && errorData.required_limit > 500) {
-                                        nazu.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
+                                        corvo.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
                                         return reply(`❌ *Plano insuficiente*\n\n⚠️ Consultas de dados disponíveis apenas no plano ilimitado.\n\n📞 O dono foi notificado.`);
                                     }
                                 }
@@ -46257,7 +46320,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 if (response.data && response.data.success === false && response.data.error === "Acesso negado") {
                                     const errorData = response.data;
                                     if (errorData.required_limit && errorData.required_limit > 500) {
-                                        nazu.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
+                                        corvo.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
                                         return reply(`❌ *Plano insuficiente*\n\n⚠️ Consultas de dados disponíveis apenas no plano ilimitado.\n\n📞 O dono foi notificado.`);
                                     }
                                 }
@@ -46278,7 +46341,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 if (apiError.response?.data && apiError.response.data.success === false && apiError.response.data.error === "Acesso negado") {
                                     const errorData = apiError.response.data;
                                     if (errorData.required_limit && errorData.required_limit > 500) {
-                                        nazu.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
+                                        corvo.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
                                         return reply(`❌ *Plano insuficiente*\n\n⚠️ Consultas de dados disponíveis apenas no plano ilimitado.\n\n📞 O dono foi notificado.`);
                                     }
                                 }
@@ -46333,7 +46396,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 if (response.data && response.data.success === false && response.data.error === "Acesso negado") {
                                     const errorData = response.data;
                                     if (errorData.required_limit && errorData.required_limit > 500) {
-                                        nazu.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
+                                        corvo.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
                                         return reply(`❌ *Plano insuficiente*\n\n⚠️ Consultas de dados disponíveis apenas no plano ilimitado.\n\n📞 O dono foi notificado.`);
                                     }
                                 }
@@ -46354,7 +46417,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 if (apiError.response?.data && apiError.response.data.success === false && apiError.response.data.error === "Acesso negado") {
                                     const errorData = apiError.response.data;
                                     if (errorData.required_limit && errorData.required_limit > 500) {
-                                        nazu.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
+                                        corvo.sendMessage(nmrdn, { text: `🚨 *ALERTA - PLANO INSUFICIENTE*\n\n• Consulta: ${consultaInfo.name}\n• Limite necessário: ${errorData.required_limit}\n• Limite atual: ${errorData.current_limit || 'N/A'}\n\n💳 Acesse: https://cog.api.br/plans` }).catch(() => { });
                                         return reply(`❌ *Plano insuficiente*\n\n⚠️ Consultas de dados disponíveis apenas no plano ilimitado.\n\n📞 O dono foi notificado.`);
                                     }
                                 }
@@ -46630,7 +46693,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 long_url: datz.url,
                                 alias: `corvo_${Math.floor(10000 + Math.random() * 90000)}`
                             }).then((shortLinkPlugin) => {
-                                return nazu.sendMessage(from, {
+                                return corvo.sendMessage(from, {
                                     image: { url: datz.image },
                                     caption: `🔍 Encontrei esse plugin aqui:\n\n*Nome*: _${datz.name}_\n*Publicado por*: _${datz.creator}_\n*Descrição*: _${datz.desc}_\n*Link para download*: _${shortLinkPlugin.data.short_url}_\n\n> 💖 `
                                 }, { quoted: info });
@@ -46700,7 +46763,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                             const filename = `${track.name.replace(/[^\w\s]/gi, '_')}.mp3`;
 
                                             try {
-                                                await nazu.sendMessage(from, {
+                                                await corvo.sendMessage(from, {
                                                     audio: audioBuffer,
                                                     mimetype: 'audio/mpeg',
                                                     fileName: filename
@@ -46708,7 +46771,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                             } catch (audioError) {
                                                 if (String(audioError).includes("ENOSPC") || String(audioError).includes("size")) {
                                                     await reply('📦 Arquivo muito grande, enviando como documento...');
-                                                    await nazu.sendMessage(from, {
+                                                    await corvo.sendMessage(from, {
                                                         document: audioBuffer,
                                                         fileName: filename,
                                                         mimetype: 'audio/mpeg'
@@ -46803,7 +46866,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                         `🎧 *Baixando e processando...*`;
 
                                     try {
-                                        await nazu.sendMessage(from, {
+                                        await corvo.sendMessage(from, {
                                             image: { url: result.thumbnail },
                                             caption
                                         }, { quoted: info });
@@ -46812,7 +46875,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                     }
 
                                     try {
-                                        await nazu.sendMessage(from, {
+                                        await corvo.sendMessage(from, {
                                             audio: result.buffer,
                                             mimetype: 'audio/mpeg',
                                             fileName: result.filename
@@ -46820,7 +46883,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                     } catch (audioError) {
                                         if (String(audioError).includes("ENOSPC") || String(audioError).includes("size")) {
                                             await reply('📦 Arquivo muito grande, enviando como documento...');
-                                            await nazu.sendMessage(from, {
+                                            await corvo.sendMessage(from, {
                                                 document: result.buffer,
                                                 fileName: result.filename,
                                                 mimetype: 'audio/mpeg'
@@ -46919,7 +46982,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
 
                                 // Enviar thumbnail primeiro
                                 if (thumbnail) {
-                                    nazu.sendMessage(from, {
+                                    corvo.sendMessage(from, {
                                         image: { url: thumbnail },
                                         caption: caption
                                     }).catch(err => {
@@ -46931,7 +46994,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 const fileSize = buffer.length;
                                 const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
 
-                                nazu.sendMessage(from, {
+                                corvo.sendMessage(from, {
                                     audio: buffer,
                                     mimetype: 'audio/mpeg',
                                     fileName: filename,
@@ -46941,7 +47004,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 }).catch(err => {
                                     console.error('Erro ao enviar áudio do Bandcamp:', err);
                                     // Tentar enviar como documento se falhar
-                                    nazu.sendMessage(from, {
+                                    corvo.sendMessage(from, {
                                         document: buffer,
                                         mimetype: 'audio/mpeg',
                                         fileName: filename
@@ -47187,7 +47250,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                     if (!datinha.ok) return reply(datinha.msg);
 
                                     for (const urlz of datinha.urls) {
-                                        await nazu.sendMessage(from, {
+                                        await corvo.sendMessage(from, {
                                             [datinha.type]: {
                                                 url: urlz
                                             }
@@ -47196,7 +47259,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                         });
                                     }
 
-                                    if (datinha.audio) await nazu.sendMessage(from, {
+                                    if (datinha.audio) await corvo.sendMessage(from, {
                                         audio: {
                                             url: datinha.audio
                                         },
@@ -47274,7 +47337,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                         `\n📥 *Enviando vídeo...*`;
 
                                     try {
-                                        await nazu.sendMessage(from, {
+                                        await corvo.sendMessage(from, {
                                             image: { url: result.thumbnail },
                                             caption
                                         }, { quoted: info });
@@ -47283,7 +47346,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                     }
 
                                     try {
-                                        await nazu.sendMessage(from, {
+                                        await corvo.sendMessage(from, {
                                             video: result.buffer,
                                             mimetype: 'video/mp4',
                                             fileName: result.filename
@@ -47291,7 +47354,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                     } catch (videoError) {
                                         if (String(videoError).includes("ENOSPC") || String(videoError).includes("size")) {
                                             await reply('📦 Vídeo muito grande, enviando como documento...');
-                                            await nazu.sendMessage(from, {
+                                            await corvo.sendMessage(from, {
                                                 document: result.buffer,
                                                 fileName: result.filename,
                                                 mimetype: 'video/mp4'
@@ -47376,7 +47439,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                         `\n📥 *Enviando vídeo...*`;
 
                                     try {
-                                        await nazu.sendMessage(from, {
+                                        await corvo.sendMessage(from, {
                                             image: { url: result.thumbnail },
                                             caption
                                         }, { quoted: info });
@@ -47385,7 +47448,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                     }
 
                                     try {
-                                        await nazu.sendMessage(from, {
+                                        await corvo.sendMessage(from, {
                                             video: result.buffer,
                                             mimetype: 'video/mp4',
                                             fileName: result.filename
@@ -47393,7 +47456,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                     } catch (videoError) {
                                         if (String(videoError).includes("ENOSPC") || String(videoError).includes("size")) {
                                             await reply('📦 Vídeo muito grande, enviando como documento...');
-                                            await nazu.sendMessage(from, {
+                                            await corvo.sendMessage(from, {
                                                 document: result.buffer,
                                                 fileName: result.filename,
                                                 mimetype: 'video/mp4'
@@ -47495,7 +47558,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
 
                                 // Enviar thumbnail primeiro
                                 if (thumbnail) {
-                                    nazu.sendMessage(from, {
+                                    corvo.sendMessage(from, {
                                         image: { url: thumbnail },
                                         caption: caption
                                     }).catch(err => {
@@ -47508,7 +47571,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
 
                                 if (fileSize > 100 * 1024 * 1024) { // > 100MB
-                                    nazu.sendMessage(from, {
+                                    corvo.sendMessage(from, {
                                         document: buffer,
                                         mimetype: 'video/mp4',
                                         fileName: filename
@@ -47519,7 +47582,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                         reply('❌ Erro ao enviar o vídeo. O arquivo pode ser muito grande.');
                                     });
                                 } else {
-                                    nazu.sendMessage(from, {
+                                    corvo.sendMessage(from, {
                                         video: buffer,
                                         mimetype: 'video/mp4',
                                         fileName: filename
@@ -47621,7 +47684,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
 
                                 // Enviar thumbnail primeiro (se tiver e for vídeo)
                                 if (thumbnail && isVideo) {
-                                    nazu.sendMessage(from, {
+                                    corvo.sendMessage(from, {
                                         image: { url: thumbnail },
                                         caption: caption
                                     }).catch(err => {
@@ -47636,7 +47699,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 if (isVideo) {
                                     // É vídeo
                                     if (fileSize > 100 * 1024 * 1024) { // > 100MB
-                                        nazu.sendMessage(from, {
+                                        corvo.sendMessage(from, {
                                             document: buffer,
                                             mimetype: 'video/mp4',
                                             fileName: filename
@@ -47647,7 +47710,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                             reply('❌ Erro ao enviar o vídeo. O arquivo pode ser muito grande.');
                                         });
                                     } else {
-                                        nazu.sendMessage(from, {
+                                        corvo.sendMessage(from, {
                                             video: buffer,
                                             mimetype: 'video/mp4',
                                             fileName: filename,
@@ -47661,7 +47724,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                     }
                                 } else {
                                     // É imagem
-                                    nazu.sendMessage(from, {
+                                    corvo.sendMessage(from, {
                                         image: buffer,
                                         caption: caption
                                     }, { quoted: info }).then(() => {
@@ -47775,7 +47838,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
 
                                 // Enviar thumbnail primeiro
                                 if (thumbnail) {
-                                    nazu.sendMessage(from, {
+                                    corvo.sendMessage(from, {
                                         image: { url: thumbnail },
                                         caption: caption
                                     }).catch(err => {
@@ -47788,7 +47851,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
 
                                 if (fileSize > 100 * 1024 * 1024) { // > 100MB
-                                    nazu.sendMessage(from, {
+                                    corvo.sendMessage(from, {
                                         document: buffer,
                                         mimetype: 'video/mp4',
                                         fileName: filename
@@ -47799,7 +47862,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                         reply('❌ Erro ao enviar o vídeo. O arquivo pode ser muito grande.');
                                     });
                                 } else {
-                                    nazu.sendMessage(from, {
+                                    corvo.sendMessage(from, {
                                         video: buffer,
                                         mimetype: 'video/mp4',
                                         fileName: filename
@@ -47912,7 +47975,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
 
                                 // Enviar thumbnail primeiro
                                 if (thumbnail) {
-                                    nazu.sendMessage(from, {
+                                    corvo.sendMessage(from, {
                                         image: { url: thumbnail },
                                         caption: caption
                                     }).catch(err => {
@@ -47925,7 +47988,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 const bufferSizeMB = (bufferSize / (1024 * 1024)).toFixed(2);
 
                                 if (bufferSize > 100 * 1024 * 1024) { // > 100MB
-                                    nazu.sendMessage(from, {
+                                    corvo.sendMessage(from, {
                                         document: buffer,
                                         mimetype: 'video/mp4',
                                         fileName: filename
@@ -47936,7 +47999,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                         reply('❌ Erro ao enviar o vídeo. O arquivo pode ser muito grande.');
                                     });
                                 } else {
-                                    nazu.sendMessage(from, {
+                                    corvo.sendMessage(from, {
                                         video: buffer,
                                         mimetype: 'video/mp4',
                                         fileName: filename
@@ -48029,26 +48092,26 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
 
                             // Determinar o tipo de mídia e enviar
                             if (mimetype.startsWith('image/')) {
-                                await nazu.sendMessage(from, {
+                                await corvo.sendMessage(from, {
                                     image: fileBuffer,
                                     caption: `📁 *${fileName}*\n📊 Tamanho: ${fileSize}`,
                                     mimetype: mimetype
                                 }, { quoted: info });
                             } else if (mimetype.startsWith('video/')) {
-                                await nazu.sendMessage(from, {
+                                await corvo.sendMessage(from, {
                                     video: fileBuffer,
                                     caption: `📁 *${fileName}*\n📊 Tamanho: ${fileSize}`,
                                     mimetype: mimetype
                                 }, { quoted: info });
                             } else if (mimetype.startsWith('audio/')) {
-                                await nazu.sendMessage(from, {
+                                await corvo.sendMessage(from, {
                                     audio: fileBuffer,
                                     mimetype: mimetype,
                                     ptt: false
                                 }, { quoted: info });
                             } else {
                                 // Enviar como documento para outros tipos
-                                await nazu.sendMessage(from, {
+                                await corvo.sendMessage(from, {
                                     document: fileBuffer,
                                     fileName: fileName,
                                     mimetype: mimetype,
@@ -48147,26 +48210,26 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
 
                             // Determinar o tipo de mídia e enviar
                             if (mimeType.startsWith('image/')) {
-                                await nazu.sendMessage(from, {
+                                await corvo.sendMessage(from, {
                                     image: fileBuffer,
                                     caption: `📁 *${fileName}*\n📊 Tamanho: ${fileSize}`,
                                     mimetype: mimeType
                                 }, { quoted: info });
                             } else if (mimeType.startsWith('video/')) {
-                                await nazu.sendMessage(from, {
+                                await corvo.sendMessage(from, {
                                     video: fileBuffer,
                                     caption: `📁 *${fileName}*\n📊 Tamanho: ${fileSize}`,
                                     mimetype: mimeType
                                 }, { quoted: info });
                             } else if (mimeType.startsWith('audio/')) {
-                                await nazu.sendMessage(from, {
+                                await corvo.sendMessage(from, {
                                     audio: fileBuffer,
                                     mimetype: mimeType,
                                     ptt: false
                                 }, { quoted: info });
                             } else {
                                 // Enviar como documento para outros tipos
-                                await nazu.sendMessage(from, {
+                                await corvo.sendMessage(from, {
                                     document: fileBuffer,
                                     fileName: fileName,
                                     mimetype: mimeType,
@@ -48241,20 +48304,20 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                         // Usar a melhor qualidade disponível
                                         const videoUrl = item.bestQuality?.url || item.url;
 
-                                        await nazu.sendMessage(from, {
+                                        await corvo.sendMessage(from, {
                                             video: { url: videoUrl },
                                             caption: caption,
                                             mimetype: 'video/mp4'
                                         }, { quoted: info });
 
                                     } else if (item.type === 'photo' || item.type === 'image') {
-                                        await nazu.sendMessage(from, {
+                                        await corvo.sendMessage(from, {
                                             image: { url: item.url },
                                             caption: caption
                                         }, { quoted: info });
 
                                     } else if (item.type === 'gif' || item.type === 'animated_gif') {
-                                        await nazu.sendMessage(from, {
+                                        await corvo.sendMessage(from, {
                                             video: { url: item.url },
                                             caption: caption,
                                             gifPlayback: true
@@ -48456,7 +48519,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 throw new Error('Resposta vazia do servidor GitHub');
                             }
 
-                            await nazu.sendMessage(from, {
+                            await corvo.sendMessage(from, {
                                 document: Buffer.from(zipResponse.data),
                                 fileName: 'corvo-bot.zip',
                                 mimetype: 'application/zip',
@@ -48604,7 +48667,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 const audioPath = getMenuAudioPath();
                                 if (audioPath && fs.existsSync(audioPath)) {
                                     const audioBuffer = fs.readFileSync(audioPath);
-                                    await nazu.sendMessage(from, {
+                                    await corvo.sendMessage(from, {
                                         audio: audioBuffer,
                                         mimetype: 'audio/mpeg',
                                         ptt: false
@@ -48612,7 +48675,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                         quoted: info
                                     }).then(async () => {
                                         // Depois envia o menu
-                                        await nazu.sendMessage(from, {
+                                        await corvo.sendMessage(from, {
                                             [useVideo ? 'video' : 'image']: mediaBuffer,
                                             caption: lerMaisPrefix + menuText,
                                             gifPlayback: useVideo,
@@ -48623,7 +48686,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                     });
                                 } else {
                                     // Se não tem áudio válido, envia só o menu
-                                    await nazu.sendMessage(from, {
+                                    await corvo.sendMessage(from, {
                                         [useVideo ? 'video' : 'image']: mediaBuffer,
                                         caption: lerMaisPrefix + menuText,
                                         gifPlayback: useVideo,
@@ -48634,7 +48697,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 }
                             } else {
                                 // Se áudio não está ativo, envia só o menu
-                                await nazu.sendMessage(from, {
+                                await corvo.sendMessage(from, {
                                     [useVideo ? 'video' : 'image']: mediaBuffer,
                                     caption: lerMaisPrefix + menuText,
                                     gifPlayback: useVideo,
@@ -48654,7 +48717,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                     case 'changers': {
 
                         try {
-                            await sendMenuWithMedia('alteradores', menuAlterador);
+                            await sendMenuWithMedia(from, selo, 'alteradores', menuAlterador, { prefix });
                         } catch (error) {
                             console.error('Erro ao enviar menu de alteradores:', error);
                             await reply("❌ Ocorreu um erro ao carregar o menu de alteradores");
@@ -48664,7 +48727,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                     case 'menuias': {
 
                         try {
-                            await sendMenuWithMedia('ia', menuIa);
+                            await sendMenuWithMedia(from, selo, 'ia', menuIa, { prefix });
                         } catch (error) {
                             console.error('Erro ao enviar menu de IA:', error);
                             await reply("❌ Ocorreu um erro ao carregar o menu de IA");
@@ -48676,7 +48739,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                         try {
                             const customDesign = getMenuDesignWithDefaults(nomebot, pushname);
                             let menuContent = await menubn(prefix, nomebot, pushname, isModoLite, customDesign);
-                            await sendMenuWithMedia('brincadeiras', async () => menuContent);
+                            await sendMenuWithMedia(from, selo, 'brincadeiras', async () => menuContent, { prefix });
                         } catch (error) {
                             console.error('Erro ao enviar menu de brincadeiras:', error);
                             await reply("❌ Ocorreu um erro ao carregar o menu de brincadeiras");
@@ -48686,7 +48749,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                     case 'downloadmenu': {
 
                         try {
-                            await sendMenuWithMedia('downloads', menudown);
+                            await sendMenuWithMedia(from, selo, 'downloads', menudown, { prefix });
                         } catch (error) {
                             console.error('Erro ao enviar menu de downloads:', error);
                             await reply("❌ Ocorreu um erro ao carregar o menu de downloads");
@@ -48696,7 +48759,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                     case 'tools': {
 
                         try {
-                            await sendMenuWithMedia('ferramentas', menuFerramentas);
+                            await sendMenuWithMedia(from, selo, 'ferramentas', menuFerramentas, { prefix });
                         } catch (error) {
                             console.error('Erro ao enviar menu de ferramentas:', error);
                             await reply("❌ Ocorreu um erro ao carregar o menu de ferramentas");
@@ -48706,7 +48769,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                     case 'menuconsultas': {
 
                         try {
-                            await sendMenuWithMedia('buscas', menuBuscas);
+                            await sendMenuWithMedia(from, selo, 'buscas', menuBuscas, { prefix });
                         } catch (error) {
                             console.error('Erro ao enviar menu de buscas:', error);
                             await reply("❌ Ocorreu um erro ao carregar o menu de buscas");
@@ -48716,7 +48779,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                     case 'brawlmenu': {
 
                         try {
-                            await sendMenuWithMedia('brawl', menuBrawlStars);
+                            await sendMenuWithMedia(from, selo, 'brawl', menuBrawlStars, { prefix });
                         } catch (error) {
                             console.error('Erro ao enviar menu de Brawl Stars:', error);
                             await reply("❌ Ocorreu um erro ao carregar o menu de Brawl Stars");
@@ -48726,7 +48789,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                     case 'admmenu': {
 
                         try {
-                            await sendMenuWithMedia('admin', menuadm);
+                            await sendMenuWithMedia(from, selo, 'admin', menuadm, { prefix });
                         } catch (error) {
                             console.error('Erro ao enviar menu de administração:', error);
                             await reply("❌ Ocorreu um erro ao carregar o menu de administração");
@@ -48736,7 +48799,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                     case 'membermenu': {
 
                         try {
-                            await sendMenuWithMedia('membros', menuMembros);
+                            await sendMenuWithMedia(from, selo, 'membros', menuMembros, { prefix });
                         } catch (error) {
                             console.error('Erro ao enviar menu de membros:', error);
                             await reply("❌ Ocorreu um erro ao carregar o menu de membros");

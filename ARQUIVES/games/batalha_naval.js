@@ -20,6 +20,11 @@ function loadGame(id) {
     return null;
 }
 
+function deleteGame(id) {
+    const file = path.join(DB_PATH, `${id}.json`);
+    if (fs.existsSync(file)) fs.unlinkSync(file);
+}
+
 function createBoard() {
     return Array(5).fill(null).map(() => Array(5).fill('🌊'));
 }
@@ -91,4 +96,4 @@ function play(id, player, r, c) {
     }
 }
 
-module.exports = { initGame, loadGame, play, renderView };
+module.exports = { initGame, loadGame, play, renderView, saveGame, deleteGame };

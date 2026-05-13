@@ -20,6 +20,11 @@ function loadGame(id) {
     return null;
 }
 
+function deleteGame(id) {
+    const file = path.join(DB_PATH, `${id}.json`);
+    if (fs.existsSync(file)) fs.unlinkSync(file);
+}
+
 function createBoard() {
     const board = Array(8).fill(null).map(() => Array(8).fill('🟫'));
     for (let r = 0; r < 8; r++) {
@@ -117,4 +122,4 @@ function move(id, player, fromR, fromC, toR, toC) {
     return { error: 'Movimento inválido.' };
 }
 
-module.exports = { initGame, loadGame, move, renderBoard };
+module.exports = { initGame, loadGame, move, renderBoard, saveGame, deleteGame };

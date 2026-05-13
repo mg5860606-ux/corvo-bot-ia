@@ -80,4 +80,4 @@ function play(id, player, pos) {
     return { game };
 }
 
-module.exports = { initGame, loadGame, play, renderBoard };
+module.exports = { initGame, loadGame, play, renderBoard, saveGame };
