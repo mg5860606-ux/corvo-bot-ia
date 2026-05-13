@@ -1,88 +1,100 @@
-# 🤖 WhatsApp Bot de Inteligência Artificial
+# 🦅 CorvoBot-IA - O Robô Multifuncional para WhatsApp 🦅
 
-Um poderoso e personalizável Bot de WhatsApp com integração a IAs (Groq, Gemini, etc.), desenvolvido para ser totalmente customizável para novos donos. Ele inclui sistemas de níveis, jogos, menus interativos, ferramentas de download, administração de grupos e muito mais.
+Bem-vindo ao **CorvoBot-IA**, a solução definitiva para automação, entretenimento e gerenciamento de grupos no WhatsApp. Construído com tecnologia de ponta e focado em oferecer a melhor experiência para o usuário.
 
 ---
 
-## 🚀 Como instalar na sua máquina ou Host (VPS / Pterodactyl)
+## 🚀 Guia de Instalação Rápida
 
-### 1. Requisitos
-- [Node.js](https://nodejs.org/en/) (Versão 18 ou superior)
-- Git instalado.
+### 1. Pré-requisitos
+* **Node.js** (v18 ou superior)
+* **Git**
+* Um celular com WhatsApp para pareamento
 
-### 2. Clonando o Repositório
-Abra o seu terminal (ou o console da sua Host) e digite:
+### 2. Instalação
 ```bash
-git clone https://github.com/SEU_USUARIO/corvo-bot-ia.git
+# Clone o repositório
+git clone https://github.com/mg5860606-ux/corvo-bot-ia.git
+
+# Acesse o diretório
 cd corvo-bot-ia
-```
 
-### 3. Instalando as dependências
-Rode o comando abaixo para instalar todas as bibliotecas necessárias:
-```bash
+# Instale as dependências
 npm install
 ```
 
-### 4. Configuração Inicial (Setup Interativo)
-O bot possui um sistema de **Configuração Inicial Automática** pelo terminal. 
-Na primeira vez que você rodar, a tela do terminal vai perguntar o nome do Bot, o seu nome, e o seu número de WhatsApp. 
-
-Para iniciar:
+### 3. Configuração e Inicialização
+O CorvoBot possui um assistente de configuração interativo. Basta iniciar e seguir as instruções no console:
 ```bash
 npm start
 ```
-*Responda às 3 perguntinhas que aparecerem no console.* Os dados serão salvos no arquivo `INFO_CORVO.json`.
-
-### 5. Conectando no WhatsApp
-Após o Setup Inicial, o bot vai perguntar como você deseja se conectar:
-- **( 1 ) Código (Pairing):** Ele gerará um código de 8 dígitos para você inserir no WhatsApp (Aparelhos Conectados > Conectar com número).
-- **( 2 ) QR-Code:** Ele gerará um QR-Code no terminal. Escaneie-o com o WhatsApp.
-
-Pronto! Assim que aparecer "BOT CONECTADO", ele já estará online.
+*Você precisará informar o nome do bot, seu nome e seu número.*
 
 ---
 
-## ☁️ Como hospedar (Host / VPS / Termux)
+## 🎮 Ecossistema de Jogos (Multiplayer & Solo)
 
-### Painel Pterodactyl (Jexactyl, etc.)
-1. Crie um servidor Node.js.
-2. Na aba `Startup`, coloque o comando de inicialização como `npm start`.
-3. Vá no `File Manager`, faça o upload do repositório zipado e extraia, ou use a aba `Git Pull` se sua host tiver.
-4. Vá no `Console`, inicie o servidor e siga o **Setup Interativo**.
+O CorvoBot vem carregado com uma vasta biblioteca de jogos interativos para seus grupos:
 
-### Termux (Celular)
-Se você for rodar direto do celular:
-```bash
-pkg update && pkg upgrade
-pkg install nodejs git -y
-git clone https://github.com/SEU_USUARIO/corvo-bot-ia.git
-cd corvo-bot-ia
-npm install
-npm start
-```
+| Categoria | Jogos Disponíveis |
+| :--- | :--- |
+| **Clássicos** | Jogo da Velha, Dama, Lig 4, Batalha Naval, Forca, Stop |
+| **Estratégia & RPG** | Lobisomem, Detetive, Monopoly (Banco Imobiliário) |
+| **Cassino & Apostas** | Roleta, 21 (Blackjack), Aposta de Corrida, Sorteio de Coins |
+| **Quizz & Raciocínio** | Gartic, Quiz de Futebol, Quiz de Animais, Rimas |
 
 ---
 
-## ⚙️ Funcionalidades
-- **IA Autônoma:** Integração com Groq e Gemini. Personalidade sarcástica, inteligente e humanizada.
-- **Auto-Reply PV:** Responde automaticamente a triggers configurados e comandos do dono.
-- **Administração de Grupos:** Antifake, Antibot, Boas-Vindas personalizável, Banimento automático e Promoção.
-- **Downloads:** Suporte completo para Instagram, YouTube, TikTok e Twitter (X).
-- **Games & Diversão:** 
-  - **Aposta de Corrida:** Novo sistema de corrida de cavalos com apostas em tempo real.
-  - **Multiplayer:** Batalha Naval, Dama, Jogo da Velha, Lig 4 e Forca.
-  - **RPG & Economia:** Sistema de níveis, banco, cassino e recompensas.
+## ✨ Funcionalidades Premium
 
-## 🌟 Novidades Recentes (Maio 2026)
-- **Estabilização do Motor de Jogos:** Otimização completa dos jogos de tabuleiro e integração do novo motor de corridas.
-- **Identidades Reais:** Correção do erro "Desconhecido" em jogos multiplayer; agora o bot identifica corretamente os participantes pelo nome do WhatsApp.
-- **Menus Dinâmicos:** Correção no carregamento dos comandos de menu para maior agilidade na resposta.
-- **Gestão de Cache:** Sistema automatizado para limpeza de sessões de jogos inativas.
+### 🤖 Inteligência Artificial Avançada
+* **Integração Multimodal:** Suporte para **Google Gemini** e **Groq**, permitindo conversas fluidas e inteligentes.
+* **Memória Contextual:** O bot lembra de interações passadas para conversas mais naturais.
+* **Ações Autônomas:** A IA pode executar comandos do bot (ex: baixar vídeos) por conta própria se solicitado.
 
-## 📝 Configurações Avançadas
-Para mudar chaves de APIs ou editar manualmente o bot, modifique os arquivos na pasta `DADOS DO CORVO/INFO_CORVO/media/`.
+### 🛡️ Administração de Grupos
+* **Segurança Total:** Sistemas de Anti-Link (Hard/Easy), Anti-Fake, Anti-Spam e Anti-Bot.
+* **Gestão de Membros:** Promoção/Rebaixamento, Banimento, Lista Negra (Global e por Grupo).
+* **Automação:** Agendamento de abertura/fechamento de grupo.
 
-As chaves do **Groq** ficam localizadas em `database/groq_keys.json`. Cole as suas lá para que a IA funcione sem interrupções.
+### 📥 Ferramentas de Download
+* Baixe conteúdo das principais redes sociais: **Instagram, TikTok, YouTube, Twitter (X), Facebook** e mais.
 
 ---
-*Desenvolvido com foco em performance e facilidade de uso.*
+
+## 🛠️ Configurações
+
+Para ajustes manuais, os arquivos de configuração estão localizados em:
+* `DADOS DO CORVO/INFO_CORVO/media/`
+* Chaves da API Groq: `database/groq_keys.json`
+
+## 🏇 Como Funciona: Aposta de Corrida
+
+O **Aposta de Corrida** é um dos mini-games mais emocionantes do CorvoBot! Veja como participar:
+
+1. **Iniciar a Corrida:** Use o comando `.apostacorrida` para abrir uma nova rodada.
+2. **Escolher seu Competidor:** O bot apresentará 4 competidores (representados por emojis aleatórios como 🏎️, 🚀, 🐎, etc.).
+3. **Fazer sua Aposta:** Durante a fase de apostas, use:
+   `apostar [número_do_competidor] [valor]`
+   *Exemplo:* `apostar 2 500` (aposta 500 coins no competidor 2).
+4. **A Corrida:** Após o tempo de aposta, a corrida começa! Os competidores avançam aleatoriamente até a linha de chegada.
+5. **Premiação:** Se o seu competidor vencer, você recebe o prêmio baseado na sua aposta!
+
+---
+
+## 🌟 Novidades (Maio 2026)
+* ✅ **Novo Jogo:** Aposta de Corrida (Corrida de Cavalos com sistema de apostas).
+* ✅ **Correção de Bugs:** Nomes de participantes agora aparecem corretamente em todos os jogos.
+* ✅ **Performance:** Redução no tempo de resposta dos comandos de menu.
+* ✅ **Estabilidade:** Melhorias no sistema de banco de dados para evitar perda de coins.
+
+---
+
+> [!TIP]
+> Use o comando `.menu` para ver a lista completa de comandos disponíveis diretamente no WhatsApp!
+
+> [!IMPORTANT]
+> Mantenha suas chaves de API seguras e nunca as compartilhe publicamente.
+
+---
+*Criado por [Sandro] - Elevando sua experiência no WhatsApp.*
