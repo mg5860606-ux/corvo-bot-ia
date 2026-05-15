@@ -76,6 +76,7 @@ if (typeof globalThis.Path2D === 'undefined') {
 
 const pdfParse = require('pdf-parse');
 const googleIt = require('google-it');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // =================== LOCAL MEMORY CONFIGURATION ===================
 
@@ -620,11 +621,7 @@ async function startcorvo(upsert, corvo, qrcode) {
     try {
         if (!upsert || !upsert.messages || upsert.messages.length === 0) return;
         var info = upsert.messages[0];
-        if (!info.message) return;
-
-        if (!upsert || !upsert.messages || upsert.messages.length === 0) return;
-        var info = upsert.messages[0];
-        if (!info.message) return;
+        if (!info.message && !info.messageStubType) return;
 
         async function startFunctionNaga() {
             var ownerNumber = setting.ownerNumber.replace(new RegExp("[()+-/ +/]", "gi"), "")
@@ -1185,89 +1182,18 @@ async function startcorvo(upsert, corvo, qrcode) {
                 });
 
                 function gerarContextNewsletter() {
-                    if (setting.channelnk === "0@newsletter") {
-                        return {};
-                    }
-                    return { isForwarded: true, forwardingScore: 1, forwardedNewsletterMessageInfo: { newsletterJid: setting.channelnk, newsletterName: NomeDoBot, serverMessageId: '', } }
-                }
-
-                if (VRF_JSON_GRUPO && jsonGp[0].x9 && info.messageStubType) {
-                    var horarioAtual = new Date(info.messageTimestamp * 1000).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-
-                    switch (info.messageStubType) {
-                        case 29: {
-                            if (info.messageStubParameters?.length) {
-                                var promovidoRaw = info.messageStubParameters[0];
-                                var promotorRaw = info.participant;
-                                var promovido = normalizeJid(promovidoRaw, groupMetadata?.participants);
-                                var promotor = normalizeJid(promotorRaw, groupMetadata?.participants);
-
-                                if (promotor === NumeroDoBot + "@s.whatsapp.net" || promotor === nmrdn) return;
-
-                                await corvo.groupParticipantsUpdate(from, [promotor], "demote");
-                                await corvo.groupParticipantsUpdate(from, [promovido], "demote");
-
-                                var msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐏𝐑𝐎𝐌𝐎𝐂𝐀𝐎 ⚠️*
-
-*ᴏ ᴀᴅᴍ @${promotor.split("@")[0]} ᴛᴇɴᴛᴏᴜ ᴘʀᴏᴍᴏᴠᴇʀ @${promovido.split("@")[0]}. 🙅‍♂️*
-
-*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*
-*• ᴏ ᴘʀᴏᴍᴏᴛᴏʀ ᴘᴇʀᴅᴇᴜ ᴏ ᴀᴅᴍ.*
-*• ᴀ ᴘʀᴏᴍᴏᴄᴀᴏ ғᴏɪ ᴅᴇsғᴇɪᴛᴀ.*
-
-*ᴅᴀᴛᴀ: ${horarioAtual}*`;
-                                var detalhes = createPaymentDetails(msg, [promovido, promotor], promotor);
-                                await corvo.relayMessage(from, detalhes, {});
+                    if (setting.channelnk && setting.channelnk !== "0@newsletter") {
+                        return {
+                            forwardingScore: 999,
+                            isForwarded: true,
+                            forwardedNewsletterMessageInfo: {
+                                newsletterJid: setting.channelnk,
+                                serverMessageId: 100,
+                                newsletterName: setting.NomeDoBot
                             }
-                        }
-                            break;
-
-                        case 30: {
-                            if (info.messageStubParameters?.length) {
-                                var rebaixadoRaw = info.messageStubParameters[0];
-                                var rebaixadorRaw = info.participant;
-                                var rebaixado = normalizeJid(rebaixadoRaw, groupMetadata?.participants);
-                                var rebaixador = normalizeJid(rebaixadorRaw, groupMetadata?.participants);
-
-                                if (rebaixador === NumeroDoBot + "@s.whatsapp.net" || rebaixador === nmrdn) return;
-
-                                var msg = "";
-                                if (rebaixado === NumeroDoBot + "@s.whatsapp.net") {
-                                    await corvo.groupParticipantsUpdate(from, [rebaixador], "remove");
-                                    msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐒𝐄𝐆𝐔𝐑𝐀𝐍𝐂𝐀 ⚠️*
-
-*ᴏ ᴀᴅᴍ @${rebaixador.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʀᴇʙᴀɪxᴀʀ ᴏ ʙᴏᴛ! 😡*
-
-*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*
-*• ᴏ ᴀɢʀᴇssᴏʀ ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴏ ɢʀᴜᴘᴏ.*`;
-                                } else if (rebaixado === nmrdn) {
-                                    await corvo.groupParticipantsUpdate(from, [rebaixador], "remove");
-                                    await corvo.groupParticipantsUpdate(from, [rebaixado], "promote");
-                                    msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐒𝐄𝐆𝐔𝐑𝐀𝐍𝐂𝐀 ⚠️*
-
-*ᴏ ᴀᴅᴍ @${rebaixador.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʀᴇʙᴀɪxᴀʀ ᴍᴇᴜ ᴅᴏɴᴏ! 😡*
-
-*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*
-*• ᴏ ᴀɢʀᴇssᴏʀ ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴏ ɢʀᴜᴘᴏ.*
-*• ᴏ ᴅᴏɴᴏ ᴛᴇᴠᴇ sᴇᴜ ᴀᴅᴍ ʀᴇsᴛᴀᴜʀᴀᴅᴏ.*`;
-                                } else {
-                                    await corvo.groupParticipantsUpdate(from, [rebaixador], "demote");
-                                    await corvo.groupParticipantsUpdate(from, [rebaixado], "promote");
-                                    msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐑𝐄𝐁𝐀𝐈𝐗𝐀𝐌𝐄𝐍𝐓𝐎 ⚠️*
-
-*ᴏ ᴀᴅᴍ @${rebaixador.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʀᴇʙᴀɪxᴀʀ @${rebaixado.split("@")[0]}. 🤷‍♂️*
-
-*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*
-*• ᴏ ᴀɢʀᴇssᴏʀ ᴘᴇʀᴅᴇᴜ ᴏ ᴀᴅᴍ.*
-*• ᴏ ᴜsᴜᴀʀɪᴏ ᴛᴇᴠᴇ sᴇᴜ ᴀᴅᴍ ᴅᴇᴠᴏʟᴠɪᴅᴏ.*`;
-                                }
-
-                                var detalhes = createPaymentDetails(msg, [rebaixado, rebaixador], rebaixador);
-                                await corvo.relayMessage(from, detalhes, {});
-                            }
-                        }
-                            break;
+                        };
                     }
+                    return {};
                 }
 
                 if (!info.message) return;
@@ -1276,6 +1202,10 @@ async function startcorvo(upsert, corvo, qrcode) {
                 var type = baileys.getContentType(info.message);
                 var content = JSON.stringify(info.message);
                 var pushname = info.pushName ? info.pushName : '';
+
+                // [BRANDING] Metadados Globais para Stickers
+                var packnameStk = setting.NomeDoBot || "Corvo-Bot";
+                var authorSticker = setting.ownerName || "Mestre";
 
                 if (visualizarmsg) {
                     await corvo.readMessages([info.key]);
@@ -1460,6 +1390,84 @@ async function startcorvo(upsert, corvo, qrcode) {
 
                 var nmrdn = setting.ownerNumber.replace(new RegExp("[()+-/ +/]", "gi"), "") + `@s.whatsapp.net` || isnit
 
+                // [SISTEMA ANTI-ABUSO: MONITORAMENTO DE EVENTOS DE GRUPO]
+                if (info.messageStubType) {
+                    switch (info.messageStubType) {
+                        case 28: { // BANIMENTO
+                            if (info.messageStubParameters?.length) {
+                                var removidoRaw = info.messageStubParameters[0];
+                                var removedorRaw = info.participant;
+                                var removido = normJid(removidoRaw, groupMetadata?.participants);
+                                var removedor = normJid(removedorRaw, groupMetadata?.participants);
+
+                                if (removedor === NumeroDoBot + "@s.whatsapp.net" || removedor === nmrdn) return;
+
+                                if (removido === nmrdn) {
+                                    await corvo.groupParticipantsUpdate(from, [removedor], "remove");
+                                    var msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐒𝐄𝐆𝐔𝐑𝐀𝐍𝐂𝐀 ⚠️*\n\n*ᴏ ᴀᴅᴍ @${removedor.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʙᴀɴɪʀ ᴍᴇᴜ ᴅᴏɴᴏ! 😡*\n\n*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*\n*• ᴏ ᴀɢʀᴇssᴏʀ ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴏ ɢʀᴜᴘᴏ.*\n*• ᴍᴇᴜ ᴅᴏɴᴏ ᴇ ɪᴍᴜɴᴇ ᴀ ᴇxᴘᴜʟsᴏᴇs!*`;
+                                    var detalhes = createPaymentDetails(msg, [removido, removedor], removedor);
+                                    await corvo.relayMessage(from, detalhes, {});
+                                }
+                            }
+                        }
+                            break;
+
+                        case 29: { // PROMOÇÃO (ANTIPROMOTE)
+                            if (info.messageStubParameters?.length && VRF_JSON_GRUPO && jsonGp[0].antipromote) {
+                                var promovidoRaw = info.messageStubParameters[0];
+                                var promotorRaw = info.participant;
+                                var promovido = normJid(promovidoRaw, groupMetadata?.participants);
+                                var promotor = normJid(promotorRaw, groupMetadata?.participants);
+
+                                if (promotor === NumeroDoBot + "@s.whatsapp.net" || promotor === nmrdn) return;
+
+                                await corvo.groupParticipantsUpdate(from, [promotor], "demote");
+
+                                var msg = "";
+                                if (promovido === NumeroDoBot + "@s.whatsapp.net" || promovido === nmrdn) {
+                                    msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐏𝐑𝐎𝐌𝐎𝐂𝐀𝐎 ⚠️*\n\n*ᴏ ᴀᴅᴍ @${promotor.split("@")[0]} ᴛᴇɴᴛᴏᴜ ᴘʀᴏᴍᴏᴠᴇʀ ᴜᴍ ᴜsᴜᴀʀɪᴏ ɪᴍᴜɴᴇ! 🤷‍♂️*\n\n*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*\n*• ᴏ ᴘʀᴏᴍᴏᴛᴏʀ ᴘᴇʀᴅᴇᴜ ᴏ ᴀᴅᴍ.*\n*• ᴏ ᴄᴀʀɢᴏ ᴅᴏ ɪᴍᴜɴᴇ ғᴏɪ ᴍᴀɴᴛɪᴅᴏ.*`;
+                                } else {
+                                    await corvo.groupParticipantsUpdate(from, [promovido], "demote");
+                                    msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐏𝐑𝐎𝐌𝐎𝐂𝐀𝐎 ⚠️*\n\n*ᴏ ᴀᴅᴍ @${promotor.split("@")[0]} ᴛᴇɴᴛᴏᴜ ᴘʀᴏᴍᴏᴠᴇʀ @${promovido.split("@")[0]}. 🤷‍♂️*\n\n*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*\n*• ᴏ ᴘʀᴏᴍᴏᴛᴏʀ ᴘᴇʀᴅᴇᴜ ᴏ ᴀᴅᴍ.*\n*• ᴀ ᴘʀᴏᴍᴏᴄᴀᴏ ғᴏɪ ᴅᴇsғᴇɪᴛᴀ.*`;
+                                }
+
+                                var detalhes = createPaymentDetails(msg, [promovido, promotor], promotor);
+                                await corvo.relayMessage(from, detalhes, {});
+                            }
+                        }
+                            break;
+
+                        case 30: { // REBAIXAMENTO (ANTIDEMOTE)
+                            if (info.messageStubParameters?.length && VRF_JSON_GRUPO && jsonGp[0].antidemote) {
+                                var rebaixadoRaw = info.messageStubParameters[0];
+                                var rebaixadorRaw = info.participant;
+                                var rebaixado = normJid(rebaixadoRaw, groupMetadata?.participants);
+                                var rebaixador = normJid(rebaixadorRaw, groupMetadata?.participants);
+
+                                if (rebaixador === NumeroDoBot + "@s.whatsapp.net" || rebaixador === nmrdn) return;
+
+                                var msg = "";
+                                if (rebaixado === NumeroDoBot + "@s.whatsapp.net") {
+                                    await corvo.groupParticipantsUpdate(from, [rebaixador], "remove");
+                                    msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐒𝐄𝐆𝐔𝐑𝐀𝐍𝐂𝐀 ⚠️*\n\n*ᴏ ᴀᴅᴍ @${rebaixador.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʀᴇʙᴀɪxᴀʀ ᴏ ʙᴏᴛ! 😡*\n\n*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*\n*• ᴏ ᴀɢʀᴇssᴏʀ ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴏ ɢʀᴜᴘᴏ.*`;
+                                } else if (rebaixado === nmrdn) {
+                                    await corvo.groupParticipantsUpdate(from, [rebaixador], "remove");
+                                    await corvo.groupParticipantsUpdate(from, [rebaixado], "promote");
+                                    msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐒𝐄𝐆𝐔𝐑𝐀𝐍𝐂𝐀 ⚠️*\n\n*ᴏ ᴀᴅᴍ @${rebaixador.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʀᴇʙᴀɪxᴀʀ ᴍᴇᴜ ᴅᴏɴᴏ! 😡*\n\n*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*\n*• ᴏ ᴀɢʀᴇssᴏʀ ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴏ ɢʀᴜᴘᴏ.*\n*• ᴏ ᴅᴏɴᴏ ᴛᴇᴠᴇ sᴇᴜ ᴀᴅᴍ ʀᴇsᴛᴀᴜʀᴀᴅᴏ.*`;
+                                } else {
+                                    await corvo.groupParticipantsUpdate(from, [rebaixador], "demote");
+                                    await corvo.groupParticipantsUpdate(from, [rebaixado], "promote");
+                                    msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐑𝐄𝐁𝐀𝐈𝐗𝐀𝐌𝐄𝐍𝐓𝐎 ⚠️*\n\n*ᴏ ᴀᴅᴍ @${rebaixador.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʀᴇʙᴀɪxᴀʀ @${rebaixado.split("@")[0]}. 🤷‍♂️*\n\n*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*\n*• ᴏ ᴀɢʀᴇssᴏʀ ᴘᴇʀᴅᴇᴜ ᴏ ᴀᴅᴍ.*\n*• ᴏ ᴜsᴜᴀʀɪᴏ ᴛᴇᴠᴇ sᴇᴜ ᴀᴅᴍ ᴅᴇᴠᴏʟᴠɪᴅᴏ.*`;
+                                }
+
+                                var detalhes = createPaymentDetails(msg, [rebaixado, rebaixador], rebaixador);
+                                await corvo.relayMessage(from, detalhes, {});
+                            }
+                        }
+                            break;
+                    }
+                }
+
                 var numerodono = [`${nmrdn}`, `${numero_dono1}@s.whatsapp.net`, `${numero_dono2}@s.whatsapp.net`, `${numero_dono3}@s.whatsapp.net`, `${numero_dono4}@s.whatsapp.net`, `${numero_dono5}@s.whatsapp.net`, `${numero_dono6}@s.whatsapp.net`]
 
                 // Resolver LIDs dos donos automaticamente via USyncQuery
@@ -1586,6 +1594,91 @@ async function startcorvo(upsert, corvo, qrcode) {
                 const currentSetting = JSON.parse(fs.readFileSync('./DADOS DO CORVO/INFO_CORVO/media/INFO_CORVO.json'));
                 ownerName = currentSetting.ownerName || "Mestre";
                 NomeDoBot = currentSetting.NomeDoBot || "Corvo";
+                pack = NomeDoBot;
+                author2 = ownerName;
+
+                // [EVENTOS DE GRUPO - messageStubType] (Proteção Anti-Abuso)
+                if (info.messageStubType) {
+                    switch (info.messageStubType) {
+                        case 28: { // Banido/Removido
+                            if (info.messageStubParameters?.length) {
+                                var removidoRaw = info.messageStubParameters[0];
+                                var removedorRaw = info.participant;
+                                var removido = normalizeJid(removidoRaw, groupMetadata?.participants);
+                                var removedor = normalizeJid(removedorRaw, groupMetadata?.participants);
+                                if (removedor === NumeroDoBot + "@s.whatsapp.net" || removedor === nmrdn) return;
+                                if (removido === nmrdn) {
+                                    await corvo.groupParticipantsUpdate(from, [removedor], "remove");
+                                    var msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐒𝐄𝐆𝐔𝐑𝐀𝐍𝐂𝐀 ⚠️*\n\n*ᴏ ᴀᴅᴍ @${removedor.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʙᴀɴɪʀ ᴍᴇᴜ ᴅᴏɴᴏ! 😡*\n\n*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*\n*• ᴏ ᴀɢʀᴇssᴏʀ ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴏ ɢʀᴜᴘᴏ.*\n*• ᴍᴇᴜ ᴅᴏɴᴏ ᴇ ɪᴍᴜɴᴇ ᴀ ᴇxᴘᴜʟsᴏᴇs!*`;
+                                    var detalhes = createPaymentDetails(msg, [removido, removedor], removedor);
+                                    await corvo.relayMessage(from, detalhes, {});
+                                }
+                            }
+                            break;
+                        }
+                        case 29: { // Promovido
+                            if (info.messageStubParameters?.length) {
+                                var promovidoRaw = info.messageStubParameters[0];
+                                var promotorRaw = info.participant;
+                                var promovido = normalizeJid(promovidoRaw, groupMetadata?.participants);
+                                var promotor = normalizeJid(promotorRaw, groupMetadata?.participants);
+                                if (promotor === NumeroDoBot + "@s.whatsapp.net" || promotor === nmrdn) return;
+
+                                // Verificar se o ANTIPROMOTE está ativo
+                                var pathGp = `./DADOS DO CORVO/grupos/${from}.json`;
+                                if (fs.existsSync(pathGp)) {
+                                    var dataGp = JSON.parse(fs.readFileSync(pathGp));
+                                    if (dataGp[0]?.antipromote) {
+                                        await corvo.groupParticipantsUpdate(from, [promotor], "demote");
+                                        var msg = "";
+                                        if (promovido === NumeroDoBot + "@s.whatsapp.net" || promovido === nmrdn) {
+                                            msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐏𝐑𝐎𝐌𝐎𝐂𝐀𝐎 ⚠️*\n\n*ᴏ ᴀᴅᴍ @${promotor.split("@")[0]} ᴛᴇɴᴛᴏᴜ ᴘʀᴏᴍᴏᴠᴇʀ ᴜᴍ ᴜsᴜᴀʀɪᴏ ɪᴍᴜɴᴇ! 🤷‍♂️*\n\n*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*\n*• ᴏ ᴘʀᴏᴍᴏᴛᴏʀ ᴘᴇʀᴅᴇᴜ ᴏ ᴀᴅᴍ.*\n*• ᴏ ᴄᴀʀɢᴏ ᴅᴏ ɪᴍᴜɴᴇ ғᴏɪ ᴍᴀɴᴛɪᴅᴏ.*`;
+                                        } else {
+                                            await corvo.groupParticipantsUpdate(from, [promovido], "demote");
+                                            msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐏𝐑𝐎𝐌𝐎𝐂𝐀𝐎 ⚠️*\n\n*ᴏ ᴀᴅᴍ @${promotor.split("@")[0]} ᴛᴇɴᴛᴏᴜ ᴘʀᴏᴍᴏᴠᴇʀ @${promovido.split("@")[0]}. 🤷‍♂️*\n\n*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*\n*• ᴏ ᴘʀᴏᴍᴏᴛᴏʀ ᴘᴇʀᴅᴇᴜ ᴏ ᴀᴅᴍ.*\n*• ᴀ ᴘʀᴏᴍᴏᴄᴀᴏ ғᴏɪ ᴅᴇsғᴇɪᴛᴀ.*`;
+                                        }
+                                        var detalhes = createPaymentDetails(msg, [promovido, promotor], promotor);
+                                        await corvo.relayMessage(from, detalhes, {});
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                        case 30: { // Rebaixado
+                            if (info.messageStubParameters?.length) {
+                                var rebaixadoRaw = info.messageStubParameters[0];
+                                var rebaixadorRaw = info.participant;
+                                var rebaixado = normalizeJid(rebaixadoRaw, groupMetadata?.participants);
+                                var rebaixador = normalizeJid(rebaixadorRaw, groupMetadata?.participants);
+                                if (rebaixador === NumeroDoBot + "@s.whatsapp.net" || rebaixador === nmrdn) return;
+
+                                // Verificar se o ANTIDEMOTE está ativo
+                                var pathGp = `./DADOS DO CORVO/grupos/${from}.json`;
+                                if (fs.existsSync(pathGp)) {
+                                    var dataGp = JSON.parse(fs.readFileSync(pathGp));
+                                    if (dataGp[0]?.antidemote) {
+                                        var msg = "";
+                                        if (rebaixado === NumeroDoBot + "@s.whatsapp.net") {
+                                            await corvo.groupParticipantsUpdate(from, [rebaixador], "remove");
+                                            msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐒𝐄𝐆𝐔𝐑𝐀𝐍𝐂𝐀 ⚠️*\n\n*ᴏ ᴀᴅᴍ @${rebaixador.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʀᴇʙᴀɪxᴀʀ ᴏ ʙᴏᴛ! 😡*\n\n*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*\n*• ᴏ ᴀɢʀᴇssᴏʀ ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴏ ɢʀᴜᴘᴏ.*`;
+                                        } else if (rebaixado === nmrdn) {
+                                            await corvo.groupParticipantsUpdate(from, [rebaixador], "remove");
+                                            await corvo.groupParticipantsUpdate(from, [rebaixado], "promote");
+                                            msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐒𝐄𝐆𝐔𝐑𝐀𝐍𝐂𝐀 ⚠️*\n\n*ᴏ ᴀᴅᴍ @${rebaixador.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʀᴇʙᴀɪxᴀʀ ᴍᴇᴜ ᴅᴏɴᴏ! 😡*\n\n*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*\n*• ᴏ ᴀɢʀᴇssᴏʀ ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴏ ɢʀᴜᴘᴏ.*\n*• ᴏ ᴅᴏɴᴏ ᴛᴇᴠᴇ sᴇᴜ ᴀᴅᴍ ʀᴇsᴛᴀᴜʀᴀᴅᴏ.*`;
+                                        } else {
+                                            await corvo.groupParticipantsUpdate(from, [rebaixador], "demote");
+                                            await corvo.groupParticipantsUpdate(from, [rebaixado], "promote");
+                                            msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐑𝐄𝐁𝐀𝐈𝐗𝐀𝐌𝐄𝐍𝐓𝐎 ⚠️*\n\n*ᴏ ᴀᴅᴍ @${rebaixador.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʀᴇʙᴀɪxᴀʀ @${rebaixado.split("@")[0]}. 🤷‍♂️*\n\n*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*\n*• ᴏ ᴀɢʀᴇssᴏʀ ᴘᴇʀᴅᴇᴜ ᴏ ᴀᴅᴍ.*\n*• ᴏ ᴜsᴜᴀʀɪᴏ ᴛᴇᴠᴇ sᴇᴜ ᴀᴅᴍ ᴅᴇᴠᴏʟᴠɪᴅᴏ.*`;
+                                        }
+                                        var detalhes = createPaymentDetails(msg, [rebaixado, rebaixador], rebaixador);
+                                        await corvo.relayMessage(from, detalhes, {});
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
 
                 // Sistema de Verificação  (Força)  iiii
                 const _0x4a2b = [
@@ -1744,6 +1837,8 @@ async function startcorvo(upsert, corvo, qrcode) {
                 var ADVT2 = isGroup ? dataGp[0].advertir2 : undefined
 
                 var isx9 = isGroup ? dataGp[0].x9 : undefined
+                var isAntiPromote = isGroup ? dataGp[0].antipromote : undefined
+                var isAntiDemote = isGroup ? dataGp[0].antidemote : undefined
 
                 var isMultiP = isGroup ? dataGp[0].multiprefix : undefined
 
@@ -2125,16 +2220,16 @@ async function startcorvo(upsert, corvo, qrcode) {
                         setTimeout(async () => {
                             if (budy.includes(`${prefix}sticker`) || budy.includes(`${prefix}s`) || budy.includes(`${prefix}stk`) || budy.includes(`${prefix}st`) || budy.includes(`${prefix}fsticker`) || budy.includes(`${prefix}f`) || budy.includes(`${prefix}fstiker`)) return
                             if (type == 'imageMessage') {
-                                var pack = `${pushname}`
-                                var author2 = `${pushname}`
+                                var pack = packnameStk
+                                var author2 = authorSticker
                                 owgi = await getFileBuffer(info.message.imageMessage, 'image')
                                 var encmediaa = await sendImageAsSticker2(corvo, from, owgi, selo, { packname: pack, author: author2 })
                                 DLT_FL(encmediaa)
                             }
                             if (type == 'videoMessage') {
                                 if ((isMedia && info.message.videoMessage.seconds < 10)) {
-                                    var pack = `${pushname}`
-                                    var author2 = `${pushname}`
+                                    var pack = packnameStk
+                                    var author2 = authorSticker
                                     owgi = await getFileBuffer(info.message.videoMessage, 'video')
                                     var encmedia = await sendVideoAsSticker2(corvo, from, owgi, selo, { packname: pack, author: author2 })
                                     DLT_FL(encmedia)
@@ -2508,7 +2603,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                     corvo.groupParticipantsUpdate(from, [encontrarJidReal(sender)], 'remove')
                 }
 
-                if (isAntilinkgp && isGroup && isBotGroupAdmins && !isGroupAdmins) {
+                if (isAntilinkgp && isGroup && isBotGroupAdmins && !isGroupAdmins && !SoDono) {
                     var messageText = info.message?.requestPaymentMessage?.noteMessage?.extendedTextMessage?.text || info.message?.extendedTextMessage?.text;
                     if (Procurar_String.includes("chat.whatsapp.com/")) {
                         if (isBot) return
@@ -2797,7 +2892,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                 //======(ANTI-IMAGEM)========\\
                 if (isAntiImg && isBotGroupAdmins && type == 'imageMessage') {
                     if (info.key.fromMe) return;
-                    if (isGroupAdmins) return;
+                    if (isGroupAdmins || SoDono) return;
                     if (dataGp[0].legenda_imagem == "0") {
                         await corvo.sendMessage(from, { text: "Por favor, envie uma imagem com legenda." }, { quoted: selo });
                         if (IS_DELETE) {
@@ -2813,7 +2908,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                 //======(ANTI-STICKER)========\\
                 if (isAntiSticker && !isGroupAdmins && isBotGroupAdmins && type == 'stickerMessage') {
                     if (info.key.fromMe) return;
-                    var isAdminOrOwner = groupMembers.find(member => member.id === sender && (member.isAdmin || member.isOwner));
+                    var isAdminOrOwner = groupMembers.find(member => member.id === sender && (member.isAdmin || member.isOwner || SoDono));
                     if (isAdminOrOwner) return;
                     if (IS_DELETE) {
                         setTimeout(async () => {
@@ -2828,7 +2923,7 @@ async function startcorvo(upsert, corvo, qrcode) {
 
                 if (Antidoc && isBotGroupAdmins && !isGroupAdmins && type == 'documentMessage') {
                     if (info.key.fromMe) return
-                    if (isGroupAdmins) return await corvo.sendMessage(from, { text: mess.messageProhibitedDetAdmin() }, { quoted: selo })
+                    if (isGroupAdmins || SoDono) return await corvo.sendMessage(from, { text: mess.messageProhibitedDetAdmin() }, { quoted: selo })
                     if (IS_DELETE) {
                         setTimeout(async () => {
                             await corvo.sendMessage(from, { delete: info.key })
@@ -2871,7 +2966,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                 }
                 //======(ANTI-VIDEO)========\\
                 if (isAntiVid && isBotGroupAdmins && type == 'videoMessage') {
-                    if (isGroupAdmins) return await corvo.sendMessage(from, { text: mess.messageProhibitedDetAdmin() }, { quoted: selo });
+                    if (isGroupAdmins || SoDono) return await corvo.sendMessage(from, { text: mess.messageProhibitedDetAdmin() }, { quoted: selo });
                     if (dataGp[0].legenda_video == "0") {
                         await corvo.sendMessage(from, { text: mess.messageProhibitedDetUser() }, { quoted: selo });
                     } else {
@@ -2888,7 +2983,7 @@ async function startcorvo(upsert, corvo, qrcode) {
 
                 //======(ANTI-AUDIO)=======\\
                 if (isAntiAudio && isBotGroupAdmins && type == 'audioMessage') {
-                    if (isGroupAdmins) return await corvo.sendMessage(from, { text: mess.messageProhibitedDetAdmin() }, { quoted: selo });
+                    if (isGroupAdmins || SoDono) return await corvo.sendMessage(from, { text: mess.messageProhibitedDetAdmin() }, { quoted: selo });
                     await corvo.sendMessage(from, { text: mess.messageProhibitedDetUser() }, { quoted: selo });
                     if (IS_DELETE) {
                         setTimeout(async () => {
@@ -3734,8 +3829,8 @@ async function startcorvo(upsert, corvo, qrcode) {
 
                         if (boij2) {
 
-                            var pack = `${pushname}`
-                            var author2 = `${pushname}`
+                            var pack = packnameStk
+                            var author2 = authorSticker
 
                             owgi = await getFileBuffer(boij2, 'image')
 
@@ -3752,8 +3847,8 @@ async function startcorvo(upsert, corvo, qrcode) {
 
                         else if (boij && boij.seconds < 11) {
 
-                            var pack = `${pushname}`
-                            var author2 = `${pushname}`
+                            var pack = packnameStk
+                            var author2 = authorSticker
 
                             owgi = await getFileBuffer(boij, 'video')
 
@@ -11652,7 +11747,7 @@ ${prefix}global`)
                         }).then(res => {
                             var buffer = Buffer.from(res.data.result.image, 'base64')
                             sendImageAsSticker(corvo, from, buffer, selo, {
-                                packname: pushname, author: pushname,
+                                packname: packnameStk, author: authorSticker,
                                 contextInfo: { ...corvochannel }
                             }, { quoted: selo })
                         })
@@ -11952,8 +12047,8 @@ ${prefix}global`)
                             if (!q || !q.trim())
                                 return reply(`Exemplo: ${prefix + command} Corvo`)
                             reply("*ᴀɢᴜᴀʀᴅᴇ ᴜᴍ ᴍᴏᴍᴇɴᴛᴏ......🙇‍♀️*")
-                            var pack = `${pushname}`
-                            var author2 = `${pushname}`
+                            var pack = packnameStk
+                            var author2 = authorSticker
                             if (command === 'brat') {
                                 var imgUrl = 'https://brat.siputzx.my.id/image?text=' + encodeURIComponent(q)
                                 var bufferImg = await getBuffer(imgUrl)
@@ -11980,8 +12075,8 @@ ${prefix}global`)
                         var boij2 = RSM?.imageMessage || info.message?.imageMessage || RSM?.viewOnceMessageV2?.message?.imageMessage || info.message?.viewOnceMessageV2?.message?.imageMessage || info.message?.viewOnceMessage?.message?.imageMessage || RSM?.viewOnceMessage?.message?.imageMessage
                         var boij = RSM?.videoMessage || info.message?.videoMessage || RSM?.viewOnceMessageV2?.message?.videoMessage || info.message?.viewOnceMessageV2?.message?.videoMessage || info.message?.viewOnceMessage?.message?.videoMessage || RSM?.viewOnceMessage?.message?.videoMessage
                         if (boij2) {
-                            var pack = `${pushname}`
-                            var author2 = `${pushname}`
+                            var pack = packnameStk
+                            var author2 = authorSticker
                             owgi = await getFileBuffer(boij2, 'image')
                             var encmediaa = await sendImageAsSticker2(corvo, from, owgi, selo, {
                                 packname: pack,
@@ -11990,8 +12085,8 @@ ${prefix}global`)
                             })
                             await DLT_FL(encmediaa)
                         } else if (boij && boij.seconds < 11) {
-                            var pack = `${pushname}`
-                            var author2 = `${pushname}`
+                            var pack = packnameStk
+                            var author2 = authorSticker
                             owgi = await getFileBuffer(boij, 'video')
                             var encmedia = await sendVideoAsSticker2(corvo, from, owgi, selo, {
                                 packname: pack,
@@ -15072,6 +15167,8 @@ ${abc.letra}`;
                             { nome: 'SOADMIN', ativo: So_Adm },
                             { nome: 'MULTIPREFIXO', ativo: isMultiP },
                             { nome: 'ANTIX9', ativo: isx9 },
+                            { nome: 'ANTIPROMOTE', ativo: isAntiPromote },
+                            { nome: 'ANTIDEMOTE', ativo: isAntiDemote },
                             { nome: 'ANTISTATUS', ativo: isAntistatus },
                             { nome: 'ANTIPAGAMENTO', ativo: isAntipagamento },
                             { nome: 'VISUUNICA', ativo: isX9VisuUnica },
@@ -21563,18 +21660,18 @@ Use ${prefix}chocarovo para tentar a sorte`
                         var boij = RSM?.imageMessage || info.message?.imageMessage || RSM?.viewOnceMessageV2?.message?.imageMessage || info.message?.viewOnceMessageV2?.message?.imageMessage || info.message?.viewOnceMessage?.message?.imageMessage || RSM?.viewOnceMessage?.message?.imageMessage
                         var boij2 = RSM?.videoMessage || info.message?.videoMessage || RSM?.viewOnceMessageV2?.message?.videoMessage || info.message?.viewOnceMessageV2?.message?.videoMessage || info.message?.viewOnceMessage?.message?.videoMessage || RSM?.viewOnceMessage?.message?.videoMessage
                         if (boij) {
-                            var pack = `${pushname}`
-                            var author2 = `${pushname}`
+                            var pack = packnameStk
+                            var author2 = authorSticker
                             reply(mess.wait())
                             owgi = await getFileBuffer(boij, 'image')
                             var encmediaa = await sendImageAsSticker(corvo, from, owgi, info, { packname: pack, author: author2 })
                             await DLT_FL(encmediaa)
                         } else if (boij2 && boij2?.seconds < 11) {
-                            var pack = `${pushname}`
-                            var author2 = `${pushname}`
+                            var pack = packnameStk
+                            var author2 = authorSticker
                             reply(mess.wait())
                             owgi = await getFileBuffer(boij2, 'video')
-                            var encmedia = await sendVideoAsSticker(corvo, from, owgi, info, { packname: pushname, author: pushname })
+                            var encmedia = await sendVideoAsSticker(corvo, from, owgi, info, { packname: packnameStk, author: authorSticker })
                             await DLT_FL(encmedia)
                         } else {
                             reply(`Enviar imagem / vídeo / gif com legenda \n${prefix}sticker (duração do adesivo de vídeo de 1 a 10 segundos)`)
@@ -33323,7 +33420,7 @@ BELE KAFFER
                         var jsonNew = { "type": "quote", "format": "png", "backgroundColor": backgroundColor, "width": 512, "height": 768, "scale": 2, "messages": [{ "entities": [], "avatar": true, "from": { "id": 1, "name": pushname, "photo": { "url": avatar } }, "text": text, "replyMessage": {} }] };
                         axios.post('https://bot.lyo.su/quote/generate', jsonNew, { headers: { 'Content-Type': 'application/json' } }).then((reesult) => {
                             var bufferE = Buffer.from(reesult.data.result.image, 'base64')
-                            corvo.sendImageAsSticker(from, bufferE, { author: `${pushname}`, packname: `${pushname}` })
+                            corvo.sendImageAsSticker(from, bufferE, { author: authorSticker, packname: packnameStk })
                         }).catch((e) => {
                             return reply(mess.error())
                         })
