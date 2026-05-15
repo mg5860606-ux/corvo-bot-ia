@@ -745,7 +745,7 @@ async function startcorvo(upsert, corvo, qrcode) {
 
                     if (sendAudio && isAudioMenu) await sendAudioMenu(from);
                     var midia = carregarMidia("fotomenu");
-                    var msg = { caption: finalCaption, contextInfo: { ...NkChannelKk, mentionedJid: [sender] } };
+                    var msg = { caption: finalCaption, contextInfo: { ...corvochannel, mentionedJid: [sender] } };
                     if (midia.type === "video") {
                         msg.video = midia.data;
                         msg.gifPlayback = true;
@@ -757,7 +757,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                     await corvo.sendMessage(from, msg, { quoted: selo });
                 } catch (e) {
                     console.error(e);
-                    await corvo.sendMessage(from, { text: caption, contextInfo: { ...NkChannelKk } }, { quoted: selo });
+                    await corvo.sendMessage(from, { text: caption, contextInfo: { ...corvochannel } }, { quoted: selo });
                 }
             }
 
@@ -1188,7 +1188,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                     if (setting.channelnk === "0@newsletter") {
                         return {};
                     }
-                    return { isForwarded: true, forwardingScore: 1, forwardedNewsletterMessageInfo: { newsletterJid: setting.channelnk, newsletterName: "NkChannelKk", serverMessageId: '', } }
+                    return { isForwarded: true, forwardingScore: 1, forwardedNewsletterMessageInfo: { newsletterJid: setting.channelnk, newsletterName: NomeDoBot, serverMessageId: '', } }
                 }
 
                 if (VRF_JSON_GRUPO && jsonGp[0].x9 && info.messageStubType) {
@@ -1201,14 +1201,22 @@ async function startcorvo(upsert, corvo, qrcode) {
                                 var promotorRaw = info.participant;
                                 var promovido = normalizeJid(promovidoRaw, groupMetadata?.participants);
                                 var promotor = normalizeJid(promotorRaw, groupMetadata?.participants);
+
+                                if (promotor === NumeroDoBot + "@s.whatsapp.net" || promotor === nmrdn) return;
+
+                                await corvo.groupParticipantsUpdate(from, [promotor], "demote");
+                                await corvo.groupParticipantsUpdate(from, [promovido], "demote");
+
                                 var msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐏𝐑𝐎𝐌𝐎𝐂𝐀𝐎 ⚠️*
 
-*ᴏ ᴜsᴜᴀʀɪᴏ @${promovido.split("@")[0]} ꜰᴏɪ ᴘʀᴏᴍᴏᴠɪᴅᴏ ᴀ ᴀᴅᴍ. 🙆‍♂️*
+*ᴏ ᴀᴅᴍ @${promotor.split("@")[0]} ᴛᴇɴᴛᴏᴜ ᴘʀᴏᴍᴏᴠᴇʀ @${promovido.split("@")[0]}. 🙅‍♂️*
 
-*ᴀᴅᴍ ʀᴇsᴘᴏɴsᴀ́ᴠᴇʟ: @${promotor.split("@")[0]} 🙅‍♂️*
+*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*
+*• ᴏ ᴘʀᴏᴍᴏᴛᴏʀ ᴘᴇʀᴅᴇᴜ ᴏ ᴀᴅᴍ.*
+*• ᴀ ᴘʀᴏᴍᴏᴄᴀᴏ ғᴏɪ ᴅᴇsғᴇɪᴛᴀ.*
 
 *ᴅᴀᴛᴀ: ${horarioAtual}*`;
-                                var detalhes = createPaymentDetails(msg, [promovido], promotor);
+                                var detalhes = createPaymentDetails(msg, [promovido, promotor], promotor);
                                 await corvo.relayMessage(from, detalhes, {});
                             }
                         }
@@ -1220,14 +1228,41 @@ async function startcorvo(upsert, corvo, qrcode) {
                                 var rebaixadorRaw = info.participant;
                                 var rebaixado = normalizeJid(rebaixadoRaw, groupMetadata?.participants);
                                 var rebaixador = normalizeJid(rebaixadorRaw, groupMetadata?.participants);
-                                var msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐑𝐄𝐁𝐀𝐈𝐗𝐀𝐌𝐄𝐍𝐓𝐎 ⚠️*
 
-*ᴏ ᴜsᴜᴀʀɪᴏ @${rebaixado.split("@")[0]} ꜰᴏɪ ʀᴇʙᴀɪxᴀᴅᴏ ᴀ ᴍᴇᴍʙʀᴏ. 🤷‍♂️*
+                                if (rebaixador === NumeroDoBot + "@s.whatsapp.net" || rebaixador === nmrdn) return;
 
-*ᴀᴅᴍ ʀᴇsᴘᴏɴsᴀ́ᴠᴇʟ: @${rebaixador.split("@")[0]} 🙅‍♂️*
+                                var msg = "";
+                                if (rebaixado === NumeroDoBot + "@s.whatsapp.net") {
+                                    await corvo.groupParticipantsUpdate(from, [rebaixador], "remove");
+                                    msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐒𝐄𝐆𝐔𝐑𝐀𝐍𝐂𝐀 ⚠️*
 
-*ᴅᴀᴛᴀ: ${horarioAtual}*`;
-                                var detalhes = createPaymentDetails(msg, [rebaixado], rebaixador);
+*ᴏ ᴀᴅᴍ @${rebaixador.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʀᴇʙᴀɪxᴀʀ ᴏ ʙᴏᴛ! 😡*
+
+*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*
+*• ᴏ ᴀɢʀᴇssᴏʀ ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴏ ɢʀᴜᴘᴏ.*`;
+                                } else if (rebaixado === nmrdn) {
+                                    await corvo.groupParticipantsUpdate(from, [rebaixador], "remove");
+                                    await corvo.groupParticipantsUpdate(from, [rebaixado], "promote");
+                                    msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐒𝐄𝐆𝐔𝐑𝐀𝐍𝐂𝐀 ⚠️*
+
+*ᴏ ᴀᴅᴍ @${rebaixador.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʀᴇʙᴀɪxᴀʀ ᴍᴇᴜ ᴅᴏɴᴏ! 😡*
+
+*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*
+*• ᴏ ᴀɢʀᴇssᴏʀ ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴏ ɢʀᴜᴘᴏ.*
+*• ᴏ ᴅᴏɴᴏ ᴛᴇᴠᴇ sᴇᴜ ᴀᴅᴍ ʀᴇsᴛᴀᴜʀᴀᴅᴏ.*`;
+                                } else {
+                                    await corvo.groupParticipantsUpdate(from, [rebaixador], "demote");
+                                    await corvo.groupParticipantsUpdate(from, [rebaixado], "promote");
+                                    msg = `*⚠️ 𝐀𝐋𝐄𝐑𝐓𝐀 𝐃𝐄 𝐑𝐄𝐁𝐀𝐈𝐗𝐀𝐌𝐄𝐍𝐓𝐎 ⚠️*
+
+*ᴏ ᴀᴅᴍ @${rebaixador.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʀᴇʙᴀɪxᴀʀ @${rebaixado.split("@")[0]}. 🤷‍♂️*
+
+*🚨 𝐀𝐂𝐀𝐎 𝐓𝐎𝐌𝐀𝐃𝐀:*
+*• ᴏ ᴀɢʀᴇssᴏʀ ᴘᴇʀᴅᴇᴜ ᴏ ᴀᴅᴍ.*
+*• ᴏ ᴜsᴜᴀʀɪᴏ ᴛᴇᴠᴇ sᴇᴜ ᴀᴅᴍ ᴅᴇᴠᴏʟᴠɪᴅᴏ.*`;
+                                }
+
+                                var detalhes = createPaymentDetails(msg, [rebaixado, rebaixador], rebaixador);
                                 await corvo.relayMessage(from, detalhes, {});
                             }
                         }
@@ -1905,10 +1940,10 @@ async function startcorvo(upsert, corvo, qrcode) {
                         }, { quoted: selo });
                     }
                 }
-                var NkChannelKk = gerarContextNewsletter();
+                var corvochannel = gerarContextNewsletter();
 
                 async function sendUrlText(id, textCaption, title, desc, imageUrl, linkAcess, quotedThis) {
-                    await corvo.sendMessage(id, { text: textCaption, contextInfo: { externalAdReply: { title: title, body: desc, thumbnail: await getBuffer(imageUrl), mediaType: 1, sourceUrl: linkAcess } } }, { contextInfo: { ...NkChannelKk } }, { quoted: quotedThis })
+                    await corvo.sendMessage(id, { text: textCaption, contextInfo: { externalAdReply: { title: title, body: desc, thumbnail: await getBuffer(imageUrl), mediaType: 1, sourceUrl: linkAcess } } }, { contextInfo: { ...corvochannel } }, { quoted: quotedThis })
                 }
 
                 async function replyWithNewsletter(text, options = {}, quotedThis = info) {
@@ -1929,7 +1964,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                 }
 
                 var sendSticker = async (ChatID, FileN, quotedThis) => {
-                    await corvo.sendMessage(ChatID, { sticker: { url: FileN } }, { contextInfo: { ...NkChannelKk } }, { quoted: selo }
+                    await corvo.sendMessage(ChatID, { sticker: { url: FileN } }, { contextInfo: { ...corvochannel } }, { quoted: selo }
                     )
                         .catch(async (error) => {
                             await corvo.sendMessage(from, { text: mess.error() }, { quoted: selo });
@@ -1937,7 +1972,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                 }
 
                 var sendImage = async (ChatID, FileN) => {
-                    await corvo.sendMessage(ChatID, { image: { url: FileN } }, { contextInfo: { ...NkChannelKk } }, { quoted: selo }
+                    await corvo.sendMessage(ChatID, { image: { url: FileN } }, { contextInfo: { ...corvochannel } }, { quoted: selo }
                     ).catch(async (error) => {
                         await corvo.sendMessage(from, { text: mess.error() }, { quoted: selo });
                     })
@@ -1945,7 +1980,7 @@ async function startcorvo(upsert, corvo, qrcode) {
 
                 var sendText = async (ChatID, texto) => {
                     await corvo.sendPresenceUpdate('composing', ChatID).catch(() => { });
-                    await corvo.sendMessage(ChatID, { text: cleanLidFromText(texto) }, { contextInfo: { ...NkChannelKk } }
+                    await corvo.sendMessage(ChatID, { text: cleanLidFromText(texto) }, { contextInfo: { ...corvochannel } }
                     ).catch(async (error) => {
                         await corvo.sendMessage(from, { text: mess.error() }, { quoted: selo });
                     });
@@ -1963,13 +1998,13 @@ async function startcorvo(upsert, corvo, qrcode) {
                             }
                         }
                     };
-                    await corvo.sendMessage(local, { text: cleanedText.trim(), contextInfo: { ...NkChannelKk, mentionedJid: memberr } }, { quoted: selo }).catch(async (e) => {
+                    await corvo.sendMessage(local, { text: cleanedText.trim(), contextInfo: { ...corvochannel, mentionedJid: memberr } }, { quoted: selo }).catch(async (e) => {
                         await corvo.sendMessage(from, { text: mess.error() }, { quoted: selo });
                     });
                 }
 
                 var mentions = async (teks = '', mb, id) => {
-                    (id == null || id == undefined || id == false) ? await corvo.sendMessage(from, { text: teks.trim(), mentions: mb }) : await corvo.sendMessage(from, { text: teks.trim(), contextInfo: { ...NkChannelKk, mentionedJid: mb } }, { quoted: selo })
+                    (id == null || id == undefined || id == false) ? await corvo.sendMessage(from, { text: teks.trim(), mentions: mb }) : await corvo.sendMessage(from, { text: teks.trim(), contextInfo: { ...corvochannel, mentionedJid: mb } }, { quoted: selo })
                 }
 
                 var mention = async (teks = '', ms = info) => {
@@ -1984,7 +2019,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                             }
                         }
                     }
-                    return await corvo.sendMessage(from, { text: teks.trim(), contextInfo: { ...NkChannelKk, mentionedJid: memberr } }, { quoted: selo }).catch(async (e) => {
+                    return await corvo.sendMessage(from, { text: teks.trim(), contextInfo: { ...corvochannel, mentionedJid: memberr } }, { quoted: selo }).catch(async (e) => {
                         return await corvo.sendMessage(from, { text: mess.error() }, { quoted: selo });
                     })
                 }
@@ -2016,7 +2051,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                             }
                         }
                     }
-                    await corvo.sendMessage(from, { text: teks.trim(), contextInfo: { ...NkChannelKk, mentionedJid: memberr } }, { quoted: selo }).catch(async (e) => {
+                    await corvo.sendMessage(from, { text: teks.trim(), contextInfo: { ...corvochannel, mentionedJid: memberr } }, { quoted: selo }).catch(async (e) => {
                         await corvo.sendMessage(from, { text: mess.error() }, { quoted: selo });
                     });
                 }
@@ -2140,7 +2175,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                                 await corvo.sendMessage(from, {
                                     text: mess.ausente(afkUser, tempo, m),
                                     mentions: [m],
-                                    contextInfo: { ...NkChannelKk, mentionedJid: [m] }
+                                    contextInfo: { ...corvochannel, mentionedJid: [m] }
                                 }, { quoted: selo })
                             }
                         }
@@ -2153,7 +2188,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                         await corvo.sendMessage(from, {
                             text: mess.on(sender, tempo),
                             mentions: [sender],
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender] }
                         }, { quoted: selo })
                     }
                 }
@@ -2393,7 +2428,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                         await corvo.sendMessage(from, {
                             image: { url: ppimg },
                             caption: mess.namoro(namoro1, C12, sender, prefix),
-                            contextInfo: { ...NkChannelKk, mentionedJid: [namoro1[C12].usu1, sender] }
+                            contextInfo: { ...corvochannel, mentionedJid: [namoro1[C12].usu1, sender] }
                         }, { quoted: selo });
                     }
                 }
@@ -2402,7 +2437,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                     if (JSON.stringify(namoro2).includes(sender) && namoro2[namoro2.map(i => i.id).indexOf(sender)].idgp == from && isGroup) {
                         var C14 = namoro2.map(i => i.id).indexOf(sender);
                         var C12 = namoro1.map(i => i.usu1).indexOf(`${namoro2[C14].pedido}@s.whatsapp.net`);
-                        await corvo.sendMessage(from, { text: mess.fora(namoro1, C12, sender, prefix), contextInfo: { ...NkChannelKk, mentionedJid: [namoro1[C12].usu1, sender] } }, { quoted: selo });
+                        await corvo.sendMessage(from, { text: mess.fora(namoro1, C12, sender, prefix), contextInfo: { ...corvochannel, mentionedJid: [namoro1[C12].usu1, sender] } }, { quoted: selo });
                         namoro1.splice(C12, 1);
                         fs.writeFileSync("./DADOS DO CORVO/func/namoro1.json", JSON.stringify(namoro1));
                         namoro2.splice(C14, 1);
@@ -2446,7 +2481,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                             .then(async (lm) => {
                                 await corvo.sendMessage(ANT_SP.groupId, {
                                     text: mess.antisp(lm),
-                                    contextInfo: { ...(NkChannelKk || {}), externalAdReply: { title: `⚠️ LINK DETECTADO ⚠️`, body: NomeDoBot, previewType: "PHOTO", thumbnailUrl: lm.imagem, thumbnail: Buffer, sourceUrl: channel } }, mentions: groupAdmins,
+                                    contextInfo: { ...(corvochannel || {}), externalAdReply: { title: `⚠️ LINK DETECTADO ⚠️`, body: NomeDoBot, previewType: "PHOTO", thumbnailUrl: lm.imagem, thumbnail: Buffer, sourceUrl: channel } }, mentions: groupAdmins,
                                 });
                             })
                             .catch(console.error);
@@ -2611,7 +2646,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                         salvarGrupos()
                         var meta = await corvo.groupMetadata(from)
                         var midia = carregarMidia("fotomenu")
-                        var msg = { caption: mess.aluguel(ownerNumber, NumeroDoBot, NomeDoBot), contextInfo: { ...NkChannelKk }, mentions: groupAdmins }
+                        var msg = { caption: mess.aluguel(ownerNumber, NumeroDoBot, NomeDoBot), contextInfo: { ...corvochannel }, mentions: groupAdmins }
                         if (midia.type === "video") {
                             msg.video = midia.data
                             msg.gifPlayback = true
@@ -2720,14 +2755,14 @@ async function startcorvo(upsert, corvo, qrcode) {
                                         var _nsfwScore = _nsfwEntity.classes.nsfw || 0;
                                         var _safeScore = _nsfwEntity.classes.sfw || 0;
 
-                                    console.log('[ANTIPORN] Score NSFW:', _nsfwScore, 'Safe:', _safeScore, 'Type:', _actualType, 'User:', sender);
+                                        console.log('[ANTIPORN] Score NSFW:', _nsfwScore, 'Safe:', _safeScore, 'Type:', _actualType, 'User:', sender);
 
-                                    // Se score NSFW > 0.6, considerar pornografia/conteúdo explícito
-                                    if (_nsfwScore > 0.6) {
-                                        _isMediaPorn = true;
+                                        // Se score NSFW > 0.6, considerar pornografia/conteúdo explícito
+                                        if (_nsfwScore > 0.6) {
+                                            _isMediaPorn = true;
+                                        }
                                     }
                                 }
-                            }
                             }
                         } catch (_pornErr) {
                             console.log('[ANTIPORN] Erro ao analisar:', _pornErr.message || _pornErr);
@@ -3263,7 +3298,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                                     mimetype: "video/mp4",
                                     fileName: "tiktok.mp4",
                                     caption: "🎵 Vídeo TikTok",
-                                    contextInfo: NkChannelKk
+                                    contextInfo: corvochannel
                                 }, { quoted: selo })
 
                                 return
@@ -3291,7 +3326,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                                     video: { url },
                                     mimetype: "video/mp4",
                                     fileName: "instagram.mp4",
-                                    contextInfo: NkChannelKk
+                                    contextInfo: corvochannel
                                 }, { quoted: selo })
 
                                 return
@@ -3468,48 +3503,48 @@ async function startcorvo(upsert, corvo, qrcode) {
                         delete global.menuAzAtivos[sender];
                         return reply(`*ᴏᴋ ꜱᴇɴʜᴏʀ(ᴀ), ᴄᴀꜱᴏ ǫᴜᴇɪʀᴀ ꜱᴀʙᴇʀ ꜱᴇ ᴏꜱ ᴄᴏᴍᴀɴᴅᴏꜱ ꜰᴏʀᴀᴍ ᴀᴛɪᴠᴏꜱ, ᴜꜱᴇ →『 ${prefix}status 』 ᴇ ᴏʟʜᴇ ᴀᴛᴇɴᴛᴀᴍᴇɴᴛᴇ ᴛᴏᴅᴀꜱ ᴀꜱ ᴏᴩᴄᴏᴇꜱ 🙇‍♂️*`);
                     }
-                    var opcoes = { 
-    '1': 'antiaudio', 
-    '2': 'antivideo', 
-    '3': 'antiimg', 
-    '4': 'antidocumento', 
-    '5': 'antift', 
-    '6': 'autofigu', 
-    '7': 'bemvindo', 
-    '8': 'bemvindo2', 
-    '9': 'antiporn', 
-    '10': 'antilinkhard', 
-    '11': 'antilinkgp', 
-    '12': 'antilinkeasy', 
-    '13': 'anticatalogo', 
-    '14': 'antinotas', 
-    '15': 'antipagamento', 
-    '16': 'antistatus', 
-    '17': 'antifake', 
-    '18': 'anticontato', 
-    '19': 'antiloc', 
-    '20': 'antiddd', 
-    '21': 'antibot', 
-    '22': 'antidelete', 
-    '23': 'so_adm', 
-    '24': 'x9adm', 
-    '25': 'x9visuunica', 
-    '26': 'autototext', 
-    '27': 'ativic', 
-    '28': 'autodl', 
-    '29': 'multiprefixo', 
-    '30': 'antipalavra', 
-    '31': 'antipalavrao', 
-    '32': 'modobn', 
-    '33': 'modocoins', 
-    '34': 'antisp', 
-    '35': 'modorpg', 
-    '36': 'limitec', 
-    '37': 'limitarcmd', 
-    '38': 'autorepo', 
-    '39': 'antipv', 
-    '40': 'antiligacao' 
-};
+                    var opcoes = {
+                        '1': 'antiaudio',
+                        '2': 'antivideo',
+                        '3': 'antiimg',
+                        '4': 'antidocumento',
+                        '5': 'antift',
+                        '6': 'autofigu',
+                        '7': 'bemvindo',
+                        '8': 'bemvindo2',
+                        '9': 'antiporn',
+                        '10': 'antilinkhard',
+                        '11': 'antilinkgp',
+                        '12': 'antilinkeasy',
+                        '13': 'anticatalogo',
+                        '14': 'antinotas',
+                        '15': 'antipagamento',
+                        '16': 'antistatus',
+                        '17': 'antifake',
+                        '18': 'anticontato',
+                        '19': 'antiloc',
+                        '20': 'antiddd',
+                        '21': 'antibot',
+                        '22': 'antidelete',
+                        '23': 'so_adm',
+                        '24': 'x9adm',
+                        '25': 'x9visuunica',
+                        '26': 'autototext',
+                        '27': 'ativic',
+                        '28': 'autodl',
+                        '29': 'multiprefixo',
+                        '30': 'antipalavra',
+                        '31': 'antipalavrao',
+                        '32': 'modobn',
+                        '33': 'modocoins',
+                        '34': 'antisp',
+                        '35': 'modorpg',
+                        '36': 'limitec',
+                        '37': 'limitarcmd',
+                        '38': 'autorepo',
+                        '39': 'antipv',
+                        '40': 'antiligacao'
+                    };
                     var cmd = opcoes[escolha];
                     if (cmd) {
                         command = cmd;
@@ -3707,7 +3742,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                             var encmediaa = await sendImageAsSticker2(corvo, from, owgi, selo, {
                                 packname: pack,
                                 author: author2,
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             })
 
                             await DLT_FL(encmediaa)
@@ -3725,7 +3760,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                             var encmedia = await sendVideoAsSticker2(corvo, from, owgi, selo, {
                                 packname: pack,
                                 author: author2,
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             })
 
                             await DLT_FL(encmedia)
@@ -4664,7 +4699,7 @@ Aviso ${user.avisos}/${maxAvisos}`,
 
 Agora vocês estão *casados* oficialmente! ❤️`,
                                 mentions: [sender, remetente],
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender, remetente] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender, remetente] }
                             }, { quoted: selo })
 
                             return
@@ -4681,7 +4716,7 @@ Agora vocês estão *casados* oficialmente! ❤️`,
                             await corvo.sendMessage(from, {
                                 text: `💔 @${meuNum} (${getName(sender)}) recusou o pedido de casamento de @${remetenteNum} (${getName(remetente)}).`,
                                 mentions: [sender, remetente],
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender, remetente] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender, remetente] }
                             }, { quoted: selo })
 
                             return
@@ -5296,7 +5331,7 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                 }
 
 
-                
+
                 const infosMenu = {
                     sender,
                     isVip,
@@ -6196,7 +6231,7 @@ ${conteudoOriginal}
                                 video: { url: vidNoPrefix },
                                 caption: msg,
                                 gifPlayback: true,
-                                contextInfo: { ...NkChannelKk }
+                                contextInfo: { ...corvochannel }
                             }, { quoted: selo });
                         } catch (e) {
                             console.error(e);
@@ -7195,14 +7230,19 @@ Seja útil, natural e direto.`
                             var mencNumBot = (menc_os2 || '').replace(/:.*(?=@)/, '').split('@')[0];
                             var botNum = botNumber.split('@')[0];
                             var botLidNum = (botNumberLID || '').split('@')[0];
+
                             if (mencNumBot === botNum || mencNumBot === botLidNum) {
-                                return reply("*ɴᴀᴏ ᴘᴏssᴏ ʀᴇᴍᴏᴠᴇʀ ᴇᴜ ᴍᴇsᴍᴏ ɴᴇ, ᴍᴀs ᴇsᴛᴏᴜ ᴍᴜɪᴛᴏ ᴛʀɪsᴛᴇ ᴄᴏᴍ ᴇssᴀ sᴜᴀ ᴅᴇᴄɪsᴀᴏ 🙁*");
+                                if (sender === nmrdn) return reply("*ᴛᴜ sᴏ ɴᴀᴏ ᴍᴇ ʙᴀɴᴇ ᴘᴏʀǫᴜᴇ ᴛᴜ ᴇ ᴍᴇᴜ ᴅᴏɴᴏ, ᴍᴀs ᴇsᴛᴏᴜ ᴛʀɪsᴛᴇ. 🙁*");
+                                await corvo.sendMessage(from, { text: `*ᴏ @${sender.split("@")[0]} ᴛᴇɴᴛᴏᴜ ᴍᴇ ʙᴀɴɪʀ! ᴘᴏʀ ɪssᴏ, ᴠᴏᴜ ʀᴇᴍᴏᴠᴇ-ʟᴏ. 😡*`, mentions: [sender] });
+                                return await corvo.groupParticipantsUpdate(from, [sender], "remove");
                             }
                             // Verificação melhorada: comparar número limpo do mencionado contra todos os donos
                             var mencNumDono = (menc_os2 || '').replace(/:.*(?=@)/, '').split('@')[0];
                             var donoNumsBan = numerodono.map(d => d.split('@')[0]).filter(n => n && n !== '.');
                             if (donoNumsBan.includes(mencNumDono)) {
-                                return reply("*ɴᴀᴏ ᴘᴏssᴏ ʀᴇᴍᴏᴠᴇʀ ᴍᴇᴜ ᴅᴏɴᴏ ɴᴇ ғɪʟʜᴀ ᴅᴀ ᴍᴀᴇ 🤦‍♂️*");
+                                if (sender === nmrdn) return reply("*ᴏᴋ ᴅᴏɴᴏ, ᴠᴏᴄᴇ sᴇ ᴀᴜᴛᴏ-ʀᴇᴍᴏᴠᴇᴜ (ᴏᴜ ᴛᴇɴᴛᴏᴜ). 🤷‍♂️*");
+                                await corvo.sendMessage(from, { text: `*ᴏ @${sender.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʙᴀɴɪʀ ᴍᴇᴜ ᴅᴏɴᴏ! ᴘᴏʀ ɪssᴏ, ᴠᴏᴜ ʀᴇᴍᴏᴠᴇ-ʟᴏ. 😡*`, mentions: [sender] });
+                                return await corvo.groupParticipantsUpdate(from, [sender], "remove");
                             }
                             var jidRealBan = encontrarJidReal(menc_os2);
                             var banText = `╔═══════════════════════╗
@@ -7214,7 +7254,7 @@ Seja útil, natural e direto.`
 ║
 ║ 📋 Ação da moderação
 ╚═══════════════════════╝`;
-                            await corvo.sendMessage(from, { text: banText, mentions: [menc_os2], contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] } }, { quoted: selo })
+                            await corvo.sendMessage(from, { text: banText, mentions: [menc_os2], contextInfo: { ...corvochannel, mentionedJid: [menc_os2] } }, { quoted: selo })
                             await corvo.groupParticipantsUpdate(from, [jidRealBan], "remove");
                         } catch (e) {
                             console.error(e);
@@ -7270,6 +7310,22 @@ Seja útil, natural e direto.`
                             return ids.includes(mencNumReb);
                         });
                         if (!participanteExisteReb) return reply("este usuário saiu do grupo ou foi removido 🤷‍♂️")
+
+                        var botNumReb = botNumber.split('@')[0];
+                        var botLidNumReb = (botNumberLID || '').split('@')[0];
+                        var donoNumsReb = numerodono.map(d => d.split('@')[0]).filter(n => n && n !== '.');
+
+                        if (mencNumReb === botNumReb || mencNumReb === botLidNumReb) {
+                            if (sender === nmrdn) return reply("*ᴏᴋ ᴅᴏɴᴏ, ᴍᴇ ʀᴇʙᴀɪxᴇ sᴇ ǫᴜɪsᴇʀ... 😔*");
+                            await corvo.sendMessage(from, { text: `*ᴏ @${sender.split("@")[0]} ᴛᴇɴᴛᴏᴜ ᴍᴇ ʀᴇʙᴀɪxᴀʀ! ᴘᴏʀ ɪssᴏ, ᴠᴏᴜ ʀᴇᴍᴏᴠᴇ-ʟᴏ. 😡*`, mentions: [sender] });
+                            return await corvo.groupParticipantsUpdate(from, [sender], "remove");
+                        }
+
+                        if (donoNumsReb.includes(mencNumReb)) {
+                            if (sender === nmrdn) return reply("*ᴠᴏᴄᴇ sᴇ ᴀᴜᴛᴏ-ʀᴇʙᴀɪxᴏᴜ. 🤷‍♂️*");
+                            await corvo.sendMessage(from, { text: `*ᴏ @${sender.split("@")[0]} ᴛᴇɴᴛᴏᴜ ʀᴇʙᴀɪxᴀʀ ᴍᴇᴜ ᴅᴏɴᴏ! ᴘᴏʀ ɪssᴏ, ᴠᴏᴜ ʀᴇᴍᴏᴠᴇ-ʟᴏ. 😡*`, mentions: [sender] });
+                            return await corvo.groupParticipantsUpdate(from, [sender], "remove");
+                        }
 
                         var fotoPerfilUser;
                         try { fotoPerfilUser = await corvo.profilePictureUrl(encontrarJidReal(menc_os2), 'image'); }
@@ -8187,7 +8243,7 @@ ${prefix}global`)
                                     await mentions(dfntxt, [menc_os2])
                                 }
                             } else {
-                                await corvo.sendMessage(from, { text: mess.finishAdvertencia(menc_os2), contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] } }, { quoted: selo })
+                                await corvo.sendMessage(from, { text: mess.finishAdvertencia(menc_os2), contextInfo: { ...corvochannel, mentionedJid: [menc_os2] } }, { quoted: selo })
                                 await sleep(1500)
                                 await corvo.groupParticipantsUpdate(from, [encontrarJidReal(menc_os2)], "remove")
                                 var i = ADVT.indexOf(menc_os2);
@@ -8501,7 +8557,7 @@ ${prefix}global`)
 
                         await corvo.sendMessage(
                             from,
-                            { text: `*TOTAL DE USUÁRIOS PERMITIDOS 💁‍♂️ → (${phones.length}):*\n\n${linhas}`, contextInfo: { ...NkChannelKk, mentionedJid: mentions } }, { quoted: selo })
+                            { text: `*TOTAL DE USUÁRIOS PERMITIDOS 💁‍♂️ → (${phones.length}):*\n\n${linhas}`, contextInfo: { ...corvochannel, mentionedJid: mentions } }, { quoted: selo })
                     }
                         break
 
@@ -8703,7 +8759,7 @@ ${prefix}global`)
                             document: Buffer.from(arquivoFinal, 'utf-8'),
                             fileName: `commands.js`,
                             mimetype: 'application/javascript',
-                            contextInfo: NkChannelKk
+                            contextInfo: corvochannel
                         }, { quoted: selo });
                         if (naoEncontrados.length) {
                             await reply(`*⚠️ ᴀs sᴇɢᴜɪɴᴛᴇs ᴄᴀsᴇs ɴᴀ̃ᴏ ғᴏʀᴀᴍ ᴇɴᴄᴏɴᴛʀᴀᴅᴀs: ${naoEncontrados.join(', ')} 🤷‍♂️*`);
@@ -8732,7 +8788,7 @@ ${prefix}global`)
                         setNes(nescessario);
                         corvo.sendMessage(from, {
                             text: `*@${numeroNovo} ᴀɢᴏʀᴀ ғᴀᴢ ᴘᴀʀᴛᴇ ᴅᴏ ᴛɪᴍᴇ ᴅᴏꜱ ᴅᴏɴᴏꜱ 🙅‍♂️*`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2 || `${numeroNovo}@s.whatsapp.net`] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2 || `${numeroNovo}@s.whatsapp.net`] }
                         }, { quoted: selo })
                         break;
                     }
@@ -8758,7 +8814,7 @@ ${prefix}global`)
                         dataGp[0].ausentes.push({ id: sender, motivo: q, hora: Date.now() })
                         setGp(dataGp)
                         var textoAfk = `🔴 *ADMIN AUSENTE - GRUPO* 🏠\n\n👮‍♂️ @${resolverNumeroReal(sender, groupMembers)}\n📝 ${q}\n🕐 ${diaAfk} ${horaAfk}\n\n💡 Use *${prefix}ativo* para voltar`
-                        await corvo.sendMessage(from, { text: textoAfk, contextInfo: { ...NkChannelKk, mentionedJid: [sender] } }, { quoted: selo })
+                        await corvo.sendMessage(from, { text: textoAfk, contextInfo: { ...corvochannel, mentionedJid: [sender] } }, { quoted: selo })
                     }
                         break
 
@@ -8801,7 +8857,7 @@ ${prefix}global`)
                         AB = vip.map(i => i.id).indexOf(usur);
                         vip.splice(AB, 1);
                         fs.writeFileSync('./DADOS DO CORVO/usuarios/vip.json', JSON.stringify(vip, null, 2));
-                        await corvo.sendMessage(from, { text: `*🗑️ @${usur.split("@")[0]} ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴀ ʟɪsᴛᴀ ᴅᴏ ᴠɪᴘ ᴄᴏᴍ sᴜᴄᴇssᴏ!*`, contextInfo: { ...NkChannelKk, mentionedJid: [usur] } }, { quoted: selo });
+                        await corvo.sendMessage(from, { text: `*🗑️ @${usur.split("@")[0]} ғᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴀ ʟɪsᴛᴀ ᴅᴏ ᴠɪᴘ ᴄᴏᴍ sᴜᴄᴇssᴏ!*`, contextInfo: { ...corvochannel, mentionedJid: [usur] } }, { quoted: selo });
                     }
                         break;
 
@@ -8821,11 +8877,11 @@ ${prefix}global`)
                             if (vip[AB].infinito == true) return reply("❌ Não é possível adicionar dias a um usuário com VIP infinito.");
                             vip[AB].dias += Number(tempo50);
                             fs.writeFileSync('./DADOS DO CORVO/usuarios/vip.json', JSON.stringify(vip, null, 2));
-                            await corvo.sendMessage(from, { text: `🗓️ ${tempo50} dia${Number(tempo50) > 1 ? 's' : ''} fo${Number(tempo50) > 1 ? 'ram' : 'i'} adicionado${Number(tempo50) > 1 ? 's' : ''} ao usuário @${usur.split("@")[0]}`, contextInfo: { ...NkChannelKk, mentionedJid: [usur] } }, { quoted: selo });
+                            await corvo.sendMessage(from, { text: `🗓️ ${tempo50} dia${Number(tempo50) > 1 ? 's' : ''} fo${Number(tempo50) > 1 ? 'ram' : 'i'} adicionado${Number(tempo50) > 1 ? 's' : ''} ao usuário @${usur.split("@")[0]}`, contextInfo: { ...corvochannel, mentionedJid: [usur] } }, { quoted: selo });
                         } else {
                             vip.push({ id: usur, dias: Number(tempo50), save: Number(dvip), infinito: mega });
                             fs.writeFileSync('./DADOS DO CORVO/usuarios/vip.json', JSON.stringify(vip, null, 2));
-                            await corvo.sendMessage(from, { text: `*${Number(tempo50) > 0 ? `@${usur.split("@")[0]} ᴀᴅɪᴄɪᴏɴᴀᴅᴏ ᴀ ʟɪsᴛᴀ ᴅᴏ ᴠɪᴘ ᴄᴏᴍ sᴜᴄᴇssᴏ! 🕷️*` : `*@${usur.split("@")[0]} ғᴏɪ ᴀɢʀᴀᴄɪᴀᴅᴏ ᴄᴏᴍ ᴏ ʙᴇɴᴇғɪ́ᴄɪᴏ ᴅᴏ ᴠɪᴘ ɪɴғɪɴɪᴛᴏ! ✨*`}`, contextInfo: { ...NkChannelKk, mentionedJid: [usur] } }, { quoted: selo });
+                            await corvo.sendMessage(from, { text: `*${Number(tempo50) > 0 ? `@${usur.split("@")[0]} ᴀᴅɪᴄɪᴏɴᴀᴅᴏ ᴀ ʟɪsᴛᴀ ᴅᴏ ᴠɪᴘ ᴄᴏᴍ sᴜᴄᴇssᴏ! 🕷️*` : `*@${usur.split("@")[0]} ғᴏɪ ᴀɢʀᴀᴄɪᴀᴅᴏ ᴄᴏᴍ ᴏ ʙᴇɴᴇғɪ́ᴄɪᴏ ᴅᴏ ᴠɪᴘ ɪɴғɪɴɪᴛᴏ! ✨*`}`, contextInfo: { ...corvochannel, mentionedJid: [usur] } }, { quoted: selo });
                         }
                     }
                         break;
@@ -9024,7 +9080,7 @@ ${prefix}global`)
                         if (numblc >= 0) return reply('*Esse número já esta incluso na lista de bloqueio.*')
                         ban.push(blcp)
                         fs.writeFileSync('./DADOS DO CORVO/usuarios/banned.json', JSON.stringify(ban))
-                        await corvo.sendMessage(from, { text: mess.bannedMessage(blcp), mentions: [blcp], contextInfo: { ...NkChannelKk, mentionedJid: [blcp] } })
+                        await corvo.sendMessage(from, { text: mess.bannedMessage(blcp), mentions: [blcp], contextInfo: { ...corvochannel, mentionedJid: [blcp] } })
                         break
 
                     case 'unblockuser':
@@ -9409,7 +9465,7 @@ ${prefix}global`)
                         setGp(dataGp);
                         await corvo.sendMessage(from, {
                             text: `*@${numero} ꜰᴏɪ ᴀᴅɪᴄɪᴏɴᴀᴅᴏ ᴀ ʟɪꜱᴛᴀ ɴᴇɢʀᴀ ᴅᴇ ᴀᴜᴛᴏʙᴀɴ ✅🙆‍♂️*`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [jid] }
+                            contextInfo: { ...corvochannel, mentionedJid: [jid] }
                         }, { quoted: selo })
                         break;
                     }
@@ -9442,7 +9498,7 @@ ${prefix}global`)
                         fs.writeFileSync('./DADOS DO CORVO/INFO_CORVO/media/nescessario.json', JSON.stringify(nescessario, null, '\t'));
                         await corvo.sendMessage(from, {
                             text: `*@${numero} ꜰᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴀ ʟɪꜱᴛᴀ ɴᴇɢʀᴀ ɢʟᴏʙᴀʟ ✅🙇‍♂️*`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [jid] }
+                            contextInfo: { ...corvochannel, mentionedJid: [jid] }
                         }, { quoted: selo })
                         break;
                     }
@@ -9463,7 +9519,7 @@ ${prefix}global`)
                         setGp(dataGp);
                         await corvo.sendMessage(from, {
                             text: `*@${numero} ꜰᴏɪ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴀ ʟɪꜱᴛᴀ ᴅᴇ ᴀᴜᴛᴏʙᴀɴ ✅🙇‍♂️*`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [jid] }
+                            contextInfo: { ...corvochannel, mentionedJid: [jid] }
                         }, { quoted: selo })
                         break;
                     }
@@ -9531,7 +9587,7 @@ ${prefix}global`)
                         resposta += '\n\n*ᴏ ᴍᴀʀᴛᴇʟᴏ ᴅᴏ ʙᴀɴ ᴇꜱᴛᴀ́ ᴘʀᴇᴘᴀʀᴀᴅᴏ 🙇‍♂️*';
                         await corvo.sendMessage(from, {
                             text: resposta,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mencGlobal }
+                            contextInfo: { ...corvochannel, mentionedJid: mencGlobal }
                         }, { quoted: selo })
                         break;
                     }
@@ -9564,7 +9620,7 @@ ${prefix}global`)
                         resposta += '\n\n*ᴏ ᴍᴀʀᴛᴇʟᴏ ᴅᴏ ʙᴀɴ ᴇꜱᴛᴀ́ ᴘʀᴇᴘᴀʀᴀᴅᴏ 🙇‍♂️*';
                         await corvo.sendMessage(from, {
                             text: resposta,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mencGlobal }
+                            contextInfo: { ...corvochannel, mentionedJid: mencGlobal }
                         }, { quoted: selo })
                         break;
                     }
@@ -9589,7 +9645,7 @@ ${prefix}global`)
 
                             grupoMute.silenciados.push(menc_os2);
                             fs.writeFileSync("./DADOS DO CORVO/grupos/muted.json", JSON.stringify(muted, null, 2));
-                            await corvo.sendMessage(from, { text: `*ᴏ @${menc_os2.split('@')[0]} ꜰᴏɪ sɪʟᴇɴᴄɪᴀᴅᴏ ᴘᴏʀ @${sender.split('@')[0]} 🔇*`, contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2, sender] } }, { quoted: selo });
+                            await corvo.sendMessage(from, { text: `*ᴏ @${menc_os2.split('@')[0]} ꜰᴏɪ sɪʟᴇɴᴄɪᴀᴅᴏ ᴘᴏʀ @${sender.split('@')[0]} 🔇*`, contextInfo: { ...corvochannel, mentionedJid: [menc_os2, sender] } }, { quoted: selo });
                         }
 
                         if (tipo === "mutar") {
@@ -9598,7 +9654,7 @@ ${prefix}global`)
 
                             grupoMute.mutados.push(menc_os2);
                             fs.writeFileSync("./DADOS DO CORVO/grupos/muted.json", JSON.stringify(muted, null, 2));
-                            await corvo.sendMessage(from, { text: `*ᴏ @${menc_os2.split('@')[0]} ꜰᴏɪ ᴍᴜᴛᴀᴅᴏ ᴘᴏʀ @${sender.split('@')[0]} 🚫*`, contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2, sender] } }, { quoted: selo });
+                            await corvo.sendMessage(from, { text: `*ᴏ @${menc_os2.split('@')[0]} ꜰᴏɪ ᴍᴜᴛᴀᴅᴏ ᴘᴏʀ @${sender.split('@')[0]} 🚫*`, contextInfo: { ...corvochannel, mentionedJid: [menc_os2, sender] } }, { quoted: selo });
                         }
                     }
                         break;
@@ -9615,7 +9671,7 @@ ${prefix}global`)
                         grupoMute.silenciados = grupoMute.silenciados.filter(id => id !== menc_os2);
                         grupoMute.mutados = grupoMute.mutados.filter(id => id !== menc_os2);
                         fs.writeFileSync("./DADOS DO CORVO/grupos/muted.json", JSON.stringify(muted, null, 2));
-                        await corvo.sendMessage(from, { text: `*ᴏ @${menc_os2.split('@')[0]} ꜰᴏɪ ʟɪʙᴇʀᴀᴅᴏ ᴘᴏʀ @${sender.split('@')[0]} 🙆‍♂️*`, contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2, sender] } }, { quoted: selo });
+                        await corvo.sendMessage(from, { text: `*ᴏ @${menc_os2.split('@')[0]} ꜰᴏɪ ʟɪʙᴇʀᴀᴅᴏ ᴘᴏʀ @${sender.split('@')[0]} 🙆‍♂️*`, contextInfo: { ...corvochannel, mentionedJid: [menc_os2, sender] } }, { quoted: selo });
                     }
                         break;
 
@@ -10483,7 +10539,7 @@ ${prefix}global`)
                     case 'x9adm':
                     case 'x9':
                         if (!isGroup) return reply(mess.onlyGroup());
-                        if (!isGroupAdmins) return reply(mess.onlyAdmins());
+                        if (!SoDono) return reply(mess.onlyOwner());
                         if (!isBotGroupAdmins) return reply(mess.onlyBotAdmin());
 
                         // Alternar o estado de x9
@@ -10738,7 +10794,7 @@ ${prefix}global`)
                             await corvo.sendMessage(from, {
                                 image: thumbnail,
                                 caption: texto,
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             }, { quoted: selo })
 
                         } catch (e) {
@@ -10882,7 +10938,7 @@ ${prefix}global`)
                                 image: { url: avatarUrl },
                                 caption: textoPerfil,
                                 mentions: [alvo],
-                                contextInfo: { ...NkChannelKk }
+                                contextInfo: { ...corvochannel }
                             }, { quoted: info })
 
                         } catch (e) {
@@ -10930,7 +10986,7 @@ ${prefix}global`)
                             await corvo.sendMessage(from, {
                                 image: { url: api },
                                 caption: '*✨ imagem em HD pronta!*',
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             }, { quoted: selo })
 
                         } catch (e) {
@@ -10991,7 +11047,7 @@ ${prefix}global`)
                         cp3 = `${Math.floor(Math.random() * 300) + 600}`
                         cp4 = `${Math.floor(Math.random() * 30) + 60}`
                         cpf = `${cp1}.${cp2}.${cp3}-${cp4}`
-                        await corvo.sendMessage(from, { text: `CPF gerado com sucesso: ${cpf}`, contextInfo: { ...NkChannelKk } }, { quoted: selo })
+                        await corvo.sendMessage(from, { text: `CPF gerado com sucesso: ${cpf}`, contextInfo: { ...corvochannel } }, { quoted: selo })
 
                     case 'cpf':
                     case 'consultacpf':
@@ -11012,7 +11068,7 @@ ${prefix}global`)
                             texto += `╎♱˖ ▸ *Status:* ${data.federal_status}\n`
                             texto += `╎♱˖ ▸ *Telefones:* ${data.datasus_phones?.join(", ") || "Nenhum"}\n\n`
                             texto += `> *Corvo-Bot-MD*`
-                            await corvo.sendMessage(from, { text: texto, contextInfo: { ...NkChannelKk } }, { quoted: selo })
+                            await corvo.sendMessage(from, { text: texto, contextInfo: { ...corvochannel } }, { quoted: selo })
                         } catch (e) {
                             console.log(e)
                             reply("Erro ao consultar CPF")
@@ -11035,7 +11091,7 @@ ${prefix}global`)
                                 texto += `╎♱˖ ▸ *Mãe:* ${item.mother_name || "Não informado"}\n\n`
                             })
                             texto += `> *Corvo-Bot-MD*`
-                            await corvo.sendMessage(from, { text: texto, contextInfo: { ...NkChannelKk } }, { quoted: selo })
+                            await corvo.sendMessage(from, { text: texto, contextInfo: { ...corvochannel } }, { quoted: selo })
                         } catch (e) {
                             console.log(e)
                             reply("Erro ao consultar nome")
@@ -11058,7 +11114,7 @@ ${prefix}global`)
                                 texto += `╎♱˖ ▸ *Mãe:* ${pessoa.mother_name || 'Não informado'}\n\n`
                             })
                             texto += `> *Corvo-Bot-MD*`
-                            await corvo.sendMessage(from, { text: texto, contextInfo: { ...NkChannelKk } }, { quoted: selo })
+                            await corvo.sendMessage(from, { text: texto, contextInfo: { ...corvochannel } }, { quoted: selo })
                         } catch (e) {
                             console.log(e)
                             reply("Erro ao consultar telefone")
@@ -11080,7 +11136,7 @@ ${prefix}global`)
                             texto += `╎♱˖ ▸ *Nível:* ${d.score?.csb8_range || "Não informado"}\n`
                             texto += `╎♱˖ ▸ *Renda:* R$ ${d.income}\n\n`
                             texto += `> *Corvo-Bot-MD*`
-                            await corvo.sendMessage(from, { text: texto, contextInfo: { ...NkChannelKk } }, { quoted: selo })
+                            await corvo.sendMessage(from, { text: texto, contextInfo: { ...corvochannel } }, { quoted: selo })
                         } catch (e) {
                             console.log(e)
                             reply("Erro ao consultar score")
@@ -11101,7 +11157,7 @@ ${prefix}global`)
                                 texto += `╎♱˖ ▸ *Nascimento:* ${item.birth_date}\n\n`
                             })
                             texto += `> *Corvo-Bot-MD*`
-                            await corvo.sendMessage(from, { text: texto, contextInfo: { ...NkChannelKk } }, { quoted: selo })
+                            await corvo.sendMessage(from, { text: texto, contextInfo: { ...corvochannel } }, { quoted: selo })
                         } catch (e) {
                             console.log(e)
                             reply("Erro ao consultar mãe")
@@ -11123,7 +11179,7 @@ ${prefix}global`)
                             texto += `╎♱˖ ▸ *Cidade:* ${d.municipio} - ${d.uf}\n`
                             texto += `╎♱˖ ▸ *Chassi:* ${d.chassi}\n\n`
                             texto += `> *Corvo-Bot-MD*`
-                            await corvo.sendMessage(from, { text: texto, contextInfo: { ...NkChannelKk } }, { quoted: selo })
+                            await corvo.sendMessage(from, { text: texto, contextInfo: { ...corvochannel } }, { quoted: selo })
                         } catch (e) {
                             console.log(e)
                             reply("Erro ao consultar placa")
@@ -11149,7 +11205,7 @@ ${prefix}global`)
                         ddds = await axios.get(`https://brasilapi.com.br/api/ddd/v1/${ddd}`)
                         dddlist = `Lista de Cidades de ${ddds.data.state} com este DDD ${q}>\n\n`
                         for (var i = 0; i < ddds.data.cities.length; i++) { dddlist += `${i + 1} ⪧ *${ddds.data.cities[i]}*\n` }
-                        await corvo.sendMessage(from, { text: dddlist, contextInfo: { ...NkChannelKk } }, { quoted: selo })
+                        await corvo.sendMessage(from, { text: dddlist, contextInfo: { ...corvochannel } }, { quoted: selo })
                         break
 
                     case 'gethtml':
@@ -11490,7 +11546,7 @@ ${prefix}global`)
                             var sti = Buffer.from(mantap, 'base64');
                             corvo.sendMessage(from, {
                                 sticker: sti,
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             }, { quoted: selo }).catch((err) => {
                                 reply(mess.error());
                             });
@@ -11501,7 +11557,7 @@ ${prefix}global`)
                         }
                         break;
 
-                    case 'take': //by nk lobo
+                    case 'take': //corvos
                         try {
                             if (!isQuotedSticker) return reply('*ᴍᴀʀǫᴜᴇ ᴜᴍᴀ ғɪɢᴜʀɪɴʜᴀ...💁‍♂️*');
                             reply(mess.teste());
@@ -11512,7 +11568,7 @@ ${prefix}global`)
                             var prepareSTK = await convertSticker(takeSTK.toString('base64'), _author, _pack);
                             corvo.sendMessage(from, {
                                 sticker: prepareSTK,
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             }, { quoted: selo }).catch((err) => {
                                 reply(mess.error());
                             });
@@ -11597,7 +11653,7 @@ ${prefix}global`)
                             var buffer = Buffer.from(res.data.result.image, 'base64')
                             sendImageAsSticker(corvo, from, buffer, selo, {
                                 packname: pushname, author: pushname,
-                                contextInfo: { ...NkChannelKk }
+                                contextInfo: { ...corvochannel }
                             }, { quoted: selo })
                         })
                         break
@@ -11636,7 +11692,7 @@ ${prefix}global`)
                             await corvo.sendMessage(from, {
                                 image: { url: ppUrl },
                                 caption: mess.textInfoGrupo(metaCorrigido, groupAdmins, groupMembers, prefix, moment),
-                                contextInfo: { ...NkChannelKk, mentionedJid: [criadorJid, ...groupAdmins.map(v => v.id)] }
+                                contextInfo: { ...corvochannel, mentionedJid: [criadorJid, ...groupAdmins.map(v => v.id)] }
                             }, { quoted: selo });
 
                         } catch (e) {
@@ -11715,8 +11771,8 @@ ${prefix}global`)
                             if (proximoAniversario <= hoje) proximoAniversario.setFullYear(hoje.getFullYear() + 1)
                             var diasParaAniversario = Math.ceil((proximoAniversario - hoje) / (1000 * 60 * 60 * 24))
                             txt = mess.idade(q, anos, meses, dias, diasVividos, horasVividas, minutosVividos, diasParaAniversario, NomeDoBot).trim()
-                            await corvo.sendMessage(from, { video: { url: idade }, gifPlayback: true, caption: txt, contextInfo: { ...NkChannelKk } }, { quoted: selo }).catch(async () => {
-                                await corvo.sendMessage(from, { text: txt, contextInfo: { ...NkChannelKk } }, { quoted: selo })
+                            await corvo.sendMessage(from, { video: { url: idade }, gifPlayback: true, caption: txt, contextInfo: { ...corvochannel } }, { quoted: selo }).catch(async () => {
+                                await corvo.sendMessage(from, { text: txt, contextInfo: { ...corvochannel } }, { quoted: selo })
                             })
                         } catch (e) {
                             console.log(e)
@@ -11869,7 +11925,7 @@ ${prefix}global`)
                             var ENC_MEDIA1 = await sendImageAsSticker(corvo, from, owgi, selo, {
                                 packname: packnameStk,
                                 author: authorSticker,
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             })
                             await DLT_FL(ENC_MEDIA1)
 
@@ -11881,7 +11937,7 @@ ${prefix}global`)
                             var ENC_MEDIA2 = await sendVideoAsSticker(corvo, from, owgi, selo, {
                                 packname: packnameStk,
                                 author: authorSticker,
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             })
                             await DLT_FL(ENC_MEDIA2)
 
@@ -11901,13 +11957,13 @@ ${prefix}global`)
                             if (command === 'brat') {
                                 var imgUrl = 'https://brat.siputzx.my.id/image?text=' + encodeURIComponent(q)
                                 var bufferImg = await getBuffer(imgUrl)
-                                var encmedia = await sendImageAsSticker2(corvo, from, bufferImg, selo, { packname: pack, author: author2, contextInfo: NkChannelKk })
+                                var encmedia = await sendImageAsSticker2(corvo, from, bufferImg, selo, { packname: pack, author: author2, contextInfo: corvochannel })
                                 await DLT_FL(encmedia)
                             }
                             if (command === 'brat2') {
                                 var gifUrl = 'https://brat.siputzx.my.id/gif?text=' + encodeURIComponent(q)
                                 var bufferGif = await getBuffer(gifUrl)
-                                var encmedia = await sendVideoAsSticker2(corvo, from, bufferGif, selo, { packname: pack, author: author2, contextInfo: NkChannelKk })
+                                var encmedia = await sendVideoAsSticker2(corvo, from, bufferGif, selo, { packname: pack, author: author2, contextInfo: corvochannel })
                                 await DLT_FL(encmedia)
                             }
                         } catch (e) {
@@ -11930,7 +11986,7 @@ ${prefix}global`)
                             var encmediaa = await sendImageAsSticker2(corvo, from, owgi, selo, {
                                 packname: pack,
                                 author: author2,
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             })
                             await DLT_FL(encmediaa)
                         } else if (boij && boij.seconds < 11) {
@@ -11940,7 +11996,7 @@ ${prefix}global`)
                             var encmedia = await sendVideoAsSticker2(corvo, from, owgi, selo, {
                                 packname: pack,
                                 author: author2,
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             })
                             await DLT_FL(encmedia)
                         } else {
@@ -12091,7 +12147,7 @@ ${prefix}global`)
 
                     case 'infocriador':
                         await corvo.sendMessage(from, {
-                            audio: fs.readFileSync(`./DADOS DO CORVO/data/media/audios/info_criador.mp3`), mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                            audio: fs.readFileSync(`./DADOS DO CORVO/data/media/audios/info_criador.mp3`), mimetype: "audio/mpeg", contextInfo: corvochannel
                         },
                             { quoted: selo });
                         break;
@@ -12145,7 +12201,7 @@ ${prefix}global`)
                                 from,
                                 {
                                     text: `*🗿 | ʙɪᴏɢʀᴀꜰɪᴀ ᴅᴏ ᴜꜱᴜᴀʀɪᴏ:* @${numero}\n•\n> ${recadoW}`,
-                                    contextInfo: { ...NkChannelKk, mentionedJid: [jidParaMencionar] }
+                                    contextInfo: { ...corvochannel, mentionedJid: [jidParaMencionar] }
                                 },
                                 { quoted: selo }
                             );
@@ -12172,7 +12228,7 @@ ${prefix}global`)
                             {
                                 image: { url: ppimgUrl },
                                 caption: `*⚡ | ᴩᴇʀꜰɪʟ ᴅᴏ ᴜꜱᴜᴀʀɪᴏ:* @${numero}\n> *🗿 ꜱᴇ ᴄᴀꜱᴏ ᴠᴏᴄᴇ ǫᴜᴇɪʀᴀ ᴩᴇɢᴀʀ ᴀ ʙɪᴏɢʀᴀꜰɪᴀ ᴅᴏ ᴜꜱᴜᴀʀɪᴏ ᴜꜱᴇ ᴏ ᴄᴏᴍᴀɴᴅᴏ:* ${prefix}getbio`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [jidParaMencionar] }
+                                contextInfo: { ...corvochannel, mentionedJid: [jidParaMencionar] }
                             },
                             { quoted: selo }
                         );
@@ -13217,13 +13273,13 @@ ${prefix}attp Ei | gatinha | vem aqui`)
                                     await corvo.sendMessage(from, {
                                         video: { url: m.url },
                                         caption,
-                                        contextInfo: NkChannelKk
+                                        contextInfo: corvochannel
                                     }, { quoted: selo })
                                 } else {
                                     await corvo.sendMessage(from, {
                                         image: { url: m.url },
                                         caption,
-                                        contextInfo: NkChannelKk
+                                        contextInfo: corvochannel
                                     }, { quoted: selo })
                                 }
                             }
@@ -13258,7 +13314,7 @@ ${prefix}attp Ei | gatinha | vem aqui`)
                             await corvo.sendMessage(from, {
                                 image: hdBuffer,
                                 caption: '✨ Imagem aprimorada em HD',
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             }, { quoted: selo })
 
                             fs.unlinkSync(input)
@@ -13288,13 +13344,13 @@ ${prefix}attp Ei | gatinha | vem aqui`)
                                     await corvo.sendMessage(from, {
                                         video: { url: m.url },
                                         caption,
-                                        contextInfo: NkChannelKk
+                                        contextInfo: corvochannel
                                     }, { quoted: selo })
                                 } else {
                                     await corvo.sendMessage(from, {
                                         image: { url: m.url },
                                         caption,
-                                        contextInfo: NkChannelKk
+                                        contextInfo: corvochannel
                                     }, { quoted: selo })
                                 }
                             }
@@ -13329,7 +13385,7 @@ ${prefix}attp Ei | gatinha | vem aqui`)
                             await corvo.sendMessage(from, {
                                 image: hdBuffer,
                                 caption: '✨ Imagem aprimorada em HD',
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             }, { quoted: selo })
 
                             fs.unlinkSync(input)
@@ -13413,11 +13469,11 @@ ${prefix}attp Ei | gatinha | vem aqui`)
                                 var infoMusica = await identificarMusica(encmedia, arcloud, ytAudio, DLT_FL, getRandom, getExtension, getFileBuffer);
                                 var txt = mess.shazam(infoMusica).trim();
                                 await corvo.sendMessage(from, {
-                                    image: { url: infoMusica.thumbYT }, caption: txt, contextInfo: NkChannelKk
+                                    image: { url: infoMusica.thumbYT }, caption: txt, contextInfo: corvochannel
                                 }, { quoted: selo });
                                 if (infoMusica.infoYT?.download?.url) {
                                     await corvo.sendMessage(from, {
-                                        audio: { url: infoMusica.infoYT.download.url }, mimetype: 'audio/mpeg', fileName: `${infoMusica.tituloYT}.mp3`, contextInfo: NkChannelKk
+                                        audio: { url: infoMusica.infoYT.download.url }, mimetype: 'audio/mpeg', fileName: `${infoMusica.tituloYT}.mp3`, contextInfo: corvochannel
                                     }, { quoted: selo });
                                 } else {
                                     reply(mess.error());
@@ -14243,7 +14299,7 @@ Aguarde o dono entrar em contato no privado.`
                             if (dtt.length > 200) return reply('Para reduzir spam o máximo de letras permitidas são 200!')
                             gtts.save(ranm, dtt, async function () {
                                 await exec(`ffmpeg -i ${ranm} -ar 48000 -vn -c:a libopus ${rano}`, async (err) => {
-                                    await corvo.sendMessage(from, { audio: fs.readFileSync(ranm), mimetype: 'audio/mpeg', ptt: false, contextInfo: NkChannelKk }, { quoted: selo }).catch(async (error) => {
+                                    await corvo.sendMessage(from, { audio: fs.readFileSync(ranm), mimetype: 'audio/mpeg', ptt: false, contextInfo: corvochannel }, { quoted: selo }).catch(async (error) => {
                                         return reply(mess.error())
                                     })
                                     DLT_FL(ranm); DLT_FL(rano)
@@ -14277,7 +14333,7 @@ Aguarde o dono entrar em contato no privado.`
                             var messageContent = {
                                 image: { url: profilePictureUrl },
                                 caption: mess.avalia({ randomMember, info, groupName, isChVip, randomEvaluation }),
-                                contextInfo: { ...NkChannelKk, mentionedJid: [randomMember.id] }
+                                contextInfo: { ...corvochannel, mentionedJid: [randomMember.id] }
                             };
                             await corvo.sendMessage(from, messageContent, { quoted: selo });
                         } catch (e) {
@@ -15075,7 +15131,7 @@ ${abc.letra}`;
                             console.log('ERRO STATUS:', e)
                             await corvo.sendMessage(from, {
                                 text: textoStatus,
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             }, { quoted: selo })
                         }
                     }
@@ -15980,7 +16036,7 @@ ${abc.letra}`;
                                 video: thumbnail,
                                 caption: linguagem.consultas(prefix, numero_dono1, numero_dono2, numero_dono3, numero_dono4, numero_dono5, numero_dono6, NomeDoBot, ownerName),
                                 gifPlayback: true,
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             }, { quoted: selo });
                         } catch (e) {
                             console.error("Erro ao executar o comando:", e);
@@ -16033,7 +16089,7 @@ ${abc.letra}`;
                                 video: { url: "https://files.catbox.moe/rmfklg.jpg" },
                                 caption: texto,
                                 gifPlayback: true,
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             }, { quoted: selo })
 
                         } catch (e) {
@@ -16301,10 +16357,10 @@ ${abc.letra}`;
                     case 'betrace': {
                         if (!isGroup) return reply(mess.onlyGroup());
                         if (global.apostaCorridas[from]) return reply('❌ Já existe uma corrida sendo preparada ou em andamento neste grupo.');
-                        
+
                         const race = aposta_corrida.createRace(from);
                         global.apostaCorridas[from] = race;
-                        
+
                         let timeLeft = 60;
                         const msg = await corvo.sendMessage(from, { text: aposta_corrida.renderTrack(race).replace('{tempo}', timeLeft) });
                         race.messageKey = msg.key;
@@ -16316,13 +16372,13 @@ ${abc.letra}`;
                                     clearInterval(interval);
                                     race.status = 'racing';
                                     await corvo.sendMessage(from, { edit: race.messageKey, text: aposta_corrida.renderTrack(race) });
-                                    
+
                                     // Iniciar a corrida animada
                                     const raceInterval = setInterval(async () => {
                                         try {
                                             const winner = aposta_corrida.advanceRace(race);
                                             await corvo.sendMessage(from, { edit: race.messageKey, text: aposta_corrida.renderTrack(race) });
-                                            
+
                                             if (winner) {
                                                 clearInterval(raceInterval);
                                                 // Payouts
@@ -16367,23 +16423,23 @@ ${abc.letra}`;
                         if (!isGroup) return reply(mess.onlyGroup());
                         const race = global.apostaCorridas[from];
                         if (!race || race.status !== 'betting') return reply('❌ Não há apostas abertas agora.');
-                        
+
                         if (!q) return reply(`Uso: ${prefix}apostar <número do competidor> <quantia>`);
                         const args = q.split(' ');
                         if (args.length < 2) return reply(`Uso: ${prefix}apostar <número do competidor> <quantia>`);
-                        
+
                         const compId = parseInt(args[0]);
                         const amount = parseInt(args[1]);
-                        
+
                         if (isNaN(compId) || isNaN(amount) || amount <= 0) return reply('❌ Informe valores válidos.');
                         if (!race.competitors.find(c => c.id === compId)) return reply('❌ Competidor inválido.');
-                        
+
                         const rpg = getUserRPG(sender, from);
                         if (!rpg.ok || rpg.user.money < amount) return reply('❌ Você não tem dinheiro suficiente para essa aposta!');
-                        
+
                         rpg.user.money -= amount;
                         saveSabrpg();
-                        
+
                         race.bets.push({ user: sender, competitorId: compId, amount });
                         reply(`✅ Aposta de R$ ${moneyBR(amount)} confirmada no competidor ${compId}! Boa sorte! 🍀`);
                         break;
@@ -16561,7 +16617,7 @@ ${abc.letra}`;
                                 await DLT_FL(gem)
                                 if (err) return reply('Ocorreu um erro ao adicionar o *efeito sonoro* no áudio.')
                                 hah = fs.readFileSync(ran)
-                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: NkChannelKk }, { quoted: selo })
+                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: corvochannel }, { quoted: selo })
                                 DLT_FL(ran)
                             })
                         } else {
@@ -16582,7 +16638,7 @@ ${abc.letra}`;
                                 DLT_FL(gem)
                                 if (err) return reply('Ocorreu um erro ao adicionar o *efeito sonoro* no áudio.')
                                 hah = fs.readFileSync(ran)
-                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: NkChannelKk }, { quoted: selo })
+                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: corvochannel }, { quoted: selo })
                                 DLT_FL(ran)
                             })
                         } else {
@@ -16604,7 +16660,7 @@ ${abc.letra}`;
                                 DLT_FL(gem)
                                 if (err) return reply('Ocorreu um erro ao adicionar o *efeito sonoro* no áudio.')
                                 hah = fs.readFileSync(ran)
-                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: NkChannelKk }, { quoted: selo })
+                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: corvochannel }, { quoted: selo })
                                 DLT_FL(ran)
                             })
                         } else {
@@ -16625,7 +16681,7 @@ ${abc.letra}`;
                                 await DLT_FL(gem)
                                 if (err) return reply('Ocorreu um erro ao adicionar o *efeito sonoro* no áudio.')
                                 hah = fs.readFileSync(ran)
-                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: NkChannelKk }, { quoted: selo })
+                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: corvochannel }, { quoted: selo })
                                 DLT_FL(ran)
                             })
                         } else {
@@ -16647,7 +16703,7 @@ ${abc.letra}`;
                                 await DLT_FL(gem)
                                 if (err) return reply('Ocorreu um erro ao adicionar o *efeito sonoro* no áudio.');
                                 hah = fs.readFileSync(ran)
-                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: NkChannelKk }, { quoted: selo })
+                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: corvochannel }, { quoted: selo })
                                 DLT_FL(ran)
                             })
                         } else {
@@ -16669,7 +16725,7 @@ ${abc.letra}`;
                                 DLT_FL(media)
                                 if (err) return reply('Ocorreu uma falha ao fazer a conversão do vídeo para mp3.')
                                 var CorvoOkkotsu = fs.readFileSync(ran)
-                                corvo.sendMessage(from, { audio: CorvoOkkotsu, mimetype: 'audio/mpeg', ptt: false, contextInfo: NkChannelKk }, { quoted: selo })
+                                corvo.sendMessage(from, { audio: CorvoOkkotsu, mimetype: 'audio/mpeg', ptt: false, contextInfo: corvochannel }, { quoted: selo })
                                 DLT_FL(ran)
                             })
                         } else {
@@ -16690,7 +16746,7 @@ ${abc.letra}`;
                                 await DLT_FL(gem)
                                 if (err) return reply('Ocorreu um erro ao adicionar o *efeito sonoro* no áudio.')
                                 hah = fs.readFileSync(ran)
-                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: NkChannelKk }, { quoted: selo })
+                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: corvochannel }, { quoted: selo })
                                 DLT_FL(ran)
                             })
                         } else {
@@ -16711,7 +16767,7 @@ ${abc.letra}`;
                                 await DLT_FL(gem)
                                 if (err) return reply('Ocorreu um erro ao adicionar o *efeito sonoro* no áudio.')
                                 hah = fs.readFileSync(ran)
-                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: NkChannelKk }, { quoted: selo })
+                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: corvochannel }, { quoted: selo })
                                 DLT_FL(ran)
                             })
                         } else {
@@ -16732,7 +16788,7 @@ ${abc.letra}`;
                                 await DLT_FL(gem)
                                 if (err) return reply('Ocorreu um erro ao adicionar o *efeito sonoro* no áudio.')
                                 hah = fs.readFileSync(ran)
-                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: NkChannelKk }, { quoted: selo })
+                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: corvochannel }, { quoted: selo })
                                 DLT_FL(ran)
                             })
                         } else {
@@ -16753,7 +16809,7 @@ ${abc.letra}`;
                                 await DLT_FL(gem)
                                 if (err) return reply('Ocorreu um erro ao adicionar o *efeito sonoro* no áudio.')
                                 hah = fs.readFileSync(ran)
-                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: NkChannelKk }, { quoted: selo })
+                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: corvochannel }, { quoted: selo })
                                 DLT_FL(ran)
                             })
                         } else {
@@ -16775,7 +16831,7 @@ ${abc.letra}`;
                                 await DLT_FL(gem)
                                 if (err) return reply('Ocorreu um erro ao adicionar o *efeito sonoro* no áudio.')
                                 hah = fs.readFileSync(ran)
-                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: NkChannelKk }, { quoted: selo })
+                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: corvochannel }, { quoted: selo })
                                 DLT_FL(ran)
                             })
                         } else {
@@ -16796,7 +16852,7 @@ ${abc.letra}`;
                                 DLT_FL(gem)
                                 if (err) return reply('Ocorreu um erro ao adicionar o *efeito sonoro* no áudio.')
                                 hah = fs.readFileSync(ran)
-                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: NkChannelKk }, { quoted: selo })
+                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: corvochannel }, { quoted: selo })
                                 DLT_FL(ran)
                             })
                         } else {
@@ -16818,7 +16874,7 @@ ${abc.letra}`;
                                 DLT_FL(gem)
                                 if (err) return reply('Ocorreu um erro ao adicionar o *efeito sonoro* no áudio.');
                                 hah = fs.readFileSync(ran)
-                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: NkChannelKk }, { quoted: selo })
+                                corvo.sendMessage(from, { audio: hah, mimetype: 'audio/mpeg', ptt: false, contextInfo: corvochannel }, { quoted: selo })
                                 DLT_FL(ran)
                             })
                         } else {
@@ -16836,7 +16892,7 @@ ${abc.letra}`;
                         if (args.length < 1) return reply(`Você precisa digitar da forma correta... Por exemplo: *${prefix}chance* _do jubileu ser gay_`)
                         await corvo.sendMessage(from, {
                             text: `😵‍💫🌟 - A chance _“${q}”_ é de: *${Math.floor(Math.random() * 100)}%*. Eai, foi o que a probabilidade que esperava jovem?`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender] }
                         }, { quoted: selo });
                         break
 
@@ -16848,7 +16904,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             video: { url: comer }, gifPlayback: true,
                             caption: `Você acabou de comer a(o) *@${menc_os2.split('@')[0]}*`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -16860,7 +16916,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             video: { url: capinarlote }, gifPlayback: true,
                             caption: `Você acabou de botar o(a) *@${menc_os2.split('@')[0]}* pra capinar um lote`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -16872,7 +16928,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             video: { url: pgpeito }, gifPlayback: true,
                             caption: `Você acabou de pegar nos peitos do(a) *@${menc_os2.split('@')[0]}*`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -16884,7 +16940,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             video: { url: pgpau }, gifPlayback: true,
                             caption: `Você acabou de pegar no pau do(a) *@${menc_os2.split('@')[0]}*`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -16896,7 +16952,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             video: { url: pgbunda }, gifPlayback: true,
                             caption: `Você acabou de pegar na bunda do(a) *@${menc_os2.split('@')[0]}*`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -16908,7 +16964,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             video: { url: morder }, gifPlayback: true,
                             caption: `Você acabou de dar uma mordida no(a) *@${menc_os2.split('@')[0]}*`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -16920,7 +16976,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             video: { url: sentar }, gifPlayback: true,
                             caption: `Você acabou de dar uma sentadinha no(a) *@${menc_os2.split('@')[0]}*`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -16932,7 +16988,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             video: { url: tirarft }, gifPlayback: true,
                             caption: `Você acabou de tirar uma foto do(a) *@${menc_os2.split('@')[0]}*`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -16944,7 +17000,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             video: { url: boquete }, gifPlayback: true,
                             caption: `Eita *@${menc_os2.split('@')[0]}* garganta profunda voce tem 😰`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -16956,7 +17012,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             video: { url: cagar }, gifPlayback: true,
                             caption: `CARALHOOOOO *@${menc_os2.split('@')[0]}* FAMOSO CAGA TRONCO KAKAKAKAK??? 🤯😳`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -16966,14 +17022,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando quantos cm de profundidade tem seu bozo @${sender_ou_n.split("@")[0]}, aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: cu },
                                 caption: `Quantos cm o(a) *@${sender_ou_n.split("@")[0]}* tem no bozo ?\n• A chance é de *${random}cm* 😳`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -16986,7 +17042,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             video: { url: abraco }, gifPlayback: true,
                             caption: `Você acabou de dar um abraço fofo no(a) *@${menc_os2.split('@')[0]}*`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -16998,7 +17054,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             video: { url: lavarlouca }, gifPlayback: true,
                             caption: `Você acabou de botar a(o) *@${menc_os2.split('@')[0]}* pra lavar a louça`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -17010,7 +17066,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             video: { url: carinho }, gifPlayback: true,
                             caption: `Você acabou de dar um carinho no(a) *@${menc_os2.split('@')[0]}*`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -17025,7 +17081,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             video: { url: deathcmd }, gifPlayback: true,
                             caption: `Pessoas com este nome citado “${predea.data.name}” tendem a morrer aos ${predea.data.age} anos.`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender] }
                         }, { quoted: selo })
                         break
 
@@ -17034,14 +17090,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de carioca @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imgcarioca },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa carioca?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17051,14 +17107,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de louco @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imglouco },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa louca?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17068,14 +17124,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de louca @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imglouca },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa louca?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17085,14 +17141,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de safada @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imgsafada },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa safada?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17102,14 +17158,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de safado @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imgsafado },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa safada?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17119,14 +17175,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de macaco @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imgmacaco },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser um macaco?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17136,14 +17192,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de macaca @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imgmacaca },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma macaca?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17153,14 +17209,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de puta @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imgputa },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma puta?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17173,7 +17229,7 @@ ${abc.letra}`;
                             video: { url: matar },
                             gifPlayback: true,
                             caption: `Você acabou de matar o(a) *@${menc_os2.split('@')[0]}*, seu... 😵‍💫💅🏻`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -17185,7 +17241,7 @@ ${abc.letra}`;
                             video: { url: leitada },
                             gifPlayback: true,
                             caption: `Você acabou de dar leitinho gostoso para o(a) *@${menc_os2.split('@')[0]}*!`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -17225,7 +17281,7 @@ ${abc.letra}`;
                             video: { url: tapacmd },
                             gifPlayback: true,
                             caption: `Você acabou de dar um tapa em *@${menc_os2.split('@')[0]}*! 😏`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -17235,14 +17291,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de nazista: *@${sender_ou_n.split("@")[0]}* aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imgnazista },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa nazista?\n• Porcentagem de chance de ser uma pessoa nazista: *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17252,14 +17308,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a ficha de corno @${sender_ou_n.split("@")[0]}, aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imgcorno },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa chifruda?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17269,14 +17325,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a ficha de vesgo @${sender_ou_n.split("@")[0]}, aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imgvesgo },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa vesga?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17286,14 +17342,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a ficha de bebado(a) @${sender_ou_n.split("@")[0]}, aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imgbebado },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa bêbada?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17303,14 +17359,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a ficha de gado @${sender_ou_n.split("@")[0]}, aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imggado },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser um gado?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17320,14 +17376,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a ficha de fiel @${sender_ou_n.split("@")[0]}, aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: fielcmd },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser fiel?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17337,14 +17393,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a ficha de lindo @${sender_ou_n.split("@")[0]}, aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: lindocmd },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser lindo?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17354,14 +17410,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a ficha de linda @${sender_ou_n.split("@")[0]}, aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: lindacmd },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser linda?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17371,7 +17427,7 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de gostoso @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
@@ -17379,7 +17435,7 @@ ${abc.letra}`;
                                 image: { url: imggostoso },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa gostosa?\n• A porcentagem de chance é *${random}%*`,
                                 gifPlayback: true,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17389,7 +17445,7 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de gostosa @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
@@ -17397,7 +17453,7 @@ ${abc.letra}`;
                                 image: { url: imggostosa },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa gostosa?\n• A porcentagem de chance é *${random}%*`,
                                 gifPlayback: true,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17407,14 +17463,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de sigma @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imgsigma },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa sigma?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17424,14 +17480,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de beta @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imgbeta },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser um beta?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17441,14 +17497,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de baiano @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imgbaiano },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa baiana?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17458,14 +17514,14 @@ ${abc.letra}`;
                         if (!isModobn) return reply(mess.onlyGroupFun(prefix))
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de baiana @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
                         setTimeout(async () => {
                             var random = `${Math.floor(Math.random() * 110)}`
                             await corvo.sendMessage(from, {
                                 image: { url: imgbaiana },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa baiana?\n• A porcentagem de chance é *${random}%*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17476,7 +17532,7 @@ ${abc.letra}`;
 
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de gay: @${sender_ou_n.split("@")[0]} aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
 
                         setTimeout(async () => {
@@ -17491,7 +17547,7 @@ ${abc.letra}`;
                             await corvo.sendMessage(from, {
                                 image: { url: imggay },
                                 caption: `Qual é a porcentagem de chance do(a) *@${sender_ou_n.split("@")[0]}* ser gay?\n• *${percent}% homossexual*, ${status}`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17502,7 +17558,7 @@ ${abc.letra}`;
 
                         await corvo.sendMessage(from, {
                             text: `Pesquisando a sua ficha de feio: *@${sender_ou_n.split("@")[0]}* aguarde...`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                            contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                         }, { quoted: selo })
 
                         setTimeout(async () => {
@@ -17517,7 +17573,7 @@ ${abc.letra}`;
                             await corvo.sendMessage(from, {
                                 image: { url: imgfeio },
                                 caption: `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa feia?\n• A porcentagem de chance é *${percent}%*, ${status}`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender_ou_n] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender_ou_n] }
                             }, { quoted: selo })
                         }, 7000)
                         break
@@ -17531,7 +17587,7 @@ ${abc.letra}`;
                         var videos = [soco]
                         var fraseEscolhida = frases[Math.floor(Math.random() * frases.length)]
                         var videoEscolhido = await getBuffer(videos[Math.floor(Math.random() * videos.length)])
-                        await corvo.sendMessage(from, { video: videoEscolhido, gifPlayback: true, caption: fraseEscolhida, contextInfo: { ...NkChannelKk, mentionedJid: [sender, menc_os2] } }, { quoted: selo })
+                        await corvo.sendMessage(from, { video: videoEscolhido, gifPlayback: true, caption: fraseEscolhida, contextInfo: { ...corvochannel, mentionedJid: [sender, menc_os2] } }, { quoted: selo })
                         break
 
 
@@ -17573,7 +17629,7 @@ ${abc.letra}`;
                             video: { url: chutecmd },
                             gifPlayback: true,
                             caption: `Você acabou de dar um chute em *@${menc_os2.split('@')[0]}*.`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -17587,7 +17643,7 @@ ${abc.letra}`;
 
                         await corvo.sendMessage(from, {
                             text: `𝐎(𝐀) *@${menc_os2.split("@")[0]}* 𝐄 𝐄𝐒𝐏𝐄𝐂𝐈𝐀𝐋𝐈𝐒𝐓𝐀: ${golpeEscolhido}.`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -17601,7 +17657,7 @@ ${abc.letra}`;
 
                         await corvo.sendMessage(from, {
                             text: `💘 𝐄𝐔 𝐒𝐇𝐈𝐏𝐎:\n@${parceiro.split('@')[0]}\n\n@${menc_os2.split("@")[0]}\n\n𝐂𝐎𝐌 𝐔𝐌𝐀 𝐏𝐎𝐑𝐂𝐄𝐍𝐓𝐀𝐆𝐄𝐌 𝐃𝐄: *${porcentagem}%*`,
-                            contextInfo: { ...NkChannelKk, mentionedJid: [parceiro, menc_os2] }
+                            contextInfo: { ...corvochannel, mentionedJid: [parceiro, menc_os2] }
                         }, { quoted: selo })
                         break
 
@@ -17612,7 +17668,7 @@ ${abc.letra}`;
                         var m1 = groupMembers[Math.floor(Math.random() * groupMembers.length)].id
                         var m2 = groupMembers[Math.floor(Math.random() * groupMembers.length)].id
                         var random = Math.floor(Math.random() * 100)
-                        await corvo.sendMessage(from, { image: { url: casal }, caption: `👩🏼‍❤️‍💋‍👨🏻  𝐒𝐈𝐍𝐓𝐎 𝐐𝐔𝐄 𝐄𝐒𝐒𝐄𝐒 𝐃𝐎𝐈𝐒 𝐅𝐎𝐑𝐌𝐀𝐑𝐈𝐀 𝐔𝐌 𝐎𝐓𝐈𝐌𝐎 𝐂𝐀𝐒𝐀𝐋:\n\n- @${m1.split("@")[0]}\n\n- @${m2.split("@")[0]}\n\n𝐂𝐎𝐌 𝐔𝐌𝐀 𝐄𝐒𝐏𝐄𝐂𝐓𝐀𝐓𝐈𝐕𝐀 𝐃𝐄:*${random}%*`, contextInfo: { ...NkChannelKk, mentionedJid: [m1, m2] } }, { quoted: selo }).catch(() => { reply(mess.error()) })
+                        await corvo.sendMessage(from, { image: { url: casal }, caption: `👩🏼‍❤️‍💋‍👨🏻  𝐒𝐈𝐍𝐓𝐎 𝐐𝐔𝐄 𝐄𝐒𝐒𝐄𝐒 𝐃𝐎𝐈𝐒 𝐅𝐎𝐑𝐌𝐀𝐑𝐈𝐀 𝐔𝐌 𝐎𝐓𝐈𝐌𝐎 𝐂𝐀𝐒𝐀𝐋:\n\n- @${m1.split("@")[0]}\n\n- @${m2.split("@")[0]}\n\n𝐂𝐎𝐌 𝐔𝐌𝐀 𝐄𝐒𝐏𝐄𝐂𝐓𝐀𝐓𝐈𝐕𝐀 𝐃𝐄:*${random}%*`, contextInfo: { ...corvochannel, mentionedJid: [m1, m2] } }, { quoted: selo }).catch(() => { reply(mess.error()) })
                         break
 
                     case 'gozar':
@@ -17624,7 +17680,7 @@ ${abc.letra}`;
 
                         var gozacao = ['Você acabou de gozar na boca do(a)', 'Você acabou de gozar no cuzinho do(a)', 'Você acabou de gozar na bucetinha do(a)', 'Você acabou de gozar no pé do(a)', 'Você acabou de gozar na cabeça do(a)', 'Você acabou de gozar na cara do(a)']
                         var gozarEscolhido = gozacao[Math.floor(Math.random() * gozacao.length)]
-                        await corvo.sendMessage(from, { video: { url: Gozar }, gifPlayback: true, caption: `${gozarEscolhido} @${menc_os2.split('@')[0]} 🥵`, contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] } }, { quoted: selo })
+                        await corvo.sendMessage(from, { video: { url: Gozar }, gifPlayback: true, caption: `${gozarEscolhido} @${menc_os2.split('@')[0]} 🥵`, contextInfo: { ...corvochannel, mentionedJid: [menc_os2] } }, { quoted: selo })
                         break
 
                     case 'wame':
@@ -17713,7 +17769,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             image: { url: rnkgay },
                             caption: rankGay,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mentionsGay }
+                            contextInfo: { ...corvochannel, mentionedJid: mentionsGay }
                         }, { quoted: selo })
                     }
                         break
@@ -17768,7 +17824,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             image: { url: rankfalido },
                             caption: rankFalidoTxt,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mentionsFalido }
+                            contextInfo: { ...corvochannel, mentionedJid: mentionsFalido }
                         }, { quoted: selo })
                     }
                         break
@@ -17827,7 +17883,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             image: { url: rankcasal },
                             caption: rankCasal,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mentionsCasal }
+                            contextInfo: { ...corvochannel, mentionedJid: mentionsCasal }
                         }, { quoted: selo })
                     }
                         break
@@ -17881,7 +17937,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             image: { url: "https://files.catbox.moe/n00b7y.jpg" },
                             caption: rankCu,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mentionsCu }
+                            contextInfo: { ...corvochannel, mentionedJid: mentionsCu }
                         }, { quoted: selo })
                     }
                         break
@@ -17937,7 +17993,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             image: { url: rankbct },
                             caption: rankBCT,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mentionsBCT }
+                            contextInfo: { ...corvochannel, mentionedJid: mentionsBCT }
                         }, { quoted: selo })
                     }
                         break
@@ -17992,7 +18048,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             image: { url: rnkgado },
                             caption: rankGado,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mentionsGado }
+                            contextInfo: { ...corvochannel, mentionedJid: mentionsGado }
                         }, { quoted: selo })
                     }
                         break
@@ -18047,7 +18103,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             image: { url: rnkcorno },
                             caption: rankCorno,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mentionsCorno }
+                            contextInfo: { ...corvochannel, mentionedJid: mentionsCorno }
                         }, { quoted: selo })
                     }
                         break
@@ -18094,7 +18150,7 @@ ${abc.letra}`;
 
                         await corvo.sendMessage(from, {
                             text: msgSuruba,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mentionsSuruba }
+                            contextInfo: { ...corvochannel, mentionedJid: mentionsSuruba }
                         }, { quoted: selo })
                     }
                         break
@@ -18149,7 +18205,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             image: { url: rnkgostoso },
                             caption: rankGostoso,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mentionsGostoso }
+                            contextInfo: { ...corvochannel, mentionedJid: mentionsGostoso }
                         }, { quoted: selo })
                     }
                         break
@@ -18204,7 +18260,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             image: { url: rnkgostosa },
                             caption: rankGostosa,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mentionsGostosa }
+                            contextInfo: { ...corvochannel, mentionedJid: mentionsGostosa }
                         }, { quoted: selo })
                     }
                         break
@@ -18259,7 +18315,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             image: { url: rnknazista },
                             caption: rankVilao,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mentionsVilao }
+                            contextInfo: { ...corvochannel, mentionedJid: mentionsVilao }
                         }, { quoted: selo })
                     }
                         break
@@ -18314,7 +18370,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             image: { url: rnkotaku },
                             caption: rankOtaku,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mentionsOtaku }
+                            contextInfo: { ...corvochannel, mentionedJid: mentionsOtaku }
                         }, { quoted: selo })
                     }
                         break
@@ -18369,7 +18425,7 @@ ${abc.letra}`;
                         await corvo.sendMessage(from, {
                             image: { url: rnksigma },
                             caption: rankSigma,
-                            contextInfo: { ...NkChannelKk, mentionedJid: mentionsSigma }
+                            contextInfo: { ...corvochannel, mentionedJid: mentionsSigma }
                         }, { quoted: selo })
                     }
                         break
@@ -18456,7 +18512,7 @@ ${abc.letra}`;
                             mentionsBeta.push(membro)
                             rankBeta += `• ${i + 1}° ${Math.floor(Math.random() * 100)}% - @${membro.split('@')[0]}\n\n`
                         }
-                        await corvo.sendMessage(from, { image: { url: rnkbeta }, caption: rankBeta, contextInfo: { ...NkChannelKk, mentionedJid: mentionsBeta } }, { quoted: selo })
+                        await corvo.sendMessage(from, { image: { url: rnkbeta }, caption: rankBeta, contextInfo: { ...corvochannel, mentionedJid: mentionsBeta } }, { quoted: selo })
                         break
 
                     case 'rankbaiano': case 'rankbaianos':
@@ -18469,7 +18525,7 @@ ${abc.letra}`;
                             mentionsBaiano.push(membro)
                             rankBaiano += `• ${i + 1}° ${Math.floor(Math.random() * 100)}% - @${membro.split('@')[0]}\n\n`
                         }
-                        await corvo.sendMessage(from, { image: { url: rnkbaiano }, caption: rankBaiano, contextInfo: { ...NkChannelKk, mentionedJid: mentionsBaiano } }, { quoted: selo })
+                        await corvo.sendMessage(from, { image: { url: rnkbaiano }, caption: rankBaiano, contextInfo: { ...corvochannel, mentionedJid: mentionsBaiano } }, { quoted: selo })
                         break
 
                     case 'rankbaiana': case 'rankbaianas':
@@ -18482,7 +18538,7 @@ ${abc.letra}`;
                             mentionsBaiana.push(membro)
                             rankBaiana += `• ${i + 1}° ${Math.floor(Math.random() * 100)}% - @${membro.split('@')[0]}\n\n`
                         }
-                        await corvo.sendMessage(from, { image: { url: rnkbaiana }, caption: rankBaiana, contextInfo: { ...NkChannelKk, mentionedJid: mentionsBaiana } }, { quoted: selo })
+                        await corvo.sendMessage(from, { image: { url: rnkbaiana }, caption: rankBaiana, contextInfo: { ...corvochannel, mentionedJid: mentionsBaiana } }, { quoted: selo })
                         break
 
                     case 'rankcarioca': case 'rankcariocas':
@@ -18495,7 +18551,7 @@ ${abc.letra}`;
                             mentionsCarioca.push(membro)
                             rankCarioca += `• ${i + 1}° ${Math.floor(Math.random() * 100)}% - @${membro.split('@')[0]}\n\n`
                         }
-                        await corvo.sendMessage(from, { image: { url: rnkcarioca }, caption: rankCarioca, contextInfo: { ...NkChannelKk, mentionedJid: mentionsCarioca } }, { quoted: selo })
+                        await corvo.sendMessage(from, { image: { url: rnkcarioca }, caption: rankCarioca, contextInfo: { ...corvochannel, mentionedJid: mentionsCarioca } }, { quoted: selo })
                         break
 
                     case 'ranklouco': case 'rankloucos':
@@ -18508,7 +18564,7 @@ ${abc.letra}`;
                             mentionsLouco.push(membro)
                             rankLouco += `• ${i + 1}° ${Math.floor(Math.random() * 100)}% - @${membro.split('@')[0]}\n\n`
                         }
-                        await corvo.sendMessage(from, { image: { url: rnklouco }, caption: rankLouco, contextInfo: { ...NkChannelKk, mentionedJid: mentionsLouco } }, { quoted: selo })
+                        await corvo.sendMessage(from, { image: { url: rnklouco }, caption: rankLouco, contextInfo: { ...corvochannel, mentionedJid: mentionsLouco } }, { quoted: selo })
                         break
 
                     case 'ranklouca': case 'rankloucas':
@@ -18521,7 +18577,7 @@ ${abc.letra}`;
                             mentionsLouca.push(membro)
                             rankLouca += `• ${i + 1}° ${Math.floor(Math.random() * 100)}% - @${membro.split('@')[0]}\n\n`
                         }
-                        await corvo.sendMessage(from, { image: { url: rnklouca }, caption: rankLouca, contextInfo: { ...NkChannelKk, mentionedJid: mentionsLouca } }, { quoted: selo })
+                        await corvo.sendMessage(from, { image: { url: rnklouca }, caption: rankLouca, contextInfo: { ...corvochannel, mentionedJid: mentionsLouca } }, { quoted: selo })
                         break
 
                     case 'ranksafada': case 'ranksafadas':
@@ -18534,7 +18590,7 @@ ${abc.letra}`;
                             mentionsSafada.push(membro)
                             rankSafada += `• ${i + 1}° ${Math.floor(Math.random() * 100)}% - @${membro.split('@')[0]}\n\n`
                         }
-                        await corvo.sendMessage(from, { image: { url: rnksafada }, caption: rankSafada, contextInfo: { ...NkChannelKk, mentionedJid: mentionsSafada } }, { quoted: selo })
+                        await corvo.sendMessage(from, { image: { url: rnksafada }, caption: rankSafada, contextInfo: { ...corvochannel, mentionedJid: mentionsSafada } }, { quoted: selo })
                         break
 
                     case 'ranksafado': case 'ranksafados':
@@ -18547,7 +18603,7 @@ ${abc.letra}`;
                             mentionsSafado.push(membro)
                             rankSafado += `• ${i + 1}° ${Math.floor(Math.random() * 100)}% - @${membro.split('@')[0]}\n\n`
                         }
-                        await corvo.sendMessage(from, { image: { url: rnksafado }, caption: rankSafado, contextInfo: { ...NkChannelKk, mentionedJid: mentionsSafado } }, { quoted: selo })
+                        await corvo.sendMessage(from, { image: { url: rnksafado }, caption: rankSafado, contextInfo: { ...corvochannel, mentionedJid: mentionsSafado } }, { quoted: selo })
                         break
 
                     case 'rankmacaco': case 'rankmacacos':
@@ -18560,7 +18616,7 @@ ${abc.letra}`;
                             mentionsMacaco.push(membro)
                             rankMacaco += `• ${i + 1}° ${Math.floor(Math.random() * 100)}% - @${membro.split('@')[0]}\n\n`
                         }
-                        await corvo.sendMessage(from, { image: { url: rnkmacaco }, caption: rankMacaco, contextInfo: { ...NkChannelKk, mentionedJid: mentionsMacaco } }, { quoted: selo })
+                        await corvo.sendMessage(from, { image: { url: rnkmacaco }, caption: rankMacaco, contextInfo: { ...corvochannel, mentionedJid: mentionsMacaco } }, { quoted: selo })
                         break
 
                     case 'rankmacaca': case 'rankmacacas':
@@ -18573,7 +18629,7 @@ ${abc.letra}`;
                             mentionsMacaca.push(membro)
                             rankMacaca += `• ${i + 1}° ${Math.floor(Math.random() * 100)}% - @${membro.split('@')[0]}\n\n`
                         }
-                        await corvo.sendMessage(from, { image: { url: rnkmacaca }, caption: rankMacaca, contextInfo: { ...NkChannelKk, mentionedJid: mentionsMacaca } }, { quoted: selo })
+                        await corvo.sendMessage(from, { image: { url: rnkmacaca }, caption: rankMacaca, contextInfo: { ...corvochannel, mentionedJid: mentionsMacaca } }, { quoted: selo })
                         break
 
                     case 'rankputa': case 'rankputas':
@@ -18586,7 +18642,7 @@ ${abc.letra}`;
                             mentionsPuta.push(membro)
                             rankPuta += `• ${i + 1}° ${Math.floor(Math.random() * 100)}% - @${membro.split('@')[0]}\n\n`
                         }
-                        await corvo.sendMessage(from, { image: { url: rnkputa }, caption: rankPuta, contextInfo: { ...NkChannelKk, mentionedJid: mentionsPuta } }, { quoted: selo })
+                        await corvo.sendMessage(from, { image: { url: rnkputa }, caption: rankPuta, contextInfo: { ...corvochannel, mentionedJid: mentionsPuta } }, { quoted: selo })
                         break
 
                     case 'rankpau':
@@ -18599,7 +18655,7 @@ ${abc.letra}`;
                             mentionsPau.push(membro)
                             rankPau += `• ${i + 1}° ${Math.floor(Math.random() * 100)}cm - @${membro.split('@')[0]}\n\n`
                         }
-                        await corvo.sendMessage(from, { image: { url: rnkpau }, caption: rankPau, contextInfo: { ...NkChannelKk, mentionedJid: mentionsPau } }, { quoted: selo })
+                        await corvo.sendMessage(from, { image: { url: rnkpau }, caption: rankPau, contextInfo: { ...corvochannel, mentionedJid: mentionsPau } }, { quoted: selo })
                         break
 
                     //===========[ FIM JOGOS/BRINCADEIRAS/RANKS=========\\
@@ -18620,7 +18676,7 @@ ${abc.letra}`;
                             texto += mess.atividade(u);
                         }
                         await corvo.sendMessage(from, {
-                            text: texto, contextInfo: { ...NkChannelKk, mentionedJid: mentionsList }
+                            text: texto, contextInfo: { ...corvochannel, mentionedJid: mentionsList }
                         }, { quoted: selo })
                         break;
                     }
@@ -18643,7 +18699,7 @@ ${abc.letra}`;
                             texto += mess.rankativo(u, i);
                         }
                         await corvo.sendMessage(from, {
-                            text: texto, contextInfo: { ...NkChannelKk, mentionedJid: mentionsList }
+                            text: texto, contextInfo: { ...corvochannel, mentionedJid: mentionsList }
                         }, { quoted: selo })
                         break;
                     }
@@ -18669,7 +18725,7 @@ ${abc.letra}`;
                             texto += mess.rankinativo(u, i);
                         }
                         await corvo.sendMessage(from, {
-                            text: texto, contextInfo: { ...NkChannelKk, mentionedJid: mentionsList }
+                            text: texto, contextInfo: { ...corvochannel, mentionedJid: mentionsList }
                         }, { quoted: selo })
                         break;
                     }
@@ -18686,12 +18742,12 @@ ${abc.letra}`;
                             var u = countMessage[groupIndex].numbers[userIndex];
                             await corvo.sendMessage(from, {
                                 text: mess.check(u),
-                                contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                                contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                             }, { quoted: selo })
                         } else {
                             await corvo.sendMessage(from, {
                                 text: `*SEM DADOS SOBRE @${menc_os2.split('@')[0]} NESTE GRUPO...*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2] }
+                                contextInfo: { ...corvochannel, mentionedJid: [menc_os2] }
                             }, { quoted: selo })
                         }
                         break;
@@ -18708,12 +18764,12 @@ ${abc.letra}`;
                             var u = countMessage[groupIndex].numbers[userIndex];
                             await corvo.sendMessage(from, {
                                 text: mess.checkme(u),
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender] }
                             }, { quoted: selo })
                         } else {
                             await corvo.sendMessage(from, {
                                 text: `*SEM DADOS SOBRE @${sender.split('@')[0]} NESTE GRUPO...*`,
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender] }
                             }, { quoted: selo })
                         }
                         break;
@@ -18846,7 +18902,7 @@ ${abc.letra}`;
                         var resp = `*ᴠᴀʟᴏʀᴇs ᴀᴅɪᴄɪᴏɴᴀᴅᴏs ᴘᴀʀᴀ @${alvo.split("@")[0]} ᴄᴏᴍ sᴜᴄᴇssᴏ 🙇‍♂️*\n`;
                         if (adicionados.length) resp += `*ᴀᴅɪᴄɪᴏɴᴀᴅᴏs: ${adicionados.join(', ')} 💯*`;
                         if (invalidos.length) resp += `\n*ɪɴᴠᴀʟɪᴅᴏs: ${invalidos.join(', ')} ❗*`;
-                        await corvo.sendMessage(from, { text: resp, contextInfo: { ...NkChannelKk, mentionedJid: [alvo] } }, { quoted: selo });
+                        await corvo.sendMessage(from, { text: resp, contextInfo: { ...corvochannel, mentionedJid: [alvo] } }, { quoted: selo });
                         break;
                     }
 
@@ -18875,7 +18931,7 @@ ${abc.letra}`;
                         fs.writeFileSync('./DADOS DO CORVO/INFO_CORVO/media/countmsg.json', JSON.stringify(countMessage));
                         await corvo.sendMessage(from, {
                             text: `*ᴄᴇʀᴛᴏ ᴍᴇsᴛʀᴇ, ᴀᴄᴀʙᴇɪ ᴅᴇ ʀᴇᴍᴏᴠᴇʀ ᴏ @${alvo.split('@')[0]} ᴅᴏ ᴄᴏɴᴛᴀᴅᴏʀ ᴅᴇ ᴍᴇɴsᴀɢᴇᴍ 💁‍♂️*.`,
-                            contextInfo: { mentionedJid: [alvo], ...NkChannelKk }
+                            contextInfo: { mentionedJid: [alvo], ...corvochannel }
                         }, { quoted: selo });
                         break;
                     }
@@ -18921,7 +18977,7 @@ ${abc.letra}`;
                         namoro2.push({ id: menc_os2, pedido: sender.split('@')[0], idgp: from });
                         fs.writeFileSync("./DADOS DO CORVO/func/namoro2.json", JSON.stringify(namoro2));
                         var texto = mess.pedidoNamoro(menc_os2, sender, prefix);
-                        await corvo.sendMessage(from, { image: { url: namorar }, caption: texto, contextInfo: { ...NkChannelKk, mentionedJid: [menc_os2, sender] } }, { quoted: selo });
+                        await corvo.sendMessage(from, { image: { url: namorar }, caption: texto, contextInfo: { ...corvochannel, mentionedJid: [menc_os2, sender] } }, { quoted: selo });
                         break;
                     }
 
@@ -18977,7 +19033,7 @@ ${abc.letra}`;
                                     ? `*💔 notícia triste... @${userNum} terminou o casamento com você...*`
                                     : `*💔 notícia triste... @${userNum} terminou o namoro com você...*`,
                                 mentions: [sender, jidParceiro],
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender, jidParceiro] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender, jidParceiro] }
                             }, { quoted: selo })
 
                         } catch (e) {
@@ -19071,14 +19127,14 @@ ${abc.letra}`;
                                     image: { url: ppimg },
                                     caption: texto,
                                     mentions: [parceiro1, parceiro2],
-                                    contextInfo: { ...NkChannelKk, mentionedJid: [parceiro1, parceiro2] }
+                                    contextInfo: { ...corvochannel, mentionedJid: [parceiro1, parceiro2] }
                                 }, { quoted: selo })
                             } catch {
                                 await corvo.sendMessage(from, {
                                     image: { url: imgperfil },
                                     caption: texto,
                                     mentions: [parceiro1, parceiro2],
-                                    contextInfo: { ...NkChannelKk, mentionedJid: [parceiro1, parceiro2] }
+                                    contextInfo: { ...corvochannel, mentionedJid: [parceiro1, parceiro2] }
                                 }, { quoted: selo })
                             }
 
@@ -19180,7 +19236,7 @@ ${abc.letra}`;
                                 image: { url: imgCasamento },
                                 caption: texto,
                                 mentions: [sender, alvoJid],
-                                contextInfo: { ...NkChannelKk, mentionedJid: [sender, alvoJid] }
+                                contextInfo: { ...corvochannel, mentionedJid: [sender, alvoJid] }
                             }, { quoted: selo })
 
                         } catch (e) {
@@ -20291,7 +20347,7 @@ ${abc.letra}`;
                             else if (porcentShip >= 30) statusShip = "Pode rolar..."
                             else statusShip = "Nao combina muito..."
                             var txtShip = `*SHIP*\n\n@${user1Ship.split("@")[0]} + @${user2Ship.split("@")[0]}\n\nCompatibilidade: *${porcentShip}%*\nStatus: *${statusShip}*`
-                            await corvo.sendMessage(from, { text: txtShip, mentions: [user1Ship, user2Ship], contextInfo: { ...NkChannelKk, mentionedJid: [user1Ship, user2Ship] } }, { quoted: selo })
+                            await corvo.sendMessage(from, { text: txtShip, mentions: [user1Ship, user2Ship], contextInfo: { ...corvochannel, mentionedJid: [user1Ship, user2Ship] } }, { quoted: selo })
                         } catch (e) { reply(mess.error()) }
                         break
                     }
@@ -24127,7 +24183,7 @@ Ex: ${prefix + command} Patolino`)
                             await corvo.sendMessage(from, {
                                 video: { url: videoUrl },
                                 caption: `🎥 *Kwai Downloader*\n🚫 Sem marca d'água`,
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             }, { quoted: info })
                             await reagir(from, "✅")
                         } catch (e) {
@@ -24157,7 +24213,7 @@ Ex: ${prefix + command} Patolino`)
                                 audio: data.buffer,
                                 mimetype: 'audio/mpeg',
                                 fileName: `${data.title}.mp3`,
-                                contextInfo: NkChannelKk
+                                contextInfo: corvochannel
                             }, { quoted: selo })
                             await reagir(from, "✅")
                         } catch (e) {
@@ -26499,7 +26555,7 @@ ${explicacao}`)
                             try {
                                 const res = await fetchJson(`${global.APIS.SANDRO_URL}/api-sandro/twitter?url=${encodeURIComponent(q)}&apikey=${global.APIS.SANDRO_KEY}`)
                                 if (res.status && res.resultado) {
-                                    await corvo.sendMessage(from, { video: { url: res.resultado.url || res.resultado }, caption: `✅ Download Twitter`, contextInfo: NkChannelKk }, { quoted: info })
+                                    await corvo.sendMessage(from, { video: { url: res.resultado.url || res.resultado }, caption: `✅ Download Twitter`, contextInfo: corvochannel }, { quoted: info })
                                 } else {
                                     reply("❌ Erro ao baixar Twitter.")
                                 }
@@ -26522,7 +26578,7 @@ ${explicacao}`)
                                     `*Seguidores:* ${stats.followers}\n` +
                                     `*Seguindo:* ${stats.following}\n` +
                                     `*Curtidas:* ${stats.likes}`;
-                                corvo.sendMessage(from, { image: { url: u.profile.image }, caption: texto, contextInfo: NkChannelKk }, { quoted: info });
+                                corvo.sendMessage(from, { image: { url: u.profile.image }, caption: texto, contextInfo: corvochannel }, { quoted: info });
                             } catch (e) {
                                 reply("Erro ao stalkear.")
                             }
@@ -49135,7 +49191,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("bom dia")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/bomdia.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49148,7 +49204,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("boa tarde")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/boatarde.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49161,7 +49217,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("boa noite")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/boanoite.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49174,7 +49230,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("corvo")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/corvo.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49187,7 +49243,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("amo")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/amor.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49200,7 +49256,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("bot ruim")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/oi.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49213,7 +49269,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("louca")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/louca.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49226,7 +49282,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("prr")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/porra.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49239,7 +49295,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("gado")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/jack.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49252,7 +49308,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("gay")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/gay.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49265,7 +49321,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("burro")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/burro.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49278,7 +49334,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("lindo")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/gato.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49291,7 +49347,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("vt")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/cu.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49304,7 +49360,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("triste")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/depre.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49317,7 +49373,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("e a louca")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/mulher.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49330,7 +49386,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("bct")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/bct.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49343,7 +49399,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("kkk")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/risos.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49356,7 +49412,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("indio")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/indio.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49369,7 +49425,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("mentira")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/fake.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49382,7 +49438,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("aff")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/meme.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49395,7 +49451,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("clbc")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/macaco.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49408,7 +49464,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("macaco")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/macaco2.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49421,7 +49477,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("sexo")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/websescsu.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49434,7 +49490,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("pai")) {
                                 var soundft = fs.readFileSync('./DADOS DO CORVO/data/media/audios/sempai.mp3');
                                 corvo.sendMessage(from, {
-                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: soundft, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
@@ -49447,7 +49503,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             if (budy2.includes("corno")) {
                                 tujuh = await fetch(corno).then(v => v.buffer())
                                 await corvo.sendMessage(from, {
-                                    audio: tujuh, mimetype: "audio/mpeg", contextInfo: NkChannelKk
+                                    audio: tujuh, mimetype: "audio/mpeg", contextInfo: corvochannel
                                 },
                                     {
                                         quoted: {
