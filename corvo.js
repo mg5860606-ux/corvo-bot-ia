@@ -3452,7 +3452,48 @@ async function startcorvo(upsert, corvo, qrcode) {
                         delete global.menuAzAtivos[sender];
                         return reply(`*ᴏᴋ ꜱᴇɴʜᴏʀ(ᴀ), ᴄᴀꜱᴏ ǫᴜᴇɪʀᴀ ꜱᴀʙᴇʀ ꜱᴇ ᴏꜱ ᴄᴏᴍᴀɴᴅᴏꜱ ꜰᴏʀᴀᴍ ᴀᴛɪᴠᴏꜱ, ᴜꜱᴇ →『 ${prefix}status 』 ᴇ ᴏʟʜᴇ ᴀᴛᴇɴᴛᴀᴍᴇɴᴛᴇ ᴛᴏᴅᴀꜱ ᴀꜱ ᴏᴩᴄᴏᴇꜱ 🙇‍♂️*`);
                     }
-                    var opcoes = { '1': 'antiaudio', '2': 'antivideo', '3': 'antiimg', '4': 'autosticker', '5': 'bemvindo', '6': 'bemvindo2', '7': 'antilink', '8': 'antilinkgp', '9': 'antilinkeasy', '10': 'anticatalogo', '11': 'antistatus', '12': 'antifake', '13': 'anticontato', '14': 'antiloc', '15': 'antiddd', '16': 'so_adm', '17': 'x9adm', '18': 'autototext', '19': 'ativic', '20': 'autodl', '21': 'multiprefixo', '22': 'antinotas', '23': 'antipalavra', '24': 'antipalavrao', '25': 'modobn', '26': 'modocoins', '27': 'antipagamento' };
+                    var opcoes = { 
+    '1': 'antiaudio', 
+    '2': 'antivideo', 
+    '3': 'antiimg', 
+    '4': 'antidocumento', 
+    '5': 'antift', 
+    '6': 'autofigu', 
+    '7': 'bemvindo', 
+    '8': 'bemvindo2', 
+    '9': 'antiporn', 
+    '10': 'antilinkhard', 
+    '11': 'antilinkgp', 
+    '12': 'antilinkeasy', 
+    '13': 'anticatalogo', 
+    '14': 'antinotas', 
+    '15': 'antipagamento', 
+    '16': 'antistatus', 
+    '17': 'antifake', 
+    '18': 'anticontato', 
+    '19': 'antiloc', 
+    '20': 'antiddd', 
+    '21': 'antibot', 
+    '22': 'antidelete', 
+    '23': 'so_adm', 
+    '24': 'x9adm', 
+    '25': 'x9visuunica', 
+    '26': 'autototext', 
+    '27': 'ativic', 
+    '28': 'autodl', 
+    '29': 'multiprefixo', 
+    '30': 'antipalavra', 
+    '31': 'antipalavrao', 
+    '32': 'modobn', 
+    '33': 'modocoins', 
+    '34': 'antisp', 
+    '35': 'modorpg', 
+    '36': 'limitec', 
+    '37': 'limitarcmd', 
+    '38': 'autorepo', 
+    '39': 'antipv', 
+    '40': 'antiligacao' 
+};
                     var cmd = opcoes[escolha];
                     if (cmd) {
                         command = cmd;
@@ -5238,6 +5279,19 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                     }
                 }
 
+
+                
+                const infosMenu = {
+                    sender,
+                    isVip,
+                    cargo: SoDono ? 'Dono' : (isGroupAdmins ? 'Adminstrador' : 'Membro'),
+                    ownerName,
+                    botName: NomeDoBot,
+                    speed: (() => { var ts = speed(); return (speed() - ts).toFixed(4); })(),
+                    uptime: kyun(process.uptime()),
+                    baileysVersion: '6.7.21',
+                    isBotoff
+                };
 
                 switch (command) {
                     case 'corvoia': {
@@ -14145,7 +14199,7 @@ Aguarde o dono entrar em contato no privado.`
                     case 'menuzz': {
                         await sendMenu(from, selo, {
                             reaction: "🕸️",
-                            caption: linguagem.menu(prefix),
+                            caption: linguagem.menu(prefix, infosMenu),
                             sendAudio: true
                         }, context);
                         break;
@@ -15011,8 +15065,7 @@ ${abc.letra}`;
 
 
                     case "menu_download_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐷𝑂𝑊𝑁𝐿𝑂𝐴𝐷𝑆
+                        var txt = `├─ ⊹ 𖤐 𝐷𝑂𝑊𝑁𝐿𝑂𝐴𝐷𝑆
 ╎♱˖ ▸ ${prefix}Play
 ╎♱˖ ▸ ${prefix}Playvid
 ╎♱˖ ▸ ${prefix}Playvideo
@@ -15058,8 +15111,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_infos_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇
-├─ ⊹ 𖤐 𝐼𝑁𝐹𝑂𝑆 / 𝐶𝐻𝐸𝐶𝐾𝑆
+                        var txt = `├─ ⊹ 𖤐 𝐼𝑁𝐹𝑂𝑆 / 𝐶𝐻𝐸𝐶𝐾𝑆
 ╎♱˖ ▸ ${prefix}ping
 ╎♱˖ ▸ ${prefix}atividade
 ╎♱˖ ▸ ${prefix}atividades
@@ -15096,8 +15148,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_pesquisa_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇
-├─ ⊹ 𖤐 𝑃𝐸𝑆𝑄𝑈𝐼𝑆𝐴𝑆
+                        var txt = `├─ ⊹ 𖤐 𝑃𝐸𝑆𝑄𝑈𝐼𝑆𝐴𝑆
 ╎♱˖ ▸ ${prefix}clima
 ╎♱˖ ▸ ${prefix}cep
 ╎♱˖ ▸ ${prefix}ip
@@ -15136,8 +15187,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_ia_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇
-├─ ⊹ 𖤐 𝐼𝑁𝑇𝐸𝐿𝐼𝐺𝐸𝑁𝐶𝐼𝐴𝑆
+                        var txt = `├─ ⊹ 𖤐 𝐼𝑁𝑇𝐸𝐿𝐼𝐺𝐸𝑁𝐶𝐼𝐴𝑆
 ╎♱˖ ▸ ${prefix}gpt
 ╎♱˖ ▸ ${prefix}chatgpt
 ╎♱˖ ▸ ${prefix}ia
@@ -15164,8 +15214,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_figu_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇
-├─ ⊹ 𖤐 𝐹𝐼𝐺𝑈𝑅𝐼𝑁𝐻𝐴𝑆
+                        var txt = `├─ ⊹ 𖤐 𝐹𝐼𝐺𝑈𝑅𝐼𝑁𝐻𝐴𝑆
 ╎♱˖ ▸ ${prefix}s
 ╎♱˖ ▸ ${prefix}st
 ╎♱˖ ▸ ${prefix}stk
@@ -15192,8 +15241,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_random_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇
-├─ ⊹ 𖤐 𝑅𝐴𝑁𝐷𝑂𝑀'𝑆
+                        var txt = `├─ ⊹ 𖤐 𝑅𝐴𝑁𝐷𝑂𝑀'𝑆
 ╎♱˖ ▸ ${prefix}totext
 ╎♱˖ ▸ ${prefix}gtts
 ╎♱˖ ▸ ${prefix}emoji
@@ -15255,8 +15303,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_bn_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐵𝑅𝐼𝑁𝐶𝐴𝐷𝐸𝐼𝑅𝐴𝑆
+                        var txt = `├─ ⊹ 𖤐 𝐵𝑅𝐼𝑁𝐶𝐴𝐷𝐸𝐼𝑅𝐴𝑆
 ╎♱˖ ▸ ${prefix}jogodavelha
 ╎♱˖ ▸ ${prefix}jogov
 ╎♱˖ ▸ ${prefix}vab
@@ -15382,8 +15429,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝑂𝑈𝑇𝑅𝑂𝑆 𝑀𝐸𝑁𝑈𝑆
+                        var txt = `├─ ⊹ 𖤐 𝑂𝑈𝑇𝑅𝑂𝑆 𝑀𝐸𝑁𝑈𝑆
 ╎♱˖ ▸ ${prefix}menu_principal
 ╎♱˖ ▸ ${prefix}menu_infos_lista
 ╎♱˖ ▸ ${prefix}menu_download_lista
@@ -15407,8 +15453,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_adm_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈 𝐴𝐷𝑀
+                        var txt = `├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈 𝐴𝐷𝑀
 
 ╎♱˖ ▸ ${prefix}ativar
 ╎♱˖ ▸ ${prefix}ativic
@@ -15512,8 +15557,7 @@ ${abc.letra}`;
                         break;
 
                     case "menudono": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝑅𝐴𝑁𝐷𝑂𝑀'𝑆 
+                        var txt = `├─ ⊹ 𖤐 𝑅𝐴𝑁𝐷𝑂𝑀'𝑆 
 ╎♱˖ ▸ ${prefix}Setprefix
 ╎♱˖ ▸ ${prefix}channel
 ╎♱˖ ▸ ${prefix}Fotomenu
@@ -15593,8 +15637,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_logo_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈-𝐿𝑂𝐺𝑂
+                        var txt = `├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈-𝐿𝑂𝐺𝑂
 ╎♱˖ ▸ ${prefix}marvel
 ╎♱˖ ▸ ${prefix}pornohub
 ╎♱˖ ▸ ${prefix}space
@@ -15658,7 +15701,6 @@ ${abc.letra}`;
 
                     case "menu_efeitos_lista": {
                         var txt = `
-╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
 ├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈-𝐸𝐹𝐸𝐼𝑇𝑂𝑆
 ╎♱˖ ▸ ${prefix}Comunismo 
 ╎♱˖ ▸ ${prefix}Bolsonaro 
@@ -15695,7 +15737,6 @@ ${abc.letra}`;
 
                     case "menu_alt_lista": {
                         var txt = `
-╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
 ├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈-𝐴𝐿𝑇𝐸𝑅𝐴𝐷𝑂𝑅
 ╎♱˖ ▸ ${prefix}Videolento (marca)
 ╎♱˖ ▸ ${prefix}Videorapido (marca)
@@ -15720,8 +15761,7 @@ ${abc.letra}`;
                     case "menu_principal_lista":
                     case "menu_lista":
                     case "menu_principal": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈 𝑃𝑅𝐼𝑁𝐶𝐼𝑃𝐴𝐿
+                        var txt = `├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈 𝑃𝑅𝐼𝑁𝐶𝐼𝑃𝐴𝐿
 
 ├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
 ├─ ⊹ 𖤐 𝑆𝑈𝐵𝑀𝐸𝑁𝑈𝑆
@@ -15863,7 +15903,7 @@ ${abc.letra}`;
                     case 'menu18':
                         await sendMenu(from, selo, {
                             reaction: "🎉",
-                            caption: linguagem.menu18(prefix),
+                            caption: linguagem.menu18(prefix, infosMenu),
                             sendAudio: true
                         }, context);
                         break;
@@ -15871,7 +15911,7 @@ ${abc.letra}`;
                     case 'menudono':
                         await sendMenu(from, selo, {
                             reaction: "🎉",
-                            caption: linguagem.menudono(prefix),
+                            caption: linguagem.menudono(prefix, infosMenu),
                             isOwnerRequired: true,
                             sendAudio: true
                         }, context);
@@ -15880,7 +15920,7 @@ ${abc.letra}`;
                     case 'menuadm':
                         await sendMenu(from, selo, {
                             reaction: "🎉",
-                            caption: linguagem.adms(prefix),
+                            caption: linguagem.adms(prefix, infosMenu),
                             isAdminRequired: true,
                             sendAudio: true
                         }, context);
@@ -15893,7 +15933,7 @@ ${abc.letra}`;
                     case 'menulogo':
                         await sendMenu(from, selo, {
                             reaction: "🎉",
-                            caption: linguagem.menulogos(prefix),
+                            caption: linguagem.menulogos(prefix, infosMenu),
                             sendAudio: true
                         }, context);
                         break;
@@ -15905,7 +15945,7 @@ ${abc.letra}`;
                     case 'menubn':
                         await sendMenu(from, selo, {
                             reaction: "🎉",
-                            caption: linguagem.brincadeiras(prefix),
+                            caption: linguagem.brincadeiras(prefix, infosMenu),
                             isGroupRequired: true,
                             isModoBnRequired: true,
                             sendAudio: true
@@ -30288,7 +30328,7 @@ https://youtube.com/@seu_canal?si=DN_gv6NZDBp-x-t7`)
                         try {
                             await sendMenu(from, selo, {
                                 reaction: "💛",
-                                caption: linguagem.efeitos(prefix),
+                                caption: linguagem.efeitos(prefix, infosMenu),
                                 sendAudio: true
                             }, context);
                         } catch (e) {
@@ -30369,7 +30409,7 @@ Use o comando ${prefix}criador e fale diretamente comigo para adquirir!
                         try {
                             await sendMenu(from, selo, {
                                 reaction: "💛",
-                                caption: linguagem.alteradores(prefix),
+                                caption: linguagem.alteradores(prefix, infosMenu),
                                 sendAudio: true
                             }, context);
                         } catch (e) {
@@ -30383,7 +30423,7 @@ Use o comando ${prefix}criador e fale diretamente comigo para adquirir!
                         try {
                             await sendMenu(from, selo, {
                                 reaction: "💛",
-                                caption: linguagem.menu18(prefix),
+                                caption: linguagem.menu18(prefix, infosMenu),
                                 sendAudio: true
                             }, context);
                         } catch (e) {
@@ -48962,14 +49002,11 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             var AB = similarityCmd(cmdToSearch);
                             if (AB[0].porcentagem >= 60) {
                                 var privateCmd = (pc, cmd, porcentagem) => {
-                                    return `┏━━━━━━━━━━━━━━━━━━━━━━━━━━━
-┃ ⚠️  *COMANDO NÃO ENCONTRADO*
-┣━━━━━━━━━━━━━━━━━━━━━━━━━━━
-┃ ❌  *Digitou:* \`${pc}\`
-┃ 💡  *Sugestão:* \`${cmd}\`?
-┃ 📊  *Precisão:* \`${porcentagem.toFixed(1)}%\`
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  > 💠  *CORVO BOT AI*`;
+                                    return `╭⊱♰ •🥀 : ᴄᴏᴍᴀɴᴅᴏ ɪɴᴠᴀʟɪᴅᴏ
+╎⊹ 🥀 ɴᴀᴏ ᴇɴᴄᴏɴᴛʀᴇɪ: ${pc}
+╎⊹ 🥀 ᴠᴏᴄᴇ ǫᴜɪs ᴅɪᴢᴇʀ: ${prefix}${cmd} ?
+╎⊹ 🥀 sᴇᴍᴇʟʜᴀɴᴄᴀ: ${porcentagem.toFixed(0)}%
+╰ : 🥀`;
                                 }
                                 var notcmd = privateCmd(prefix + (command || ""), AB[0].comando, AB[0].porcentagem);
                                 reply(notcmd);
