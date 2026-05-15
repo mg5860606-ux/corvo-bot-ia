@@ -351,6 +351,7 @@ return` ​​​​​​​​​​​​​​​​​​​​​​​​
 ┇ | 🌹⋆͜͡҈➳ *${prefix}figaleatoria (quantidade)*
 ┇ | 🌹⋆͜͡҈➳ *${prefix}ttp (seu texto)*
 ┇ | 🌹⋆͜͡҈➳ *${prefix}attp (seu texto)*
+┇ | 🌹⋆͜͡҈➳ *${prefix}rgfigu (marcar figurinha)*
 ┇ | 🌹⋆͜͡҈➳ *${prefix}sticker (marcar ft/video)*
 ┇ | 🌹⋆͜͡҈➳ *${prefix}fsticker (marcar ft/video)*
 ┇ | 🌹⋆͜͡҈➳ *${prefix}toimg (marcar figurinha)*
@@ -408,6 +409,8 @@ return `​​​​​​​​​​​​​​​​​​​​​​​​
 ┇ | 👑⋆͜͡҈➳ *${prefix}fotomenu (marcar img)*
 ┇ | 👑⋆͜͡҈➳ *${prefix}blockcmd (comando)*
 ┇ | 👑⋆͜͡҈➳ *${prefix}unblockcmd (comando)*
+┇ | 👑⋆͜͡҈➳ *${prefix}addcmd*
+┇ | 👑⋆͜͡҈➳ *${prefix}addcmdmidia*
 ┇ | 👑⋆͜͡҈➳ *${prefix}cmdviplist*
 ┇ | 👑⋆͜͡҈➳ *${prefix}addcmdvip (comando)*
 ┇ | 👑⋆͜͡҈➳ *${prefix}fundobemvindo (marcar img)*

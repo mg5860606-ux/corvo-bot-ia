@@ -2652,22 +2652,31 @@ async function startcorvo(upsert, corvo, qrcode) {
                     var _mediaType = null;
                     var _mediaObj = null;
 
+                    var _actualType = type;
+
+                    // Desembrulhar ViewOnce
+                    var _mToAnalyze = info.message;
+                    if (['viewOnceMessage', 'viewOnceMessageV2', 'viewOnceMessageV2Extension'].includes(_actualType)) {
+                        _mToAnalyze = _mToAnalyze[_actualType].message;
+                        _actualType = baileys.getContentType(_mToAnalyze);
+                    }
+
                     // Detectar tipo de mídia
-                    if (type === 'imageMessage') {
+                    if (_actualType === 'imageMessage') {
                         _mediaType = 'image';
-                        _mediaObj = info.message?.imageMessage;
-                    } else if (type === 'videoMessage') {
+                        _mediaObj = _mToAnalyze.imageMessage;
+                    } else if (_actualType === 'videoMessage') {
                         _mediaType = 'video';
-                        _mediaObj = info.message?.videoMessage;
-                    } else if (type === 'stickerMessage') {
+                        _mediaObj = _mToAnalyze.videoMessage;
+                    } else if (_actualType === 'stickerMessage') {
                         _mediaType = 'image';
-                        _mediaObj = info.message?.stickerMessage;
+                        _mediaObj = _mToAnalyze.stickerMessage;
                     }
 
                     if (_mediaType && _mediaObj) {
                         try {
                             // Baixar a mídia
-                            var _dlType = type === 'stickerMessage' ? 'sticker' : _mediaType;
+                            var _dlType = _actualType === 'stickerMessage' ? 'sticker' : _mediaType;
                             var _dlFunc = typeof downloadContentFromMessage === 'function' ? downloadContentFromMessage : require('@whiskeysockets/baileys').downloadContentFromMessage;
                             var _stream = await _dlFunc(_mediaObj, _dlType);
                             var _mediaBuf = Buffer.from([]);
@@ -2681,7 +2690,7 @@ async function startcorvo(upsert, corvo, qrcode) {
 
                                 // Se for vídeo e tiver thumbnail, usar a thumbnail (mais rápido)
                                 if (_mediaType === 'video' && _mediaObj.jpegThumbnail) {
-                                    _bufToAnalyze = Buffer.from(_mediaObj.jpegThumbnail, 'base64');
+                                    _bufToAnalyze = Buffer.isBuffer(_mediaObj.jpegThumbnail) ? _mediaObj.jpegThumbnail : Buffer.from(_mediaObj.jpegThumbnail, 'base64');
                                 }
 
                                 // Limitar tamanho para API (max 5MB)
@@ -2692,24 +2701,31 @@ async function startcorvo(upsert, corvo, qrcode) {
                                 // Enviar para API de detecção NSFW
                                 var _FormData = require('form-data');
                                 var _fd = new _FormData();
-                                var _ext = type === 'stickerMessage' ? 'webp' : (_mediaType === 'video' ? 'jpg' : 'jpg');
-                                _fd.append('image', _bufToAnalyze, { filename: `check.${_ext}`, contentType: `image/jpeg` });
+                                var _ext = _actualType === 'stickerMessage' ? 'webp' : 'jpg';
+                                var _mime = _actualType === 'stickerMessage' ? 'image/webp' : 'image/jpeg';
+                                _fd.append('image', _bufToAnalyze, { filename: `check.${_ext}`, contentType: _mime });
 
                                 var _nsfwResult = await axios.post('https://demo.api4ai.cloud/nsfw/v1/results', _fd, {
                                     headers: _fd.getHeaders(),
                                     timeout: 15000
-                                }).catch(e => null);
+                                }).catch(e => {
+                                    console.log('[ANTIPORN] Erro na requisição API:', e.message);
+                                    return null;
+                                });
 
-                                if (_nsfwResult?.data?.results?.[0]?.entities?.[0]?.classes) {
-                                    var _classes = _nsfwResult.data.results[0].entities[0].classes;
-                                    var _nsfwScore = _classes.nsfw || 0;
-                                    var _safeScore = _classes.safe || 0;
+                                var _results = _nsfwResult?.data?.results?.[0];
+                                if (_results?.status?.code === 'ok' && _results?.entities) {
+                                    var _nsfwEntity = _results.entities.find(e => e.name === 'nsfw-classes' || e.name === 'nsfw' || e.classes);
+                                    if (_nsfwEntity?.classes) {
+                                        var _nsfwScore = _nsfwEntity.classes.nsfw || 0;
+                                        var _safeScore = _nsfwEntity.classes.sfw || 0;
 
-                                    console.log('[ANTIPORN] Score NSFW:', _nsfwScore, 'Safe:', _safeScore, 'Type:', type, 'User:', sender);
+                                        console.log('[ANTIPORN] Score NSFW:', _nsfwScore, 'Safe:', _safeScore, 'Type:', _actualType, 'User:', sender);
 
-                                    // Se score NSFW > 0.6, considerar pornografia/conteúdo explícito
-                                    if (_nsfwScore > 0.6) {
-                                        _isMediaPorn = true;
+                                        // Se score NSFW > 0.6, considerar pornografia/conteúdo explícito
+                                        if (_nsfwScore > 0.6) {
+                                            _isMediaPorn = true;
+                                        }
                                     }
                                 }
                             }
@@ -2860,7 +2876,7 @@ async function startcorvo(upsert, corvo, qrcode) {
 
                 //========(ANTI STATUS)========\\
                 if (isGroup && dataGp[0]?.antistatus === true && isBotGroupAdmins && !SoDono && !isGroupAdmins) {
-                    var isStatusMsg = type === 'groupStatusMentionMessage' || type === 'groupStatusMessageV2' || from === 'status@broadcast';
+                    var isStatusMsg = (type === 'groupStatusMentionMessage' || type === 'groupStatusMessageV2' || from === 'status@broadcast') && !info.message.extendedTextMessage?.contextInfo?.quotedMessage;
                     if (isStatusMsg) {
                         await corvo.sendMessage(from, {
                             text: `*ᴜꜱᴜᴀʀɪᴏ ʙᴀɴɪᴅᴏ ᴩᴏʀ ᴩᴏꜱᴛᴀʀ ꜱᴛᴀᴛᴜꜱ ɴᴏ ɢʀᴜᴩᴏ* 🗣️`,
@@ -2892,9 +2908,9 @@ async function startcorvo(upsert, corvo, qrcode) {
                     var strMsg2 = JSON.stringify(info.message || {});
                     var isPagamento = false;
                     // Detectar todos os tipos de mensagem de pagamento
-                    if (strMsg2.includes('requestPaymentMessage') || strMsg2.includes('sendPaymentMessage') || strMsg2.includes('paymentInviteMessage')) isPagamento = true;
+                    if ((strMsg2.includes('requestPaymentMessage') || strMsg2.includes('sendPaymentMessage') || strMsg2.includes('paymentInviteMessage')) && !info.message.extendedTextMessage?.contextInfo?.quotedMessage) isPagamento = true;
                     // Detectar por campos de pagamento no payload
-                    if (strMsg2.includes('currencyCodeIso4217') || strMsg2.includes('amount1000')) isPagamento = true;
+                    if ((strMsg2.includes('currencyCodeIso4217') || strMsg2.includes('amount1000')) && !info.message.extendedTextMessage?.contextInfo?.quotedMessage) isPagamento = true;
                     if (isPagamento) {
                         await corvo.sendMessage(from, {
                             text: `*💰 ᴜꜱᴜᴀʀɪᴏ ʀᴇᴍᴏᴠɪᴅᴏ ᴩᴏʀ ᴇɴᴠɪᴀʀ ᴩᴀɢᴀᴍᴇɴᴛᴏ ɴᴏ ɢʀᴜᴩᴏ* 🚫`,
@@ -3452,7 +3468,48 @@ async function startcorvo(upsert, corvo, qrcode) {
                         delete global.menuAzAtivos[sender];
                         return reply(`*ᴏᴋ ꜱᴇɴʜᴏʀ(ᴀ), ᴄᴀꜱᴏ ǫᴜᴇɪʀᴀ ꜱᴀʙᴇʀ ꜱᴇ ᴏꜱ ᴄᴏᴍᴀɴᴅᴏꜱ ꜰᴏʀᴀᴍ ᴀᴛɪᴠᴏꜱ, ᴜꜱᴇ →『 ${prefix}status 』 ᴇ ᴏʟʜᴇ ᴀᴛᴇɴᴛᴀᴍᴇɴᴛᴇ ᴛᴏᴅᴀꜱ ᴀꜱ ᴏᴩᴄᴏᴇꜱ 🙇‍♂️*`);
                     }
-                    var opcoes = { '1': 'antiaudio', '2': 'antivideo', '3': 'antiimg', '4': 'autosticker', '5': 'bemvindo', '6': 'bemvindo2', '7': 'antilink', '8': 'antilinkgp', '9': 'antilinkeasy', '10': 'anticatalogo', '11': 'antistatus', '12': 'antifake', '13': 'anticontato', '14': 'antiloc', '15': 'antiddd', '16': 'so_adm', '17': 'x9adm', '18': 'autototext', '19': 'ativic', '20': 'autodl', '21': 'multiprefixo', '22': 'antinotas', '23': 'antipalavra', '24': 'antipalavrao', '25': 'modobn', '26': 'modocoins', '27': 'antipagamento' };
+                    var opcoes = {
+                        '1': 'antiaudio',
+                        '2': 'antivideo',
+                        '3': 'antiimg',
+                        '4': 'antidocumento',
+                        '5': 'antift',
+                        '6': 'autofigu',
+                        '7': 'bemvindo',
+                        '8': 'bemvindo2',
+                        '9': 'antiporn',
+                        '10': 'antilinkhard',
+                        '11': 'antilinkgp',
+                        '12': 'antilinkeasy',
+                        '13': 'anticatalogo',
+                        '14': 'antinotas',
+                        '15': 'antipagamento',
+                        '16': 'antistatus',
+                        '17': 'antifake',
+                        '18': 'anticontato',
+                        '19': 'antiloc',
+                        '20': 'antiddd',
+                        '21': 'antibot',
+                        '22': 'antidelete',
+                        '23': 'so_adm',
+                        '24': 'x9adm',
+                        '25': 'x9visuunica',
+                        '26': 'autototext',
+                        '27': 'ativic',
+                        '28': 'autodl',
+                        '29': 'multiprefixo',
+                        '30': 'antipalavra',
+                        '31': 'antipalavrao',
+                        '32': 'modobn',
+                        '33': 'modocoins',
+                        '34': 'antisp',
+                        '35': 'modorpg',
+                        '36': 'limitec',
+                        '37': 'limitarcmd',
+                        '38': 'autorepo',
+                        '39': 'antipv',
+                        '40': 'antiligacao'
+                    };
                     var cmd = opcoes[escolha];
                     if (cmd) {
                         command = cmd;
@@ -5238,6 +5295,19 @@ Mensagem: "${textoLimpo}"${contextTextAI}${contextGroupAI}`;
                     }
                 }
 
+
+
+                const infosMenu = {
+                    sender,
+                    isVip,
+                    cargo: SoDono ? 'Dono' : (isGroupAdmins ? 'Adminstrador' : 'Membro'),
+                    ownerName,
+                    botName: NomeDoBot,
+                    speed: (() => { var ts = speed(); return (speed() - ts).toFixed(4); })(),
+                    uptime: kyun(process.uptime()),
+                    baileysVersion: '6.7.21',
+                    isBotoff
+                };
 
                 switch (command) {
                     case 'corvoia': {
@@ -11403,9 +11473,10 @@ ${prefix}global`)
                     case 'roubar':
                         if (!isQuotedSticker) return reply('*ᴍᴀʀǫᴜᴇ ᴜᴍᴀ ғɪɢᴜʀɪɴʜᴀ...💁‍♂️*');
                         encmediats = await getFileBuffer(info.message.extendedTextMessage.contextInfo.quotedMessage.stickerMessage, 'sticker');
+                        var _stk_template = `➦ ✦ ✧ 💍 ✧ ✦   *CRIADA POR* ↴\nㅤㅤㅤ↳ 『 *${ownerName}* 亗 』\n➦ ✦ ✧ 🐈‍⬛ ✧ ✦   *NICK DONO* ↴\nㅤㅤㅤ↳ 『 **${pushname}** 亗 』\nㅤㅤㅤㅤ⎯⎯⎯⎯⎯⎯ ● ⎯⎯⎯⎯⎯⎯\n➦ ✦ ✧ 🌹 ✧ ✦   *FEITA POR* ↴\nㅤㅤㅤ↳ 『 ${NomeDoBot} 』\n➦ ✦ ✧ 💌 ✧ ✦   *GRUPO* ↴\nㅤㅤㅤ↳ 『 ${isGroup ? groupName : 'Privado'} 』`;
                         var kls = q;
-                        var pack = kls.split("/")[0];
-                        var author2 = kls.split("/")[1];
+                        var pack = kls ? (kls.includes("/") ? kls.split("/")[0] : NomeDoBot) : NomeDoBot;
+                        var author2 = kls ? (kls.includes("/") ? kls.split("/")[1] : _stk_template) : _stk_template;
                         if (!q) {
                             return reply(`*ᴇꜱᴛᴀ ꜰᴀʟᴛᴀɴᴅᴏ ᴏ ɴᴏᴍᴇ ᴅᴏ ᴩᴀᴄᴏᴛᴇ + ᴀᴜᴛᴏʀ 🤷‍♂️*`);
                         }
@@ -11434,8 +11505,9 @@ ${prefix}global`)
                         try {
                             if (!isQuotedSticker) return reply('*ᴍᴀʀǫᴜᴇ ᴜᴍᴀ ғɪɢᴜʀɪɴʜᴀ...💁‍♂️*');
                             reply(mess.teste());
-                            var _author = `${pushname}`;
-                            var _pack = "";
+                            var _stk_template = `➦ ✦ ✧ 💍 ✧ ✦   *CRIADA POR* ↴\nㅤㅤㅤ↳ 『 *${ownerName}* 亗 』\n➦ ✦ ✧ 🐈‍⬛ ✧ ✦   *NICK DONO* ↴\nㅤㅤㅤ↳ 『 **${pushname}** 亗 』\nㅤㅤㅤㅤ⎯⎯⎯⎯⎯⎯ ● ⎯⎯⎯⎯⎯⎯\n➦ ✦ ✧ 🌹 ✧ ✦   *FEITA POR* ↴\nㅤㅤㅤ↳ 『 ${NomeDoBot} 』\n➦ ✦ ✧ 💌 ✧ ✦   *GRUPO* ↴\nㅤㅤㅤ↳ 『 ${isGroup ? groupName : 'Privado'} 』`;
+                            var _author = _stk_template;
+                            var _pack = NomeDoBot;
                             var takeSTK = await getFileBuffer(info.message.extendedTextMessage.contextInfo.quotedMessage.stickerMessage, 'sticker');
                             var prepareSTK = await convertSticker(takeSTK.toString('base64'), _author, _pack);
                             corvo.sendMessage(from, {
@@ -14145,7 +14217,7 @@ Aguarde o dono entrar em contato no privado.`
                     case 'menuzz': {
                         await sendMenu(from, selo, {
                             reaction: "🕸️",
-                            caption: linguagem.menu(prefix),
+                            caption: linguagem.menu(prefix, infosMenu),
                             sendAudio: true
                         }, context);
                         break;
@@ -15011,20 +15083,7 @@ ${abc.letra}`;
 
 
                     case "menu_download_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🥀ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐈𝐍𝐅𝐎𝐒 𝐃𝐎 𝐁𝐎𝐓 / 𝐔𝐒𝐄𝐑
-╎🥀˖ ▸ 𝗨𝘀𝘂́𝗮𝗿𝗶𝗼: @.........................
-╎🥀˖ ▸ 𝗩𝗜𝗣: ɴᴀᴏ ❌
-╎🥀˖ ▸ 𝗖𝗮𝗿𝗴𝗼: Adminstrador
-╎🥀˖ ▸ 𝗗𝗼𝗻𝗼: 𝑩𝑹𝑼𝑪𝑬 亗
-╎🥀˖ ▸ 𝗕𝗼𝘁: 𝐘𝐎𝐑𝐈 亗
-╎🥀˖ ▸ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: ${prefix}
-╎🥀˖ ▸ 𝗩𝗲𝗿. 𝗕𝗮𝗶𝗹𝗲𝘆𝘀: 6.7.21
-╎🥀˖ ▸ 𝗩𝗲𝗹𝗼𝗰𝗶𝗱𝗮𝗱𝗲: 0.000 s
-╎🥀˖ ▸ 𝗨𝗽𝘁𝗶𝗺𝗲: 08 ʜʀ, 25 ᴍɪɴ ᴇ 31 ꜱᴇɢ
-╎🥀˖ ▸𝗔𝘁𝗶𝘃𝗼 𝗣𝗮𝗿𝗮 𝗠𝗲𝗺𝗯𝗿𝗼𝘀: Sim ✅
-├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐷𝑂𝑊𝑁𝐿𝑂𝐴𝐷𝑆
+                        var txt = `├─ ⊹ 𖤐 𝐷𝑂𝑊𝑁𝐿𝑂𝐴𝐷𝑆
 ╎♱˖ ▸ ${prefix}Play
 ╎♱˖ ▸ ${prefix}Playvid
 ╎♱˖ ▸ ${prefix}Playvideo
@@ -15070,20 +15129,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_infos_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🥀ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐈𝐍𝐅𝐎𝐒 𝐃𝐎 𝐁𝐎𝐓 / 𝐔𝐒𝐄𝐑
-╎🥀˖ ▸ 𝗨𝘀𝘂́𝗮𝗿𝗶𝗼: @.........................
-╎🥀˖ ▸ 𝗩𝗜𝗣: ɴᴀᴏ ❌
-╎🥀˖ ▸ 𝗖𝗮𝗿𝗴𝗼: Adminstrador
-╎🥀˖ ▸ 𝗗𝗼𝗻𝗼: 𝑩𝑹𝑼𝑪𝑬 亗
-╎🥀˖ ▸ 𝗕𝗼𝘁: 𝐘𝐎𝐑𝐈 亗
-╎🥀˖ ▸ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: ${prefix}
-╎🥀˖ ▸ 𝗩𝗲𝗿. 𝗕𝗮𝗶𝗹𝗲𝘆𝘀: 6.7.21
-╎🥀˖ ▸ 𝗩𝗲𝗹𝗼𝗰𝗶𝗱𝗮𝗱𝗲: 0.000 s
-╎🥀˖ ▸ 𝗨𝗽𝘁𝗶𝗺𝗲: 08 ʜʀ, 25 ᴍɪɴ ᴇ 31 ꜱᴇɢ
-╎🥀˖ ▸𝗔𝘁𝗶𝘃𝗼 𝗣𝗮𝗿𝗮 𝗠𝗲𝗺𝗯𝗿𝗼𝘀: Sim ✅
-├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐼𝑁𝐹𝑂𝑆 / 𝐶𝐻𝐸𝐶𝐾𝑆
+                        var txt = `├─ ⊹ 𖤐 𝐼𝑁𝐹𝑂𝑆 / 𝐶𝐻𝐸𝐶𝐾𝑆
 ╎♱˖ ▸ ${prefix}ping
 ╎♱˖ ▸ ${prefix}atividade
 ╎♱˖ ▸ ${prefix}atividades
@@ -15120,20 +15166,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_pesquisa_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🥀ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐈𝐍𝐅𝐎𝐒 𝐃𝐎 𝐁𝐎𝐓 / 𝐔𝐒𝐄𝐑
-╎🥀˖ ▸ 𝗨𝘀𝘂́𝗮𝗿𝗶𝗼: @.........................
-╎🥀˖ ▸ 𝗩𝗜𝗣: ɴᴀᴏ ❌
-╎🥀˖ ▸ 𝗖𝗮𝗿𝗴𝗼: Adminstrador
-╎🥀˖ ▸ 𝗗𝗼𝗻𝗼: 𝑩𝑹𝑼𝑪𝑬 亗
-╎🥀˖ ▸ 𝗕𝗼𝘁: 𝐘𝐎𝐑𝐈 亗
-╎🥀˖ ▸ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: ${prefix}
-╎🥀˖ ▸ 𝗩𝗲𝗿. 𝗕𝗮𝗶𝗹𝗲𝘆𝘀: 6.7.21
-╎🥀˖ ▸ 𝗩𝗲𝗹𝗼𝗰𝗶𝗱𝗮𝗱𝗲: 0.000 s
-╎🥀˖ ▸ 𝗨𝗽𝘁𝗶𝗺𝗲: 08 ʜʀ, 25 ᴍɪɴ ᴇ 31 ꜱᴇɢ
-╎🥀˖ ▸𝗔𝘁𝗶𝘃𝗼 𝗣𝗮𝗿𝗮 𝗠𝗲𝗺𝗯𝗿𝗼𝘀: Sim ✅
-├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝑃𝐸𝑆𝑄𝑈𝐼𝑆𝐴𝑆
+                        var txt = `├─ ⊹ 𖤐 𝑃𝐸𝑆𝑄𝑈𝐼𝑆𝐴𝑆
 ╎♱˖ ▸ ${prefix}clima
 ╎♱˖ ▸ ${prefix}cep
 ╎♱˖ ▸ ${prefix}ip
@@ -15172,20 +15205,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_ia_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🥀ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐈𝐍𝐅𝐎𝐒 𝐃𝐎 𝐁𝐎𝐓 / 𝐔𝐒𝐄𝐑
-╎🥀˖ ▸ 𝗨𝘀𝘂́𝗮𝗿𝗶𝗼: @.........................
-╎🥀˖ ▸ 𝗩𝗜𝗣: ɴᴀᴏ ❌
-╎🥀˖ ▸ 𝗖𝗮𝗿𝗴𝗼: Adminstrador
-╎🥀˖ ▸ 𝗗𝗼𝗻𝗼: 𝑩𝑹𝑼𝑪𝑬 亗
-╎🥀˖ ▸ 𝗕𝗼𝘁: 𝐘𝐎𝐑𝐈 亗
-╎🥀˖ ▸ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: ${prefix}
-╎🥀˖ ▸ 𝗩𝗲𝗿. 𝗕𝗮𝗶𝗹𝗲𝘆𝘀: 6.7.21
-╎🥀˖ ▸ 𝗩𝗲𝗹𝗼𝗰𝗶𝗱𝗮𝗱𝗲: 0.000 s
-╎🥀˖ ▸ 𝗨𝗽𝘁𝗶𝗺𝗲: 08 ʜʀ, 25 ᴍɪɴ ᴇ 31 ꜱᴇɢ
-╎🥀˖ ▸𝗔𝘁𝗶𝘃𝗼 𝗣𝗮𝗿𝗮 𝗠𝗲𝗺𝗯𝗿𝗼𝘀: Sim ✅
-├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐼𝑁𝑇𝐸𝐿𝐼𝐺𝐸𝑁𝐶𝐼𝐴𝑆
+                        var txt = `├─ ⊹ 𖤐 𝐼𝑁𝑇𝐸𝐿𝐼𝐺𝐸𝑁𝐶𝐼𝐴𝑆
 ╎♱˖ ▸ ${prefix}gpt
 ╎♱˖ ▸ ${prefix}chatgpt
 ╎♱˖ ▸ ${prefix}ia
@@ -15212,20 +15232,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_figu_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🥀ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐈𝐍𝐅𝐎𝐒 𝐃𝐎 𝐁𝐎𝐓 / 𝐔𝐒𝐄𝐑
-╎🥀˖ ▸ 𝗨𝘀𝘂́𝗮𝗿𝗶𝗼: @.........................
-╎🥀˖ ▸ 𝗩𝗜𝗣: ɴᴀᴏ ❌
-╎🥀˖ ▸ 𝗖𝗮𝗿𝗴𝗼: Adminstrador
-╎🥀˖ ▸ 𝗗𝗼𝗻𝗼: 𝑩𝑹𝑼𝑪𝑬 亗
-╎🥀˖ ▸ 𝗕𝗼𝘁: 𝐘𝐎𝐑𝐈 亗
-╎🥀˖ ▸ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: ${prefix}
-╎🥀˖ ▸ 𝗩𝗲𝗿. 𝗕𝗮𝗶𝗹𝗲𝘆𝘀: 6.7.21
-╎🥀˖ ▸ 𝗩𝗲𝗹𝗼𝗰𝗶𝗱𝗮𝗱𝗲: 0.000 s
-╎🥀˖ ▸ 𝗨𝗽𝘁𝗶𝗺𝗲: 08 ʜʀ, 25 ᴍɪɴ ᴇ 31 ꜱᴇɢ
-╎🥀˖ ▸𝗔𝘁𝗶𝘃𝗼 𝗣𝗮𝗿𝗮 𝗠𝗲𝗺𝗯𝗿𝗼𝘀: Sim ✅
-├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐹𝐼𝐺𝑈𝑅𝐼𝑁𝐻𝐴𝑆
+                        var txt = `├─ ⊹ 𖤐 𝐹𝐼𝐺𝑈𝑅𝐼𝑁𝐻𝐴𝑆
 ╎♱˖ ▸ ${prefix}s
 ╎♱˖ ▸ ${prefix}st
 ╎♱˖ ▸ ${prefix}stk
@@ -15252,20 +15259,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_random_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🥀ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐈𝐍𝐅𝐎𝐒 𝐃𝐎 𝐁𝐎𝐓 / 𝐔𝐒𝐄𝐑
-╎🥀˖ ▸ 𝗨𝘀𝘂́𝗮𝗿𝗶𝗼: @.........................
-╎🥀˖ ▸ 𝗩𝗜𝗣: ɴᴀᴏ ❌
-╎🥀˖ ▸ 𝗖𝗮𝗿𝗴𝗼: Adminstrador
-╎🥀˖ ▸ 𝗗𝗼𝗻𝗼: 𝑩𝑹𝑼𝑪𝑬 亗
-╎🥀˖ ▸ 𝗕𝗼𝘁: 𝐘𝐎𝐑𝐈 亗
-╎🥀˖ ▸ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: ${prefix}
-╎🥀˖ ▸ 𝗩𝗲𝗿. 𝗕𝗮𝗶𝗹𝗲𝘆𝘀: 6.7.21
-╎🥀˖ ▸ 𝗩𝗲𝗹𝗼𝗰𝗶𝗱𝗮𝗱𝗲: 0.000 s
-╎🥀˖ ▸ 𝗨𝗽𝘁𝗶𝗺𝗲: 08 ʜʀ, 25 ᴍɪɴ ᴇ 31 ꜱᴇɢ
-╎🥀˖ ▸𝗔𝘁𝗶𝘃𝗼 𝗣𝗮𝗿𝗮 𝗠𝗲𝗺𝗯𝗿𝗼𝘀: Sim ✅
-├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝑅𝐴𝑁𝐷𝑂𝑀'𝑆
+                        var txt = `├─ ⊹ 𖤐 𝑅𝐴𝑁𝐷𝑂𝑀'𝑆
 ╎♱˖ ▸ ${prefix}totext
 ╎♱˖ ▸ ${prefix}gtts
 ╎♱˖ ▸ ${prefix}emoji
@@ -15327,20 +15321,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_bn_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🥀ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐈𝐍𝐅𝐎𝐒 𝐃𝐎 𝐁𝐎𝐓 / 𝐔𝐒𝐄𝐑
-╎🥀˖ ▸ 𝗨𝘀𝘂́𝗮𝗿𝗶𝗼: @.........................
-╎🥀˖ ▸ 𝗩𝗜𝗣: ɴᴀᴏ ❌
-╎🥀˖ ▸ 𝗖𝗮𝗿𝗴𝗼: Adminstrador
-╎🥀˖ ▸ 𝗗𝗼𝗻𝗼: 𝑩𝑹𝑼𝑪𝑬 亗
-╎🥀˖ ▸ 𝗕𝗼𝘁: 𝐘𝐎𝐑𝐈 亗
-╎🥀˖ ▸ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: ${prefix}
-╎🥀˖ ▸ 𝗩𝗲𝗿. 𝗕𝗮𝗶𝗹𝗲𝘆𝘀: 6.7.21
-╎🥀˖ ▸ 𝗩𝗲𝗹𝗼𝗰𝗶𝗱𝗮𝗱𝗲: 0.000 s
-╎🥀˖ ▸ 𝗨𝗽𝘁𝗶𝗺𝗲: 08 ʜʀ, 25 ᴍɪɴ ᴇ 31 ꜱᴇɢ
-╎🥀˖ ▸𝗔𝘁𝗶𝘃𝗼 𝗣𝗮𝗿𝗮 𝗠𝗲𝗺𝗯𝗿𝗼𝘀: Sim ✅
-├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐵𝑅𝐼𝑁𝐶𝐴𝐷𝐸𝐼𝑅𝐴𝑆
+                        var txt = `├─ ⊹ 𖤐 𝐵𝑅𝐼𝑁𝐶𝐴𝐷𝐸𝐼𝑅𝐴𝑆
 ╎♱˖ ▸ ${prefix}jogodavelha
 ╎♱˖ ▸ ${prefix}jogov
 ╎♱˖ ▸ ${prefix}vab
@@ -15466,20 +15447,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🥀ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐈𝐍𝐅𝐎𝐒 𝐃𝐎 𝐁𝐎𝐓 / 𝐔𝐒𝐄𝐑
-╎🥀˖ ▸ 𝗨𝘀𝘂́𝗮𝗿𝗶𝗼: @.........................
-╎🥀˖ ▸ 𝗩𝗜𝗣: ɴᴀᴏ ❌
-╎🥀˖ ▸ 𝗖𝗮𝗿𝗴𝗼: Adminstrador
-╎🥀˖ ▸ 𝗗𝗼𝗻𝗼: 𝑩𝑹𝑼𝑪𝑬 亗
-╎🥀˖ ▸ 𝗕𝗼𝘁: 𝐘𝐎𝐑𝐈 亗
-╎🥀˖ ▸ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: ${prefix}
-╎🥀˖ ▸ 𝗩𝗲𝗿. 𝗕𝗮𝗶𝗹𝗲𝘆𝘀: 6.7.21
-╎🥀˖ ▸ 𝗩𝗲𝗹𝗼𝗰𝗶𝗱𝗮𝗱𝗲: 0.000 s
-╎🥀˖ ▸ 𝗨𝗽𝘁𝗶𝗺𝗲: 08 ʜʀ, 25 ᴍɪɴ ᴇ 31 ꜱᴇɢ
-╎🥀˖ ▸𝗔𝘁𝗶𝘃𝗼 𝗣𝗮𝗿𝗮 𝗠𝗲𝗺𝗯𝗿𝗼𝘀: Sim ✅
-├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝑂𝑈𝑇𝑅𝑂𝑆 𝑀𝐸𝑁𝑈𝑆
+                        var txt = `├─ ⊹ 𖤐 𝑂𝑈𝑇𝑅𝑂𝑆 𝑀𝐸𝑁𝑈𝑆
 ╎♱˖ ▸ ${prefix}menu_principal
 ╎♱˖ ▸ ${prefix}menu_infos_lista
 ╎♱˖ ▸ ${prefix}menu_download_lista
@@ -15503,20 +15471,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_adm_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🥀ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐈𝐍𝐅𝐎𝐒 𝐃𝐎 𝐁𝐎𝐓 / 𝐔𝐒𝐄𝐑
-╎🥀˖ ▸ 𝗨𝘀𝘂́𝗮𝗿𝗶𝗼: @.........................
-╎🥀˖ ▸ 𝗩𝗜𝗣: ɴᴀᴏ ❌
-╎🥀˖ ▸ 𝗖𝗮𝗿𝗴𝗼: Adminstrador
-╎🥀˖ ▸ 𝗗𝗼𝗻𝗼: 𝑩𝑹𝑼𝑪𝑬 亗
-╎🥀˖ ▸ 𝗕𝗼𝘁: 𝐘𝐎𝐑𝐈 亗
-╎🥀˖ ▸ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: ${prefix}
-╎🥀˖ ▸ 𝗩𝗲𝗿. 𝗕𝗮𝗶𝗹𝗲𝘆𝘀: 6.7.21
-╎🥀˖ ▸ 𝗩𝗲𝗹𝗼𝗰𝗶𝗱𝗮𝗱𝗲: 0.000 s
-╎🥀˖ ▸ 𝗨𝗽𝘁𝗶𝗺𝗲: 08 ʜʀ, 25 ᴍɪɴ ᴇ 31 ꜱᴇɢ
-╎🥀˖ ▸𝗔𝘁𝗶𝘃𝗼 𝗣𝗮𝗿𝗮 𝗠𝗲𝗺𝗯𝗿𝗼𝘀: Sim ✅
-├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈 𝐴𝐷𝑀
+                        var txt = `├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈 𝐴𝐷𝑀
 
 ╎♱˖ ▸ ${prefix}ativar
 ╎♱˖ ▸ ${prefix}ativic
@@ -15620,20 +15575,7 @@ ${abc.letra}`;
                         break;
 
                     case "menudono": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🥀ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐈𝐍𝐅𝐎𝐒 𝐃𝐎 𝐁𝐎𝐓 / 𝐔𝐒𝐄𝐑
-╎🥀˖ ▸ 𝗨𝘀𝘂́𝗮𝗿𝗶𝗼: @.........................
-╎🥀˖ ▸ 𝗩𝗜𝗣: ɴᴀᴏ ❌
-╎🥀˖ ▸ 𝗖𝗮𝗿𝗴𝗼: Adminstrador
-╎🥀˖ ▸ 𝗗𝗼𝗻𝗼: 𝑩𝑹𝑼𝑪𝑬 亗
-╎🥀˖ ▸ 𝗕𝗼𝘁: 𝐘𝐎𝐑𝐈 亗
-╎🥀˖ ▸ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: ${prefix}
-╎🥀˖ ▸ 𝗩𝗲𝗿. 𝗕𝗮𝗶𝗹𝗲𝘆𝘀: 6.7.21
-╎🥀˖ ▸ 𝗩𝗲𝗹𝗼𝗰𝗶𝗱𝗮𝗱𝗲: 0.000 s
-╎🥀˖ ▸ 𝗨𝗽𝘁𝗶𝗺𝗲: 08 ʜʀ, 25 ᴍɪɴ ᴇ 31 ꜱᴇɢ
-╎🥀˖ ▸𝗔𝘁𝗶𝘃𝗼 𝗣𝗮𝗿𝗮 𝗠𝗲𝗺𝗯𝗿𝗼𝘀: Sim ✅
-├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝑅𝐴𝑁𝐷𝑂𝑀'𝑆 
+                        var txt = `├─ ⊹ 𖤐 𝑅𝐴𝑁𝐷𝑂𝑀'𝑆 
 ╎♱˖ ▸ ${prefix}Setprefix
 ╎♱˖ ▸ ${prefix}channel
 ╎♱˖ ▸ ${prefix}Fotomenu
@@ -15713,20 +15655,7 @@ ${abc.letra}`;
                         break;
 
                     case "menu_logo_lista": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🥀ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐈𝐍𝐅𝐎𝐒 𝐃𝐎 𝐁𝐎𝐓 / 𝐔𝐒𝐄𝐑
-╎🥀˖ ▸ 𝗨𝘀𝘂́𝗮𝗿𝗶𝗼: @.........................
-╎🥀˖ ▸ 𝗩𝗜𝗣: ɴᴀᴏ ❌
-╎🥀˖ ▸ 𝗖𝗮𝗿𝗴𝗼: Adminstrador
-╎🥀˖ ▸ 𝗗𝗼𝗻𝗼: 𝑩𝑹𝑼𝑪𝑬 亗
-╎🥀˖ ▸ 𝗕𝗼𝘁: 𝐘𝐎𝐑𝐈 亗
-╎🥀˖ ▸ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: ${prefix}
-╎🥀˖ ▸ 𝗩𝗲𝗿. 𝗕𝗮𝗶𝗹𝗲𝘆𝘀: 6.7.21
-╎🥀˖ ▸ 𝗩𝗲𝗹𝗼𝗰𝗶𝗱𝗮𝗱𝗲: 0.000 s
-╎🥀˖ ▸ 𝗨𝗽𝘁𝗶𝗺𝗲: 08 ʜʀ, 25 ᴍɪɴ ᴇ 31 ꜱᴇɢ
-╎🥀˖ ▸𝗔𝘁𝗶𝘃𝗼 𝗣𝗮𝗿𝗮 𝗠𝗲𝗺𝗯𝗿𝗼𝘀: Sim ✅
-├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈-𝐿𝑂𝐺𝑂
+                        var txt = `├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈-𝐿𝑂𝐺𝑂
 ╎♱˖ ▸ ${prefix}marvel
 ╎♱˖ ▸ ${prefix}pornohub
 ╎♱˖ ▸ ${prefix}space
@@ -15790,19 +15719,6 @@ ${abc.letra}`;
 
                     case "menu_efeitos_lista": {
                         var txt = `
-╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🥀ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐈𝐍𝐅𝐎𝐒 𝐃𝐎 𝐁𝐎𝐓 / 𝐔𝐒𝐄𝐑
-╎🥀˖ ▸ 𝗨𝘀𝘂́𝗮𝗿𝗶𝗼: @.........................
-╎🥀˖ ▸ 𝗩𝗜𝗣: ɴᴀᴏ ❌
-╎🥀˖ ▸ 𝗖𝗮𝗿𝗴𝗼: Adminstrador
-╎🥀˖ ▸ 𝗗𝗼𝗻𝗼: 𝑩𝑹𝑼𝑪𝑬 亗
-╎🥀˖ ▸ 𝗕𝗼𝘁: 𝐘𝐎𝐑𝐈 亗
-╎🥀˖ ▸ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: ${prefix}
-╎🥀˖ ▸ 𝗩𝗲𝗿. 𝗕𝗮𝗶𝗹𝗲𝘆𝘀: 6.7.21
-╎🥀˖ ▸ 𝗩𝗲𝗹𝗼𝗰𝗶𝗱𝗮𝗱𝗲: 0.000 s
-╎🥀˖ ▸ 𝗨𝗽𝘁𝗶𝗺𝗲: 08 ʜʀ, 25 ᴍɪɴ ᴇ 31 ꜱᴇɢ
-╎🥀˖ ▸𝗔𝘁𝗶𝘃𝗼 𝗣𝗮𝗿𝗮 𝗠𝗲𝗺𝗯𝗿𝗼𝘀: Sim ✅
-├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
 ├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈-𝐸𝐹𝐸𝐼𝑇𝑂𝑆
 ╎♱˖ ▸ ${prefix}Comunismo 
 ╎♱˖ ▸ ${prefix}Bolsonaro 
@@ -15839,19 +15755,6 @@ ${abc.letra}`;
 
                     case "menu_alt_lista": {
                         var txt = `
-╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🥀ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐈𝐍𝐅𝐎𝐒 𝐃𝐎 𝐁𝐎𝐓 / 𝐔𝐒𝐄𝐑
-╎🥀˖ ▸ 𝗨𝘀𝘂́𝗮𝗿𝗶𝗼: @.........................
-╎🥀˖ ▸ 𝗩𝗜𝗣: ɴᴀᴏ ❌
-╎🥀˖ ▸ 𝗖𝗮𝗿𝗴𝗼: Adminstrador
-╎🥀˖ ▸ 𝗗𝗼𝗻𝗼: 𝑩𝑹𝑼𝑪𝑬 亗
-╎🥀˖ ▸ 𝗕𝗼𝘁: 𝐘𝐎𝐑𝐈 亗
-╎🥀˖ ▸ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: ${prefix}
-╎🥀˖ ▸ 𝗩𝗲𝗿. 𝗕𝗮𝗶𝗹𝗲𝘆𝘀: 6.7.21
-╎🥀˖ ▸ 𝗩𝗲𝗹𝗼𝗰𝗶𝗱𝗮𝗱𝗲: 0.000 s
-╎🥀˖ ▸ 𝗨𝗽𝘁𝗶𝗺𝗲: 08 ʜʀ, 25 ᴍɪɴ ᴇ 31 ꜱᴇɢ
-╎🥀˖ ▸𝗔𝘁𝗶𝘃𝗼 𝗣𝗮𝗿𝗮 𝗠𝗲𝗺𝗯𝗿𝗼𝘀: Sim ✅
-├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
 ├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈-𝐴𝐿𝑇𝐸𝑅𝐴𝐷𝑂𝑅
 ╎♱˖ ▸ ${prefix}Videolento (marca)
 ╎♱˖ ▸ ${prefix}Videorapido (marca)
@@ -15876,20 +15779,7 @@ ${abc.letra}`;
                     case "menu_principal_lista":
                     case "menu_lista":
                     case "menu_principal": {
-                        var txt = `╭⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🥀ִ ࣪𖤐
-├─ ⊹ 𖤐 𝐈𝐍𝐅𝐎𝐒 𝐃𝐎 𝐁𝐎𝐓 / 𝐔𝐒𝐄𝐑
-╎🥀˖ ▸ 𝗨𝘀𝘂́𝗮𝗿𝗶𝗼: @.........................
-╎🥀˖ ▸ 𝗩𝗜𝗣: ɴᴀᴏ ❌
-╎🥀˖ ▸ 𝗖𝗮𝗿𝗴𝗼: Adminstrador
-╎🥀˖ ▸ 𝗗𝗼𝗻𝗼: 𝑩𝑹𝑼𝑪𝑬 亗
-╎🥀˖ ▸ 𝗕𝗼𝘁: 𝐘𝐎𝐑𝐈 亗
-╎🥀˖ ▸ 𝗣𝗿𝗲𝗳𝗶𝘅𝗼: ${prefix}
-╎🥀˖ ▸ 𝗩𝗲𝗿. 𝗕𝗮𝗶𝗹𝗲𝘆𝘀: 6.7.21
-╎🥀˖ ▸ 𝗩𝗲𝗹𝗼𝗰𝗶𝗱𝗮𝗱𝗲: 0.000 s
-╎🥀˖ ▸ 𝗨𝗽𝘁𝗶𝗺𝗲: 08 ʜʀ, 25 ᴍɪɴ ᴇ 31 ꜱᴇɢ
-╎🥀˖ ▸𝗔𝘁𝗶𝘃𝗼 𝗣𝗮𝗿𝗮 𝗠𝗲𝗺𝗯𝗿𝗼𝘀: Sim ✅
-├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
-├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈 𝑃𝑅𝐼𝑁𝐶𝐼𝑃𝐴𝐿
+                        var txt = `├─ ⊹ 𖤐 𝑀𝐸𝑁𝑈 𝑃𝑅𝐼𝑁𝐶𝐼𝑃𝐴𝐿
 
 ├⊱ ───── ⋆⋅ ♰ ⋅⋆ ───── ⊰˖°🦇ִ ࣪𖤐
 ├─ ⊹ 𖤐 𝑆𝑈𝐵𝑀𝐸𝑁𝑈𝑆
@@ -16031,7 +15921,7 @@ ${abc.letra}`;
                     case 'menu18':
                         await sendMenu(from, selo, {
                             reaction: "🎉",
-                            caption: linguagem.menu18(prefix),
+                            caption: linguagem.menu18(prefix, infosMenu),
                             sendAudio: true
                         }, context);
                         break;
@@ -16039,7 +15929,7 @@ ${abc.letra}`;
                     case 'menudono':
                         await sendMenu(from, selo, {
                             reaction: "🎉",
-                            caption: linguagem.menudono(prefix),
+                            caption: linguagem.menudono(prefix, infosMenu),
                             isOwnerRequired: true,
                             sendAudio: true
                         }, context);
@@ -16048,7 +15938,7 @@ ${abc.letra}`;
                     case 'menuadm':
                         await sendMenu(from, selo, {
                             reaction: "🎉",
-                            caption: linguagem.adms(prefix),
+                            caption: linguagem.adms(prefix, infosMenu),
                             isAdminRequired: true,
                             sendAudio: true
                         }, context);
@@ -16061,7 +15951,7 @@ ${abc.letra}`;
                     case 'menulogo':
                         await sendMenu(from, selo, {
                             reaction: "🎉",
-                            caption: linguagem.menulogos(prefix),
+                            caption: linguagem.menulogos(prefix, infosMenu),
                             sendAudio: true
                         }, context);
                         break;
@@ -16073,7 +15963,7 @@ ${abc.letra}`;
                     case 'menubn':
                         await sendMenu(from, selo, {
                             reaction: "🎉",
-                            caption: linguagem.brincadeiras(prefix),
+                            caption: linguagem.brincadeiras(prefix, infosMenu),
                             isGroupRequired: true,
                             isModoBnRequired: true,
                             sendAudio: true
@@ -21638,8 +21528,9 @@ Use ${prefix}chocarovo para tentar a sorte`
                     case 'figurinha': case 's': case 'stickergifp': case 'figura': case 'f': case 'figu': case 'st': case 'stk': case 'fgif':
                         (async function () {
                             try {
-                                var legenda = q ? (q.includes('/') ? q.split("/")[0] : q) : "";
-                                var autor = q ? (q.includes('/') ? q.split("/")[1] : "") : `${pushname}`;
+                                var _stk_template = `➦ ✦ ✧ 💍 ✧ ✦   *CRIADA POR* ↴\nㅤㅤㅤ↳ 『 *${ownerName}* 亗 』\n➦ ✦ ✧ 🐈‍⬛ ✧ ✦   *NICK DONO* ↴\nㅤㅤㅤ↳ 『 **${pushname}** 亗 』\nㅤㅤㅤㅤ⎯⎯⎯⎯⎯⎯ ● ⎯⎯⎯⎯⎯⎯\n➦ ✦ ✧ 🌹 ✧ ✦   *FEITA POR* ↴\nㅤㅤㅤ↳ 『 ${NomeDoBot} 』\n➦ ✦ ✧ 💌 ✧ ✦   *GRUPO* ↴\nㅤㅤㅤ↳ 『 ${isGroup ? groupName : 'Privado'} 』`;
+                                var legenda = q ? (q.includes('/') ? q.split("/")[0] : q) : NomeDoBot;
+                                var autor = q ? (q.includes('/') ? q.split("/")[1] : _stk_template) : _stk_template;
 
                                 if (isMedia && info.message.imageMessage || isQuotedImage) {
                                     var encmedia = isQuotedImage
@@ -30456,7 +30347,7 @@ https://youtube.com/@seu_canal?si=DN_gv6NZDBp-x-t7`)
                         try {
                             await sendMenu(from, selo, {
                                 reaction: "💛",
-                                caption: linguagem.efeitos(prefix),
+                                caption: linguagem.efeitos(prefix, infosMenu),
                                 sendAudio: true
                             }, context);
                         } catch (e) {
@@ -30537,7 +30428,7 @@ Use o comando ${prefix}criador e fale diretamente comigo para adquirir!
                         try {
                             await sendMenu(from, selo, {
                                 reaction: "💛",
-                                caption: linguagem.alteradores(prefix),
+                                caption: linguagem.alteradores(prefix, infosMenu),
                                 sendAudio: true
                             }, context);
                         } catch (e) {
@@ -30551,7 +30442,7 @@ Use o comando ${prefix}criador e fale diretamente comigo para adquirir!
                         try {
                             await sendMenu(from, selo, {
                                 reaction: "💛",
-                                caption: linguagem.menu18(prefix),
+                                caption: linguagem.menu18(prefix, infosMenu),
                                 sendAudio: true
                             }, context);
                         } catch (e) {
@@ -45287,6 +45178,7 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
                         }
                         break;
                     }
+                    case 'addcmd':
                     case 'adicionarcmd': {
 
                         try {
@@ -45451,6 +45343,8 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
                         }
                         break;
                     }
+                    case 'addcmdmidia':
+                    case 'rgfigu':
                     case 'addcmdmedia': {
 
                         try {
@@ -49130,14 +49024,11 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             var AB = similarityCmd(cmdToSearch);
                             if (AB[0].porcentagem >= 60) {
                                 var privateCmd = (pc, cmd, porcentagem) => {
-                                    return `┏━━━━━━━━━━━━━━━━━━━━━━━━━━━
-┃ ⚠️  *COMANDO NÃO ENCONTRADO*
-┣━━━━━━━━━━━━━━━━━━━━━━━━━━━
-┃ ❌  *Digitou:* \`${pc}\`
-┃ 💡  *Sugestão:* \`${cmd}\`?
-┃ 📊  *Precisão:* \`${porcentagem.toFixed(1)}%\`
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  > 💠  *CORVO BOT AI*`;
+                                    return `╭⊱♰ •🥀 : ᴄᴏᴍᴀɴᴅᴏ ɪɴᴠᴀʟɪᴅᴏ
+╎⊹ 🥀 ɴᴀᴏ ᴇɴᴄᴏɴᴛʀᴇɪ: ${pc}
+╎⊹ 🥀 ᴠᴏᴄᴇ ǫᴜɪs ᴅɪᴢᴇʀ: ${prefix}${cmd} ?
+╎⊹ 🥀 sᴇᴍᴇʟʜᴀɴᴄᴀ: ${porcentagem.toFixed(0)}%
+╰ : 🥀`;
                                 }
                                 var notcmd = privateCmd(prefix + (command || ""), AB[0].comando, AB[0].porcentagem);
                                 reply(notcmd);

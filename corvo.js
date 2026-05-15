@@ -2652,22 +2652,31 @@ async function startcorvo(upsert, corvo, qrcode) {
                     var _mediaType = null;
                     var _mediaObj = null;
 
+                    var _actualType = type;
+
+                    // Desembrulhar ViewOnce
+                    var _mToAnalyze = info.message;
+                    if (['viewOnceMessage', 'viewOnceMessageV2', 'viewOnceMessageV2Extension'].includes(_actualType)) {
+                        _mToAnalyze = _mToAnalyze[_actualType].message;
+                        _actualType = baileys.getContentType(_mToAnalyze);
+                    }
+
                     // Detectar tipo de mídia
-                    if (type === 'imageMessage') {
+                    if (_actualType === 'imageMessage') {
                         _mediaType = 'image';
-                        _mediaObj = info.message?.imageMessage;
-                    } else if (type === 'videoMessage') {
+                        _mediaObj = _mToAnalyze.imageMessage;
+                    } else if (_actualType === 'videoMessage') {
                         _mediaType = 'video';
-                        _mediaObj = info.message?.videoMessage;
-                    } else if (type === 'stickerMessage') {
+                        _mediaObj = _mToAnalyze.videoMessage;
+                    } else if (_actualType === 'stickerMessage') {
                         _mediaType = 'image';
-                        _mediaObj = info.message?.stickerMessage;
+                        _mediaObj = _mToAnalyze.stickerMessage;
                     }
 
                     if (_mediaType && _mediaObj) {
                         try {
                             // Baixar a mídia
-                            var _dlType = type === 'stickerMessage' ? 'sticker' : _mediaType;
+                            var _dlType = _actualType === 'stickerMessage' ? 'sticker' : _mediaType;
                             var _dlFunc = typeof downloadContentFromMessage === 'function' ? downloadContentFromMessage : require('@whiskeysockets/baileys').downloadContentFromMessage;
                             var _stream = await _dlFunc(_mediaObj, _dlType);
                             var _mediaBuf = Buffer.from([]);
@@ -2681,7 +2690,7 @@ async function startcorvo(upsert, corvo, qrcode) {
 
                                 // Se for vídeo e tiver thumbnail, usar a thumbnail (mais rápido)
                                 if (_mediaType === 'video' && _mediaObj.jpegThumbnail) {
-                                    _bufToAnalyze = Buffer.from(_mediaObj.jpegThumbnail, 'base64');
+                                    _bufToAnalyze = Buffer.isBuffer(_mediaObj.jpegThumbnail) ? _mediaObj.jpegThumbnail : Buffer.from(_mediaObj.jpegThumbnail, 'base64');
                                 }
 
                                 // Limitar tamanho para API (max 5MB)
@@ -2692,26 +2701,33 @@ async function startcorvo(upsert, corvo, qrcode) {
                                 // Enviar para API de detecção NSFW
                                 var _FormData = require('form-data');
                                 var _fd = new _FormData();
-                                var _ext = type === 'stickerMessage' ? 'webp' : (_mediaType === 'video' ? 'jpg' : 'jpg');
-                                _fd.append('image', _bufToAnalyze, { filename: `check.${_ext}`, contentType: `image/jpeg` });
+                                var _ext = _actualType === 'stickerMessage' ? 'webp' : 'jpg';
+                                var _mime = _actualType === 'stickerMessage' ? 'image/webp' : 'image/jpeg';
+                                _fd.append('image', _bufToAnalyze, { filename: `check.${_ext}`, contentType: _mime });
 
                                 var _nsfwResult = await axios.post('https://demo.api4ai.cloud/nsfw/v1/results', _fd, {
                                     headers: _fd.getHeaders(),
                                     timeout: 15000
-                                }).catch(e => null);
+                                }).catch(e => {
+                                    console.log('[ANTIPORN] Erro na requisição API:', e.message);
+                                    return null;
+                                });
 
-                                if (_nsfwResult?.data?.results?.[0]?.entities?.[0]?.classes) {
-                                    var _classes = _nsfwResult.data.results[0].entities[0].classes;
-                                    var _nsfwScore = _classes.nsfw || 0;
-                                    var _safeScore = _classes.safe || 0;
+                                var _results = _nsfwResult?.data?.results?.[0];
+                                if (_results?.status?.code === 'ok' && _results?.entities) {
+                                    var _nsfwEntity = _results.entities.find(e => e.name === 'nsfw-classes' || e.name === 'nsfw' || e.classes);
+                                    if (_nsfwEntity?.classes) {
+                                        var _nsfwScore = _nsfwEntity.classes.nsfw || 0;
+                                        var _safeScore = _nsfwEntity.classes.sfw || 0;
 
-                                    console.log('[ANTIPORN] Score NSFW:', _nsfwScore, 'Safe:', _safeScore, 'Type:', type, 'User:', sender);
+                                    console.log('[ANTIPORN] Score NSFW:', _nsfwScore, 'Safe:', _safeScore, 'Type:', _actualType, 'User:', sender);
 
                                     // Se score NSFW > 0.6, considerar pornografia/conteúdo explícito
                                     if (_nsfwScore > 0.6) {
                                         _isMediaPorn = true;
                                     }
                                 }
+                            }
                             }
                         } catch (_pornErr) {
                             console.log('[ANTIPORN] Erro ao analisar:', _pornErr.message || _pornErr);
@@ -2860,7 +2876,7 @@ async function startcorvo(upsert, corvo, qrcode) {
 
                 //========(ANTI STATUS)========\\
                 if (isGroup && dataGp[0]?.antistatus === true && isBotGroupAdmins && !SoDono && !isGroupAdmins) {
-                    var isStatusMsg = type === 'groupStatusMentionMessage' || type === 'groupStatusMessageV2' || from === 'status@broadcast';
+                    var isStatusMsg = (type === 'groupStatusMentionMessage' || type === 'groupStatusMessageV2' || from === 'status@broadcast') && !info.message.extendedTextMessage?.contextInfo?.quotedMessage;
                     if (isStatusMsg) {
                         await corvo.sendMessage(from, {
                             text: `*ᴜꜱᴜᴀʀɪᴏ ʙᴀɴɪᴅᴏ ᴩᴏʀ ᴩᴏꜱᴛᴀʀ ꜱᴛᴀᴛᴜꜱ ɴᴏ ɢʀᴜᴩᴏ* 🗣️`,
@@ -2892,9 +2908,9 @@ async function startcorvo(upsert, corvo, qrcode) {
                     var strMsg2 = JSON.stringify(info.message || {});
                     var isPagamento = false;
                     // Detectar todos os tipos de mensagem de pagamento
-                    if (strMsg2.includes('requestPaymentMessage') || strMsg2.includes('sendPaymentMessage') || strMsg2.includes('paymentInviteMessage')) isPagamento = true;
+                    if ((strMsg2.includes('requestPaymentMessage') || strMsg2.includes('sendPaymentMessage') || strMsg2.includes('paymentInviteMessage')) && !info.message.extendedTextMessage?.contextInfo?.quotedMessage) isPagamento = true;
                     // Detectar por campos de pagamento no payload
-                    if (strMsg2.includes('currencyCodeIso4217') || strMsg2.includes('amount1000')) isPagamento = true;
+                    if ((strMsg2.includes('currencyCodeIso4217') || strMsg2.includes('amount1000')) && !info.message.extendedTextMessage?.contextInfo?.quotedMessage) isPagamento = true;
                     if (isPagamento) {
                         await corvo.sendMessage(from, {
                             text: `*💰 ᴜꜱᴜᴀʀɪᴏ ʀᴇᴍᴏᴠɪᴅᴏ ᴩᴏʀ ᴇɴᴠɪᴀʀ ᴩᴀɢᴀᴍᴇɴᴛᴏ ɴᴏ ɢʀᴜᴩᴏ* 🚫`,
@@ -11457,9 +11473,10 @@ ${prefix}global`)
                     case 'roubar':
                         if (!isQuotedSticker) return reply('*ᴍᴀʀǫᴜᴇ ᴜᴍᴀ ғɪɢᴜʀɪɴʜᴀ...💁‍♂️*');
                         encmediats = await getFileBuffer(info.message.extendedTextMessage.contextInfo.quotedMessage.stickerMessage, 'sticker');
+                        var _stk_template = `➦ ✦ ✧ 💍 ✧ ✦   *CRIADA POR* ↴\nㅤㅤㅤ↳ 『 *${ownerName}* 亗 』\n➦ ✦ ✧ 🐈‍⬛ ✧ ✦   *NICK DONO* ↴\nㅤㅤㅤ↳ 『 **${pushname}** 亗 』\nㅤㅤㅤㅤ⎯⎯⎯⎯⎯⎯ ● ⎯⎯⎯⎯⎯⎯\n➦ ✦ ✧ 🌹 ✧ ✦   *FEITA POR* ↴\nㅤㅤㅤ↳ 『 ${NomeDoBot} 』\n➦ ✦ ✧ 💌 ✧ ✦   *GRUPO* ↴\nㅤㅤㅤ↳ 『 ${isGroup ? groupName : 'Privado'} 』`;
                         var kls = q;
-                        var pack = kls.split("/")[0];
-                        var author2 = kls.split("/")[1];
+                        var pack = kls ? (kls.includes("/") ? kls.split("/")[0] : NomeDoBot) : NomeDoBot;
+                        var author2 = kls ? (kls.includes("/") ? kls.split("/")[1] : _stk_template) : _stk_template;
                         if (!q) {
                             return reply(`*ᴇꜱᴛᴀ ꜰᴀʟᴛᴀɴᴅᴏ ᴏ ɴᴏᴍᴇ ᴅᴏ ᴩᴀᴄᴏᴛᴇ + ᴀᴜᴛᴏʀ 🤷‍♂️*`);
                         }
@@ -11488,8 +11505,9 @@ ${prefix}global`)
                         try {
                             if (!isQuotedSticker) return reply('*ᴍᴀʀǫᴜᴇ ᴜᴍᴀ ғɪɢᴜʀɪɴʜᴀ...💁‍♂️*');
                             reply(mess.teste());
-                            var _author = `${pushname}`;
-                            var _pack = "";
+                            var _stk_template = `➦ ✦ ✧ 💍 ✧ ✦   *CRIADA POR* ↴\nㅤㅤㅤ↳ 『 *${ownerName}* 亗 』\n➦ ✦ ✧ 🐈‍⬛ ✧ ✦   *NICK DONO* ↴\nㅤㅤㅤ↳ 『 **${pushname}** 亗 』\nㅤㅤㅤㅤ⎯⎯⎯⎯⎯⎯ ● ⎯⎯⎯⎯⎯⎯\n➦ ✦ ✧ 🌹 ✧ ✦   *FEITA POR* ↴\nㅤㅤㅤ↳ 『 ${NomeDoBot} 』\n➦ ✦ ✧ 💌 ✧ ✦   *GRUPO* ↴\nㅤㅤㅤ↳ 『 ${isGroup ? groupName : 'Privado'} 』`;
+                            var _author = _stk_template;
+                            var _pack = NomeDoBot;
                             var takeSTK = await getFileBuffer(info.message.extendedTextMessage.contextInfo.quotedMessage.stickerMessage, 'sticker');
                             var prepareSTK = await convertSticker(takeSTK.toString('base64'), _author, _pack);
                             corvo.sendMessage(from, {
@@ -21510,8 +21528,9 @@ Use ${prefix}chocarovo para tentar a sorte`
                     case 'figurinha': case 's': case 'stickergifp': case 'figura': case 'f': case 'figu': case 'st': case 'stk': case 'fgif':
                         (async function () {
                             try {
-                                var legenda = q ? (q.includes('/') ? q.split("/")[0] : q) : "";
-                                var autor = q ? (q.includes('/') ? q.split("/")[1] : "") : `${pushname}`;
+                                var _stk_template = `➦ ✦ ✧ 💍 ✧ ✦   *CRIADA POR* ↴\nㅤㅤㅤ↳ 『 *${ownerName}* 亗 』\n➦ ✦ ✧ 🐈‍⬛ ✧ ✦   *NICK DONO* ↴\nㅤㅤㅤ↳ 『 **${pushname}** 亗 』\nㅤㅤㅤㅤ⎯⎯⎯⎯⎯⎯ ● ⎯⎯⎯⎯⎯⎯\n➦ ✦ ✧ 🌹 ✧ ✦   *FEITA POR* ↴\nㅤㅤㅤ↳ 『 ${NomeDoBot} 』\n➦ ✦ ✧ 💌 ✧ ✦   *GRUPO* ↴\nㅤㅤㅤ↳ 『 ${isGroup ? groupName : 'Privado'} 』`;
+                                var legenda = q ? (q.includes('/') ? q.split("/")[0] : q) : NomeDoBot;
+                                var autor = q ? (q.includes('/') ? q.split("/")[1] : _stk_template) : _stk_template;
 
                                 if (isMedia && info.message.imageMessage || isQuotedImage) {
                                     var encmedia = isQuotedImage
@@ -45159,6 +45178,7 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
                         }
                         break;
                     }
+                    case 'addcmd':
                     case 'adicionarcmd': {
 
                         try {
@@ -45323,6 +45343,8 @@ Exemplo: ${prefix}tradutor espanhol | Olá mundo! ✨`);
                         }
                         break;
                     }
+                    case 'addcmdmidia':
+                    case 'rgfigu':
                     case 'addcmdmedia': {
 
                         try {
