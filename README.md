@@ -1,99 +1,305 @@
-# 🦅 CorvoBot - O Robô Multifuncional para WhatsApp 🦅
+# 🦅 CorvoBot - O Robô de IA Multifuncional para WhatsApp
 
-Bem-vindo ao **CorvoBot**, a solução definitiva para automação, entretenimento e gerenciamento de grupos no WhatsApp. Construído com tecnologia de ponta e focado em oferecer a melhor experiência para o usuário.
+<div align="center">
+
+![WhatsApp](https://img.shields.io/badge/WhatsApp-25D366?style=flat-square&logo=whatsapp&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-v18+-339933?style=flat-square&logo=node.js&logoColor=white)
+![Groq AI](https://img.shields.io/badge/Groq-AI--Powered-FF6B6B?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=flat-square)
+
+**A solução definitiva para automação, entretenimento e gerenciamento inteligente de grupos no WhatsApp** 🚀
+
+[Features](#-features) • [Instalação](#-instalação-rápida) • [Jogos](#-ecossistema-de-jogos) • [Comandos](#-principais-comandos) • [Contribuir](#-contribuindo) • [Suporte](#-suporte)
+
+</div>
 
 ---
 
-## 🚀 Guia de Instalação Rápida
+## 🌟 O que é CorvoBot?
 
-### 1. Pré-requisitos
-* **Node.js** (v18 ou superior)
-* **Git**
-* Um celular com WhatsApp para pareamento
+**CorvoBot** é um bot revolucionário para WhatsApp alimentado por **Groq AI**, combinando inteligência artificial avançada com um vasto ecossistema de jogos, ferramentas de automação e recursos de administração. Com mais de **25+ jogos multiplayer**, suporte a IA contextual e integração com redes sociais, CorvoBot transforma seu WhatsApp em uma plataforma completa de entretenimento e produtividade.
 
-### 2. Instalação
+> 💡 Desde jogos clássicos até apostas automáticas, do gerenciamento de grupos até downloads de qualquer rede social - **tudo em um só lugar**.
+
+---
+
+## ⚡ Features Principais
+
+### 🎮 Ecossistema de Jogos (25+)
+
+<table>
+<tr>
+<td>
+
+**🎯 Clássicos Atemporais**
+- Jogo da Velha
+- Dama
+- Lig-4
+- Batalha Naval
+- Forca
+- Stop (Cidades)
+
+</td>
+<td>
+
+**🎲 Cassino & Apostas**
+- Roleta Russa
+- Blackjack (21)
+- Aposta de Corrida
+- Sorteio de Coins
+- Roleta com Multiplicadores
+- Caça-níqueis (Slots)
+
+</td>
+</tr>
+<tr>
+<td>
+
+**👥 Social & Party**
+- Lobisomem
+- Detetive
+- Monopoly (Banco Imobiliário)
+- Quiz Temático
+- Rimas & Palavras
+- Verdade ou Desafio
+
+</td>
+<td>
+
+**🧩 Desafios & Lógica**
+- Gartic (Desenho Colaborativo)
+- Jogo de Rimas
+- Quiz de Futebol & Animais
+- Tesouro Escondido
+- UNO Multiplayer
+- Jokenpo (Pedra, Papel, Tesoura)
+
+</td>
+</tr>
+</table>
+
+### 🤖 Inteligência Artificial & IA
+
+- **IA Contextual:** Conversa natural com compreensão de contexto
+- **Execução Autônoma:** A IA pode executar comandos automaticamente
+- **Sistema de Memória:** Lembra interações passadas para conversas mais personalizadas
+- **Suporte Groq:** Processamento rápido e eficiente com Groq API
+
+### 🛡️ Administração & Segurança de Grupos
+
+- **Anti-Link:** Bloqueio de links (modo Hard/Easy)
+- **Anti-Fake:** Detecção de contas suspeitas
+- **Anti-Spam & Bot:** Proteção contra spam e bots maliciosos
+- **Gestão de Membros:** Promover, rebaixar, banir com logs
+- **Lista Negra:** Sistema global e por grupo
+- **Agendamento:** Automação de abertura/fechamento
+
+### 📥 Ferramentas de Download
+
+Baixe conteúdo de:
+- 📸 Instagram (fotos, vídeos, reels)
+- 🎬 TikTok (vídeos sem marca d'água)
+- 🎥 YouTube (vídeos, áudio, playlists)
+- 🐦 Twitter/X (tweets, vídeos)
+- 📱 Facebook (vídeos, fotos)
+- 🎵 Spotify (informações de músicas)
+- 🎮 Outros (MediaFire, Google Drive, etc)
+
+### 🎁 Sistema de Economia
+
+- **Coins:** Sistema de moeda virtual
+- **Daily Rewards:** Recompensas diárias para usuários ativos
+- **Apostas:** Ganhe ou perca coins em jogos
+- **Banco:** Armazene e gerencie seu dinheiro virtual
+
+---
+
+## 🚀 Instalação Rápida
+
+### Pré-requisitos
+- **Node.js** v18 ou superior
+- **Git**
+- Um celular com WhatsApp para pareamento
+- Chave da API **Groq** (gratuita em [console.groq.com](https://console.groq.com))
+
+### Passo 1: Clonar e Instalar
+
 ```bash
 # Clone o repositório
 git clone https://github.com/mg5860606-ux/corvo-bot-ia.git
-
-# Acesse o diretório
 cd corvo-bot-ia
 
 # Instale as dependências
 npm install
 ```
 
-### 3. Configuração e Inicialização
-O CorvoBot possui um assistente de configuração interativo. Basta iniciar e seguir as instruções no console:
+### Passo 2: Configurar
+
 ```bash
+# Inicie o bot (setup interativo)
 npm start
 ```
-*Você precisará informar o nome do bot, seu nome e seu número.*
+
+O bot guiará você através:
+- Nome do bot
+- Seu nome
+- Seu número WhatsApp
+- Chave da API Groq
+
+### Passo 3: Pareamento
+
+1. Escaneie o **QR Code** com seu WhatsApp
+2. O bot conectará automaticamente
+3. Pronto! Bot online 🎉
 
 ---
 
-## 🎮 Ecossistema de Jogos (Multiplayer & Solo)
+## 📋 Principais Comandos
 
-O CorvoBot vem carregado com uma vasta biblioteca de jogos interativos para seus grupos:
+| Comando | Descrição |
+|---------|-----------|
+| `.menu` | Exibe menu principal de comandos |
+| `.admin` | Painel de administração |
+| `.games` | Lista de jogos disponíveis |
+| `.velha` / `.dama` / `.lig4` | Iniciar jogo contra o bot |
+| `.lobisomem` / `.detetive` | Jogos em grupo (multiplayer) |
+| `.apostacorrida` | Aposta em corrida de cavalos |
+| `.roleta` | Roleta russa com ganhos |
+| `.ia sua pergunta` | Converse com a IA |
+| `.ytdl [url]` | Baixar vídeo do YouTube |
+| `.tiktok [url]` | Baixar vídeo do TikTok |
+| `.insta [url]` | Baixar do Instagram |
 
-| Categoria | Jogos Disponíveis |
-| :--- | :--- |
-| **Clássicos** | Jogo da Velha, Dama, Lig 4, Batalha Naval, Forca, Stop |
-| **Estratégia & RPG** | Lobisomem, Detetive, Monopoly (Banco Imobiliário) |
-| **Cassino & Apostas** | Roleta, 21 (Blackjack), Aposta de Corrida, Sorteio de Coins |
-| **Quizz & Raciocínio** | Gartic, Quiz de Futebol, Quiz de Animais, Rimas |
-
----
-
-## ✨ Funcionalidades Premium
-
-* **Integração IA:** Suporte para **Groq**, permitindo conversas fluidas e inteligentes.
-* **Memória Contextual:** O bot lembra de interações passadas para conversas mais naturais.
-* **Ações Autônomas:** A IA pode executar comandos do bot (ex: baixar vídeos) por conta própria se solicitado.
-
-### 🛡️ Administração de Grupos
-* **Segurança Total:** Sistemas de Anti-Link (Hard/Easy), Anti-Fake, Anti-Spam e Anti-Bot.
-* **Gestão de Membros:** Promoção/Rebaixamento, Banimento, Lista Negra (Global e por Grupo).
-* **Automação:** Agendamento de abertura/fechamento de grupo.
-
-### 📥 Ferramentas de Download
-* Baixe conteúdo das principais redes sociais: **Instagram, TikTok, YouTube, Twitter (X), Facebook** e mais.
+> 💡 Use `.menu` dentro do WhatsApp para ver a lista **completa** e atualizada!
 
 ---
 
-## 🛠️ Configurações
+## 🏇 Exemplo: Como Funciona a Aposta de Corrida
 
-Para ajustes manuais, os arquivos de configuração estão localizados em:
-* `DADOS DO CORVO/INFO_CORVO/media/`
-* Chaves da API Groq: `database/groq_keys.json`
-
-## 🏇 Como Funciona: Aposta de Corrida
-
-O **Aposta de Corrida** é um dos mini-games mais emocionantes do CorvoBot! Veja como participar:
-
-1. **Iniciar a Corrida:** Use o comando `.apostacorrida` para abrir uma nova rodada.
-2. **Escolher seu Competidor:** O bot apresentará 4 competidores (representados por emojis aleatórios como 🏎️, 🚀, 🐎, etc.).
-3. **Fazer sua Aposta:** Durante a fase de apostas, use:
-   `apostar [número_do_competidor] [valor]`
-   *Exemplo:* `apostar 2 500` (aposta 500 coins no competidor 2).
-4. **A Corrida:** Após o tempo de aposta, a corrida começa! Os competidores avançam aleatoriamente até a linha de chegada.
-5. **Premiação:** Se o seu competidor vencer, você recebe o prêmio baseado na sua aposta!
+1. **Iniciar:** `.apostacorrida`
+2. **O bot mostra:** 4 competidores aleatórios (🏎️ 🚀 🐎 ⚡)
+3. **Você aposta:** `apostar 2 1000` (aposta 1000 coins no competidor 2)
+4. **A corrida começa** após fechamento das apostas
+5. **Resultado:** Ganha se seu competidor vencer! 🏆
 
 ---
 
-## 🌟 Novidades (Maio 2026)
-* ✅ **Novo Jogo:** Aposta de Corrida (Corrida de Cavalos com sistema de apostas).
-* ✅ **Correção de Bugs:** Nomes de participantes agora aparecem corretamente em todos os jogos.
-* ✅ **Performance:** Redução no tempo de resposta dos comandos de menu.
-* ✅ **Estabilidade:** Melhorias no sistema de banco de dados para evitar perda de coins.
+## ⚙️ Configuração Avançada
+
+### Variáveis de Ambiente
+
+Crie um arquivo `.env` na raiz:
+
+```env
+GROQ_API_KEY=sua_chave_aqui
+BOT_NAME=CorvoBot
+OWNER_NUMBER=55119999999
+```
+
+### Arquivos de Configuração
+
+- **`database/groq_keys.json`** - Chaves da API Groq (rotação automática)
+- **`DADOS DO CORVO/`** - Dados persistentes de usuários e jogos
+- **`settings/lib/menus.js`** - Personalizar menus
 
 ---
 
-> [!TIP]
-> Use o comando `.menu` para ver a lista completa de comandos disponíveis diretamente no WhatsApp!
+## 🎯 Roadmap & Futuras Features
 
-> [!IMPORTANT]
-> Mantenha suas chaves de API seguras e nunca as compartilhe publicamente.
+- [ ] 📊 Dashboard web para estatísticas
+- [ ] 🎨 Customização de temas e menus
+- [ ] 🌐 Suporte multilíngue
+- [ ] 📈 Sistema de ranking global
+- [ ] 🎬 Integração com Twitch
+- [ ] 🤝 Sistema de clãs/guildas
+- [ ] 🎪 Novos jogos semanais
 
 ---
-*Criado por [Corvo] - Elevando sua experiência no WhatsApp.*
+
+## 🛠️ Troubleshooting
+
+### Bot não conecta
+```bash
+# Tente reiniciar
+npm start
+
+# Ou limpe cache
+rm -rf node_modules package-lock.json
+npm install
+npm start
+```
+
+### Erro de API Groq
+- Verifique sua chave em [console.groq.com](https://console.groq.com)
+- Garanta que a chave não expirou
+- Tente adicionar uma nova chave
+
+### Bot desconecta
+- Evite deixar abas do WhatsApp Web abertas
+- Reinicie regularmente com `npm start`
+
+---
+
+## 🤝 Contribuindo
+
+Adoramos contribuições! Se você tem uma ideia:
+
+1. **Fork** o repositório
+2. Crie uma branch (`git checkout -b feature/incrivel`)
+3. Commit suas mudanças (`git commit -m 'Add feature incrível'`)
+4. Push (`git push origin feature/incrivel`)
+5. Abra um **Pull Request**
+
+---
+
+## 📝 Estrutura do Projeto
+
+```
+corvo-bot-ia/
+├── corvo.js                 # Bot principal
+├── package.json             # Dependências
+├── ARQUIVES/
+│   ├── ai_core.js          # IA e Groq integration
+│   ├── funcoes/            # Funções auxiliares
+│   ├── games/              # Lógica dos jogos
+│   └── sticker/            # Processamento de stickers
+├── DADOS DO CORVO/         # Banco de dados persistente
+│   ├── usuarios/           # Dados de usuários
+│   └── INFO_CORVO/         # Configurações
+└── settings/               # Configuração e menus
+```
+
+---
+
+## 💬 Suporte & Comunidade
+
+- 📧 **Issues:** Use a aba [Issues](https://github.com/mg5860606-ux/corvo-bot-ia/issues) para reportar bugs
+- 💬 **Discussões:** [GitHub Discussions](https://github.com/mg5860606-ux/corvo-bot-ia/discussions)
+- 🐦 **Twitter:** [@CorvoBot](https://twitter.com)
+
+---
+
+## 📄 Licença
+
+Distribuído sob a licença **MIT**. Veja [LICENSE](LICENSE) para detalhes.
+
+---
+
+## 🌟 Créditos
+
+Desenvolvido com ❤️ pelo time **CorvoBot**
+
+- **Groq API** - Processamento de IA
+- **Baileys** - Cliente WhatsApp
+- **Node.js Community** - Ferramentas e bibliotecas
+
+---
+
+<div align="center">
+
+**[⭐ Deixe uma estrela se gostou!](https://github.com/mg5860606-ux/corvo-bot-ia)**
+
+*Elevando sua experiência no WhatsApp desde 2024* 🚀
+
+</div>
