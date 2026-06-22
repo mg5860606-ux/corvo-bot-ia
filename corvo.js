@@ -7547,9 +7547,16 @@ ${prefix}antiemoji off`)
                         reply("🔄 *Iniciando atualização do bot pelo GitHub...*\nPor favor, aguarde alguns segundos!");
                         try {
                             const { exec } = require("child_process");
-                            exec("git fetch origin main && git reset --hard origin/main", async (err, stdout, stderr) => {
+                            const path = require('path');
+                            // Garantir que o comando git rode na pasta do repositório (onde está este arquivo)
+                            const repoDir = path.resolve(__dirname);
+                            const gitCmd = "git fetch origin main && git reset --hard origin/main";
+
+                            exec(gitCmd, { cwd: repoDir }, async (err, stdout, stderr) => {
                                 if (err) {
-                                    reply("❌ *Erro ao atualizar:*\n" + err.message);
+                                    // Mostrar cwd e stderr para facilitar diagnóstico remoto
+                                    reply(`❌ *Erro ao atualizar:*\n${err.message}\n\nPasta atual: ${repoDir}\n${stderr ? '\nGit stderr:\n' + stderr : ''}`);
+                                    console.error('Erro ao executar atualização (cwd=' + repoDir + '):', err, stderr);
                                     return;
                                 }
 
