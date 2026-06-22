@@ -20,6 +20,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const moment = require('moment-timezone');
 const webp = require("node-webpmux");
 const crypto = require("crypto");
+const path = require('path');
 
 var corzinhas = ["red", "green", "yellow", "blue","magenta", "cyan", "", "gray", "redBright","greenBright", "yellowBright", "blueBright", "magentaBright", "cyanBright", "whiteBright"];
 const cor1 = corzinhas[Math.floor(Math.random() * (corzinhas.length))];	
@@ -128,22 +129,22 @@ async function pegarCases(nomes = []) {
 }
 
 function carregarMidia(customName = "fotomenu") {
-    const pasta = './DADOS DO CORVO/INFO_CORVO/LOGOS'
-    const image = `${pasta}/${customName}.png`
-    const video = `${pasta}/${customName}.mp4`
-    if (fs.existsSync(video)) {
-        return {
-            type: "video",
-            data: fs.readFileSync(video)
+    // Use absolute paths relative to this file to avoid cwd issues when the bot is started elsewhere
+    const pasta = path.resolve(__dirname, '..', '..', 'DADOS DO CORVO', 'INFO_CORVO', 'LOGOS');
+    const imagePath = path.join(pasta, `${customName}.png`);
+    const videoPath = path.join(pasta, `${customName}.mp4`);
+
+    try {
+        if (fs.existsSync(videoPath)) {
+            return { type: 'video', data: fs.readFileSync(videoPath) };
         }
-    }
-    if (fs.existsSync(image)) {
-        return {
-            type: "image",
-            data: fs.readFileSync(image)
+        if (fs.existsSync(imagePath)) {
+            return { type: 'image', data: fs.readFileSync(imagePath) };
         }
+    } catch (err) {
+        console.error('carregarMidia error:', err);
     }
-    return { type: "text" }
+    return { type: 'text' };
 }
 
 
