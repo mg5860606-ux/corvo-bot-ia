@@ -47,8 +47,7 @@ O CorvoBot vem carregado com uma vasta biblioteca de jogos interativos para seus
 
 ## ✨ Funcionalidades Premium
 
-* (Recursos de IA foram removidos nesta versão.)
-* **Integração Multimodal:** Suporte para **Google Gemini** e **Groq**, permitindo conversas fluidas e inteligentes.
+* **Integração IA:** Suporte para **Groq**, permitindo conversas fluidas e inteligentes.
 * **Memória Contextual:** O bot lembra de interações passadas para conversas mais naturais.
 * **Ações Autônomas:** A IA pode executar comandos do bot (ex: baixar vídeos) por conta própria se solicitado.
 

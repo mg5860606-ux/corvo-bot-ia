@@ -76,7 +76,6 @@ if (typeof globalThis.Path2D === 'undefined') {
 
 const pdfParse = require('pdf-parse');
 const googleIt = require('google-it');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // =================== LOCAL MEMORY CONFIGURATION ===================
 
@@ -469,17 +468,7 @@ global.APIS = {
 
 
 
-    // 4. GOOGLE GEMINI
-    // Serve para: Respostas alternativas e visão computacional.
-    // Onde pegar: https://aistudio.google.com/app/apikey (Gratuito)
-    GEMINI_KEY: "COLOQUE_SUA_API_KEY_AQUI",
-
-    // 5. OPENROUTER
-    // Serve para: Acesso a dezenas de modelos de IA no comando /chatgpt.
-    // Onde pegar: https://openrouter.ai/keys (Tem opções gratuitas)
-    OPENROUTER_KEY: "sk-or-v1-a62...fda",
-
-    // 6. ASSEMBLY AI
+    // 5. ASSEMBLY AI
     // Serve para: Transcrição de áudio para texto.
     // Onde pegar: https://www.assemblyai.com/dashboard/api-keys
     ASSEMBLYAI_KEY: "22be3718b6bf42019d9cc59f70133b83",
@@ -528,59 +517,29 @@ global.SHIZUKU_KEY = global.APIS.SHIZUKU_KEY;
 var Shizukusite = global.APIS.SHIZUKU_URL;
 
 const CONFIG_ADMIN = {
-    SPIDERX_API_KEY: global.APIS.SPIDERX_KEY,
-    GEMINI_API_KEY: global.APIS.GEMINI_KEY
+    SPIDERX_API_KEY: global.APIS.SPIDERX_KEY
 };
 // ==============================================================
 
 // =================== INTELIGÊNCIA ARTIFICIAL ===================
-const genAI = new GoogleGenerativeAI(CONFIG_ADMIN.GEMINI_API_KEY);
-
-async function callGeminiAI(prompt, system, mediaData = null, chatId = "default") {
+async function callGroqAI(prompt, system) {
     try {
-        const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash",
-            tools: [{ googleSearch: {} }] // Ativa acesso à internet nativo
-        });
-
-        global.aiHistory = global.aiHistory || {};
-        let memory = global.aiHistory[chatId] || [];
-        let memoryContext = memory.length > 0 ? "\n\n=== SUAS LEMBRANÇAS DESSA CONVERSA ===\n" + memory.join("\n") + "\n=======================================\n\n" : "";
-
-        let contentParts = [];
-        if (mediaData && mediaData.data && mediaData.mimeType) {
-            contentParts.push({
-                inlineData: {
-                    data: mediaData.data,
-                    mimeType: mediaData.mimeType
-                }
-            });
+        let query = system ? `${system}\n\n${prompt}` : prompt;
+        const res = await fetchJson(`https://api.zenzxz.my.id/ai/chatgpt?q=${encodeURIComponent(query)}`);
+        let resultado = res.result || res.data || res.message || res.response || res.text || res.answer || '';
+        if (typeof resultado === 'object' && resultado !== null) {
+            resultado = resultado.message || resultado.text || resultado.response || resultado.answer || resultado.content || JSON.stringify(resultado);
         }
-        contentParts.push({ text: system + memoryContext + "\n\nMensagem atual: " + prompt });
-
-        const result = await model.generateContent(contentParts);
-        let resultText = result.response.text();
-
-        memory.push(`Pessoa: ${prompt}`);
-        memory.push(`Você: ${resultText}`);
-        if (memory.length > 20) memory = memory.slice(-20); // Guarda últimas 20 interações
-        global.aiHistory[chatId] = memory;
-
-        return resultText;
+        return typeof resultado === 'string' ? resultado.trim() : '';
     } catch (e) {
-        console.error("ERRO GEMINI:", e.message);
-        return false;
+        console.error("ERRO AI Fallback:", e);
+        return "Desculpe, não consegui obter resposta no momento.";
     }
 }
 
-// ALIAS PARA NÃO QUEBRAR COMANDOS ANTIGOS (AGORA USAM GEMINI)
-async function callGroqAgent(prompt, pushname, from, botName, ownerName) {
+async function callGroqAgent(userPrompt, pushname, from = null, botName = "Corvo", ownerName = "Mestre") {
     const systemPrompt = `Você é o ${botName}, um assistente humano e sarcástico...\nO dono se chama ${ownerName}.`;
-    return await callGeminiAI(prompt, systemPrompt, null, from);
-}
-
-async function callGroqAI(prompt, system) {
-    return await callGeminiAI(prompt, system || "Você é um assistente prestativo.");
+    return await callGroqAI(`${systemPrompt}\n\n${userPrompt}`);
 }
 // ==============================================================
 
@@ -603,11 +562,11 @@ ESTILO DA RESPOSTA:
 ${estilo}`;
 
     try {
-        var resposta = await callGeminiAI(texto, promptFinal, mediaData, chatId);
+        var resposta = await callGroqAI(texto, promptFinal);
         if (resposta) return resposta;
-        throw new Error("Resposta vazia do Gemini");
+        throw new Error("Resposta vazia da IA");
     } catch (err) {
-        console.log("ERRO GEMINI RESPONDER IA:", err.message);
+        console.log("ERRO IA RESPONDER:", err.message);
         var res = await fetchJson(`https://api.zenzxz.my.id/ai/chatgpt?q=${encodeURIComponent(promptFinal)}`);
         var resultado = res.result || res.data || res.message || res.response || res.text || res.answer || '';
         if (typeof resultado === 'object' && resultado !== null) {
@@ -7167,70 +7126,18 @@ ${prefix}antiemoji off`)
                     case 'ia':
                     case 'chatgpt': {
                         try {
-                            // [REMOVIDO - já importado globalmente] var axios = require('axios')
-
                             var pergunta = q || body.slice((prefix + command).length).trim()
                             if (!pergunta) return reply(`Exemplo: ${prefix}gpt quem foi Einstein?`)
 
-                            // coloque sua key aqui
-                            var OPENROUTER_API_KEY = global.APIS.OPENROUTER_KEY;
-
-                            if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY === "SUA_KEY_AQUI") {
-                                return reply("❌ Configure sua API key do OpenRouter na case.")
+                            var res = await fetchJson(`https://api.zenzxz.my.id/ai/chatgpt?q=${encodeURIComponent(pergunta)}`);
+                            var resposta = res.result || res.data || res.message || res.response || res.text || res.answer || '';
+                            if (typeof resposta === 'object' && resposta !== null) {
+                                resposta = resposta.message || resposta.text || resposta.response || resposta.answer || resposta.content || JSON.stringify(resposta);
                             }
 
-                            var response = await axios.post(
-                                "https://openrouter.ai/api/v1/chat/completions",
-                                {
-                                    model: "openrouter/auto",
-                                    models: [
-                                        "deepseek/deepseek-r1:free",
-                                        "qwen/qwen3-14b:free",
-                                        "meta-llama/llama-3.3-8b-instruct:free"
-                                    ],
-                                    messages: [
-                                        {
-                                            role: "system",
-                                            content: `Você é ${NomeDoBot || "um assistente virtual"}.
-Responda em português do Brasil.
-Seja útil, natural e direto.`
-                                        },
-                                        {
-                                            role: "user",
-                                            content: pergunta
-                                        }
-                                    ]
-                                },
-                                {
-                                    headers: {
-                                        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                                        "Content-Type": "application/json",
-                                        "HTTP-Referer": "https://localhost",
-                                        "X-Title": NomeDoBot || "Bot WhatsApp"
-                                    },
-                                    timeout: 120000
-                                }
-                            )
-
-                            var resposta =
-                                response?.data?.choices?.[0]?.message?.content ||
-                                "Não consegui responder agora."
-
-                            reply(resposta)
-
+                            reply(typeof resposta === 'string' ? resposta.trim() : "Não consegui responder agora.")
                         } catch (e) {
                             console.log(e)
-
-                            var err = e?.response?.data || e?.message || String(e)
-
-                            if (String(err).includes("401")) {
-                                return reply("❌ API key inválida do OpenRouter.")
-                            }
-
-                            if (String(err).includes("429")) {
-                                return reply("❌ Limite temporário atingido nos modelos grátis. Tente novamente em instantes.")
-                            }
-
                             reply("❌ Erro ao consultar a IA.")
                         }
                     }
@@ -14784,36 +14691,6 @@ ${abc.letra}`;
                     }
                         break;
 
-                    case 'gemini': {
-                        if (!q) return reply('• Para conversar com o gemini, ' +
-                            'primeiro você deve inserir um texto ao lado ' +
-                            ' do comando!');
-                        try {
-                            var GEMINI_RESPONSE = await fetchJson(`https://corvoapis.site/api/ias/gemini?apitoken=${TOKEN}&query=${encodeURIComponent(q.trim())}`);
-
-                            reply(GEMINI_RESPONSE.resposta);
-                        } catch (error) {
-                            console.error(error);
-                            reply("❌ Erro ao processar.\n- Acesse: https://corvoapis.site e verifique se ainda contém requests no seu token.")
-                        }
-                        break;
-                    }
-
-                    case 'gemini-pro': {
-                        if (!q) return reply('• Para conversar com o gemini-pro, ' +
-                            'primeiro você deve inserir um texto ao lado ' +
-                            ' do comando!');
-                        try {
-                            var GEMPRO_RESPONSE = await fetchJson(`https://corvoapis.site/api/ias/gemini-pro?apitoken=${TOKEN}&query=${encodeURIComponent(q.trim())}`);
-                            reply(GEMPRO_RESPONSE.resposta.resposta);
-                        } catch (error) {
-                            console.error(error);
-                            reply("❌ Erro ao processar.\n- Acesse: https://corvoapis.site e verifique se ainda contém requests no seu token.")
-                        }
-                        break;
-                    }
-
-
                     case 'esportenoticias':
                     case 'esportenoticia':
                     case 'espnoticia':
@@ -15358,12 +15235,10 @@ ${abc.letra}`;
                         break;
 
                     case "menu_ia_lista": {
-                        var txt = `├─ ⊹ 𖤐 𝐼𝑁𝑇𝐸𝐿𝐼𝐺𝐸𝑁𝐶𝐼𝐴𝑆
+                        var txt = `├─ ⊹ 𖤐 𝐼𝑁𝑇𝐸𝐿𝐼𝐺𝐸̂𝑁𝐶𝐼𝐴𝑆
 ╎♱˖ ▸ ${prefix}gpt
 ╎♱˖ ▸ ${prefix}chatgpt
 ╎♱˖ ▸ ${prefix}ia
-╎♱˖ ▸ ${prefix}gemini
-╎♱˖ ▸ ${prefix}gemini-pro
 ╎♱˖ ▸ ${prefix}imagine
 ╎♱˖ ▸ ${prefix}createimg
 ╎♱˖ ▸ ${prefix}texttoimage
@@ -15995,7 +15870,6 @@ ${abc.letra}`;
 ╎♱˖ ▸ ${prefix}gpt
 ╎♱˖ ▸ ${prefix}chatgpt
 ╎♱˖ ▸ ${prefix}ia
-╎♱˖ ▸ ${prefix}gemini
 ╎♱˖ ▸ ${prefix}imagine
 ╎♱˖ ▸ ${prefix}createimg
 ╎♱˖ ▸ ${prefix}texttoimage
@@ -26504,19 +26378,17 @@ ${explicacao}`)
                     case 'gpt3':
                     case 'chatgpt3':
                         reagir(from, "💭");
-                        if (!q) return reply('❌ Envie uma mensagem para eu responder.\n\nExemplo: sandro gemini quem é você');
+                        if (!q) return reply('❌ Envie uma mensagem para eu responder.\n\nExemplo: sandro gpt quem é você');
 
                         try {
-                            var res = await fetch(`https://api.siputzx.my.id/api/ai/gemini-pro?content=${encodeURIComponent(q)}`);
-                            var json = await res.json();
-
-                            if (!json.status || !json.data) {
+                            var res = await fetchJson(`https://api.zenzxz.my.id/ai/chatgpt?q=${encodeURIComponent(q)}`);
+                            var respostaAI = res.result || res.data || res.message || res.response || res.text || res.answer || '';
+                            if (!respostaAI) {
                                 return reply('❌ Não consegui obter uma resposta.');
                             }
-
-                            reply(`🤖 *Resposta:*\n${json.data}`);
+                            reply(`🤖 *Resposta:*\n${typeof respostaAI === 'object' ? JSON.stringify(respostaAI) : respostaAI}`);
                         } catch (e) {
-                            console.error("Erro no comando 'gemini':", e);
+                            console.error("Erro no comando 'chatgpt3':", e);
                             reply('❌ Ocorreu um erro ao tentar responder.');
                         }
                         break;

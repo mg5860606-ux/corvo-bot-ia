@@ -161,7 +161,6 @@ return `​​​​​​​​​​​​​​​​​​​​​​​​
 ┇ | 📚⋆͜͡҈➳ *${prefix}imagine*
 ┇ | 📚⋆͜͡҈➳ *${prefix}gimage*
 ┇ | 📚⋆͜͡҈➳ *${prefix}pinterest*
-┇ | 📚⋆͜͡҈➳ *${prefix}gemini*
 ┇ | 📚⋆͜͡҈➳ *${prefix}cotacao*
 ┇ | 📚⋆͜͡҈➳ *${prefix}dicionario*
 ┇╰┉━┅━┅━┅━┅━┅━┅━⋅≎⋆ᐧ

@@ -1,20 +1,12 @@
 const fs = require('fs');
 const { execSync } = require('child_process');
 const moment = require('moment-timezone');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Groq = require('groq-sdk');
 const { color } = require('../ARQUIVES/funcoes/exports.js');
 
 // Helper to access globals
 const getConfigGroq = () => global.CONFIG_GROQ || {
   KEYS: [], MODEL: "llama-3.3-70b-versatile"
-};
-
-const getConfigAdmin = () => global.CONFIG_ADMIN || {
-  MODEL_PRIMARY: "gemini-1.5-flash",
-  MODEL_SECONDARY: "gemini-1.5-pro",
-  MODEL_TERTIARY: "gemini-2.0-flash-exp",
-  GOOGLE_API_KEYS: []
 };
 
 // =========================================================================
@@ -69,21 +61,12 @@ async function callGroqAgent(userPrompt, pushName, from = null, botName = "Corvo
       const history = global.groqChatHistory[from];
       if (history.length > 50) global.groqChatHistory[from] = history.slice(-50);
 
-      // Carregar preferências se disponíveis
-      const userPrefs = global.userPreferences && global.userPreferences[from] ? 
-        "\nPREFERÊNCIAS DO USUÁRIO:\n" + Object.entries(global.userPreferences[from]).map(([k, v]) => `- ${k}: ${v}`).join("\n") : "";
-
       const systemInstruction = `Você é o ${botName}, um bot de WhatsApp com personalidade forte, sarcástica, extremamente humano e leal ao seu dono.
 Você NÃO é uma IA genérica ou assistente padrão, haja como um amigo real.
 REGRAS:
 1. Nunca diga que é robô, IA ou assistente. Você é o ${botName}.
 2. Seja prestativo mas mantenha sua personalidade sarcástica e direta.
-3. O usuário com quem você fala é o seu dono (${ownerName}), trate-o com respeito e lealdade absoluta, mas sem ser robótico.
-4. NUNCA pergunte qual é o seu próprio nome e NUNCA pergunte como o usuário quer ser chamado. Você já sabe que seu nome é ${botName} e seu dono é ${ownerName}.
-5. Mantenha as respostas concisas e naturais para o WhatsApp.
-6. Se o usuário te cumprimentar ou chamar, responda de forma inteligente e desenvolva o assunto.
-7. Se for mencionado em uma conversa de grupo, dê sua OPINIÃO sincera e sarcástica sobre o que estão falando.
-8. Se descobrir algo novo sobre o usuário (gostos, apelidos, preferências), você pode sugerir salvar usando a tag [SAVE_PREFERENCE: chave=valor].${userPrefs}`;
+3. Mantenha as respostas concisas e naturais para o WhatsApp.`;
 
       const messages = [
         { role: "system", content: systemInstruction },
@@ -99,7 +82,6 @@ REGRAS:
 
       const response = completion.choices[0]?.message?.content || "";
 
-      // Salvar no histórico
       global.groqChatHistory[from].push({ role: "user", content: userPrompt });
       global.groqChatHistory[from].push({ role: "assistant", content: response });
 
@@ -113,57 +95,4 @@ REGRAS:
   throw new Error("Todas as chaves do Groq no Agente falharam.");
 }
 
-// =========================================================================
-//                             LÓGICA GEMINI (FALLBACK)
-// =========================================================================
-
-async function callGeminiAI(prompt, mediaData = null, modelName = getConfigAdmin().MODEL_PRIMARY) {
-  const keys = getConfigAdmin().GOOGLE_API_KEYS.filter(k => k && k.trim() !== "" && k !== "COLOQUE_SUA_API_AQUI");
-  
-  if (keys.length === 0) {
-    return await callGroqAI(prompt);
-  }
-
-  for (let i = 0; i < keys.length; i++) {
-    const keyToUse = keys[global.currentApiKeyIndex];
-    global.currentApiKeyIndex = (global.currentApiKeyIndex + 1) % keys.length;
-
-    try {
-      const genAI = new GoogleGenerativeAI(keyToUse);
-      const model = genAI.getGenerativeModel({ model: modelName });
-      let parts = [{ text: prompt }];
-      if (mediaData) {
-        parts.push({ inlineData: { data: mediaData.data.toString("base64"), mimeType: mediaData.mimeType } });
-      }
-      const result = await model.generateContent(parts);
-      return (await result.response).text().trim();
-    } catch (e) {
-      console.error(` [AI-ERROR] Model ${modelName} failed:`, e.message);
-      if (e.message.includes("429") || e.message.includes("quota") || e.message.includes("API key not valid")) continue;
-      throw e;
-    }
-  }
-  return await callGroqAI(prompt);
-}
-
-async function callGeminiWithFallback(prompt, mediaData = null) {
-  try {
-    return await callGeminiAI(prompt, mediaData, getConfigAdmin().MODEL_PRIMARY);
-  } catch (e) {
-    return await callGroqAI(prompt);
-  }
-}
-
-async function callGeminiAgent(userPrompt, pushName, corvo = null, from = null) {
-  try {
-    return await callGroqAgent(userPrompt, pushName, from);
-  } catch (e) {
-    const keys = getConfigAdmin().GOOGLE_API_KEYS.filter(k => k && k.trim() !== "" && k !== "COLOQUE_SUA_API_AQUI");
-    if (keys.length > 0) {
-        return await callGeminiAI(userPrompt);
-    }
-    throw e;
-  }
-}
-
-module.exports = { callGeminiAI, callGeminiWithFallback, callGeminiAgent, callGroqAI, callGroqAgent };
+module.exports = { callGroqAI, callGroqAgent };
