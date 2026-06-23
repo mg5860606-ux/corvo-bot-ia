@@ -5191,7 +5191,6 @@ Agora vocês estão *casados* oficialmente! ❤️`,
                                 }
                             } catch (err) {
                                 console.error("[AGENT-ERROR]", err);
-                                reply(`Tô com uma dor de cabeça lascada agora, me dá um minuto pra eu reiniciar meus miolos... 🦇`);
                             }
                         } else {
                             // ===== MODO NORMAL (Produção - Individual por Usuário) =====
