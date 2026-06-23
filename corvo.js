@@ -49107,14 +49107,21 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                             const cmdToSearch = command || "menu";
                             var AB = similarityCmd(cmdToSearch);
                             if (AB[0].porcentagem >= 60) {
+                                var normalizeSuggestion = (value) => {
+                                    const text = String(value || '').trim();
+                                    if (!text) return prefix;
+                                    if (text.startsWith(prefix)) return text;
+                                    if (text.startsWith('/') || text.startsWith('.')) return text;
+                                    return `${prefix}${text}`;
+                                };
                                 var privateCmd = (pc, cmd, porcentagem) => {
                                     return `╭⊱♰ •🥀 : ᴄᴏᴍᴀɴᴅᴏ ɪɴᴠᴀʟɪᴅᴏ
 ╎⊹ 🥀 ɴᴀᴏ ᴇɴᴄᴏɴᴛʀᴇɪ: ${pc}
-╎⊹ 🥀 ᴠᴏᴄᴇ ǫᴜɪs ᴅɪᴢᴇʀ: ${prefix}${cmd} ?
+╎⊹ 🥀 ᴠᴏᴄᴇ ǫᴜɪs ᴅɪᴢᴇʀ: ${normalizeSuggestion(cmd)} ?
 ╎⊹ 🥀 sᴇᴍᴇʟʜᴀɴᴄᴀ: ${porcentagem.toFixed(0)}%
 ╰ : 🥀`;
                                 }
-                                var notcmd = privateCmd(prefix + (command || ""), AB[0].comando, AB[0].porcentagem);
+                                var notcmd = privateCmd(normalizeSuggestion(command || ""), AB[0].comando, AB[0].porcentagem);
                                 reply(notcmd);
                             }
                         }
