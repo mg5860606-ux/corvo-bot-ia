@@ -11,7 +11,7 @@
 
 //=============[ COMEÇO DE TUDO ]=============\\
 const { downloadContentFromMessage, relayWAMessage, mentionedJid, MediaType, Browser, MessageType, Presence, Mimetype, Browsers, delay, getLastMessageInChat, WA_DEFAULT_EPHEMERAL, generateWAMessageFromContent, proto, logger, makeInMemoryStore, getContentType, INativeFlowMessage, prepareWAMessageMedia, jidNormalizedUser, USyncQuery, USyncUser } = require('@whiskeysockets/baileys');
-
+const pathModule = require('path');
 
 // Cache global de LID -> telefone dos donos (resolvido automaticamente)
 if (!global.donoLidMap) global.donoLidMap = {};
@@ -522,8 +522,26 @@ const CONFIG_ADMIN = {
 // ==============================================================
 
 // =================== INTELIGÊNCIA ARTIFICIAL ===================
-// =================== INTELIGÊNCIA ARTIFICIAL ===================
+async function callGroqAI(prompt, system) {
+    try {
+        let query = system ? `${system}\n\n${prompt}` : prompt;
+        const res = await fetchJson(`https://api.zenzxz.my.id/ai/chatgpt?q=${encodeURIComponent(query)}`);
+        let resultado = res.result || res.data || res.message || res.response || res.text || res.answer || '';
+        if (typeof resultado === 'object' && resultado !== null) {
+            resultado = resultado.message || resultado.text || resultado.response || resultado.answer || resultado.content || JSON.stringify(resultado);
+        }
+        return typeof resultado === 'string' ? resultado.trim() : '';
+    } catch (e) {
+        console.error("ERRO AI Fallback:", e);
+        return "Desculpe, não consegui obter resposta no momento.";
+    }
+}
 
+async function callGroqAgent(userPrompt, pushname, from = null, botName = "Corvo", ownerName = "Mestre") {
+    const systemPrompt = `Você é o ${botName}, um assistente humano e sarcástico...\nO dono se chama ${ownerName}.`;
+    return await callGroqAI(`${systemPrompt}\n\n${userPrompt}`);
+}
+// ==============================================================
 
 async function responderIA(texto, estilo, mediaData = null, rolePermissions = "Membro Comum", chatId = "default") {
     var promptFinal = `Você é o ${setting.NomeDoBot || "Assistente"}, o próprio bot de WhatsApp.
@@ -681,21 +699,80 @@ async function startcorvo(upsert, corvo, qrcode) {
 
                     const finalCaption = header + caption;
 
-                    if (sendAudio && isAudioMenu) await sendAudioMenu(from);
-                    var midia = carregarMidia("fotomenu");
-                    var msg = { caption: finalCaption, contextInfo: { ...corvochannel, mentionedJid: [sender] } };
-                    if (midia.type === "video") {
-                        msg.video = midia.data;
-                        msg.gifPlayback = true;
-                    } else if (midia.type === "image") {
-                        msg.image = midia.data;
-                    } else {
-                        msg.text = finalCaption;
+                    console.log('sendMenu:', { from, sendAudio, isAudioMenu, sender });
+                    if (sendAudio && isAudioMenu) {
+                        try {
+                            await sendAudioMenu(from, selo);
+                        } catch (errAudio) {
+                            console.error('sendMenu: sendAudioMenu failed:', errAudio);
+                        }
                     }
+
+                    var midia = carregarMidia("fotomenu");
+                    console.log('sendMenu: midia type=', midia.type, 'data length=', midia.data ? (midia.data.length || 'unknown') : 'no data');
+
+                    const menuImagePath = pathModule.resolve('./DADOS DO CORVO/INFO_CORVO/LOGOS/fotomenu.png');
+                    const menuVideoPath = pathModule.resolve('./DADOS DO CORVO/INFO_CORVO/LOGOS/fotomenu.mp4');
+                    console.log('sendMenu: menuImagePath exists=', fs.existsSync(menuImagePath), 'menuVideoPath exists=', fs.existsSync(menuVideoPath));
+                    var msg = { caption: finalCaption, contextInfo: { mentionedJid: [sender] } };
+
+                    if (midia.type === "video" && Buffer.isBuffer(midia.data) && midia.data.length) {
+                        msg.video = midia.data;
+                        msg.mimetype = 'video/mp4';
+                        msg.gifPlayback = true;
+                    } else if (midia.type === "image" && Buffer.isBuffer(midia.data) && midia.data.length) {
+                        msg.image = midia.data;
+                        msg.mimetype = 'image/png';
+                    } else if (midia.type === "text") {
+                        msg.text = finalCaption;
+                        delete msg.caption;
+                    } else {
+                        console.log('sendMenu: unexpected midia type, falling back to text', midia);
+                        msg.text = finalCaption;
+                        delete msg.caption;
+                    }
+
+                    console.log('sendMenu: final msg keys=', Object.keys(msg), 'isImage=', !!msg.image, 'isVideo=', !!msg.video, 'isText=', !!msg.text, 'quotedId=', selo?.key?.id);
                     await corvo.sendMessage(from, msg, { quoted: selo });
                 } catch (e) {
-                    console.error(e);
+                    console.error('sendMenu error:', e);
                     await corvo.sendMessage(from, { text: caption, contextInfo: { ...corvochannel } }, { quoted: selo });
+                }
+            }
+
+            async function sendAudioMenu(from, selo) {
+                const menuAudioPath = pathModule.resolve('./DADOS DO CORVO/data/media/audios/menu.mp3');
+                try {
+                    if (!fs.existsSync(menuAudioPath)) {
+                        console.log('sendAudioMenu: arquivo não encontrado', menuAudioPath);
+                        return;
+                    }
+
+                    console.log('sendAudioMenu: enviando áudio do menu para', from, 'path:', menuAudioPath, 'quotedId=', selo?.key?.id);
+                    const audioMsg = {
+                        audio: fs.readFileSync(menuAudioPath),
+                        mimetype: 'audio/mpeg',
+                        fileName: 'menu.mp3',
+                        ptt: false,
+                        contextInfo: {},
+                    };
+                    console.log('sendAudioMenu: payload keys=', Object.keys(audioMsg), 'audioUrl=', audioMsg.audio.url);
+                    await corvo.sendMessage(from, audioMsg, { quoted: selo });
+                } catch (err) {
+                    console.log('Erro ao enviar áudio do menu:', err);
+                    try {
+                        var soundft = fs.readFileSync(menuAudioPath);
+                        console.log('sendAudioMenu: fallback using buffer, size=', soundft.length);
+                        await corvo.sendMessage(from, {
+                            audio: soundft,
+                            mimetype: 'audio/mpeg',
+                            fileName: 'menu.mp3',
+                            ptt: false,
+                            contextInfo: {},
+                        }, { quoted: selo });
+                    } catch (err2) {
+                        console.log('Erro fallback áudio do menu:', err2);
+                    }
                 }
             }
 
@@ -1159,10 +1236,10 @@ async function startcorvo(upsert, corvo, qrcode) {
                 function extrairTexto(info) {
                     var paths = ['message.conversation', 'message.sendPaymentMessage.noteMessage.extendedTextMessage.text', 'message.requestPaymentMessage.noteMessage.extendedTextMessage.text', 'message.viewOnceMessageV2.message.imageMessage.caption', 'message.viewOnceMessageV2.message.videoMessage.caption', 'message.imageMessage.caption', 'message.videoMessage.caption', 'message.extendedTextMessage.text', 'message.viewOnceMessage.message.videoMessage.caption', 'message.viewOnceMessage.message.imageMessage.caption', 'message.documentWithCaptionMessage.message.documentMessage.caption', 'message.buttonsMessage.imageMessage.caption', 'message.buttonsResponseMessage.selectedButtonId', 'message.listResponseMessage.singleSelectReply.selectedRowId', 'message.templateButtonReplyMessage.selectedId', 'message.pollCreationMessageV3.name', 'message.editedMessage.message.protocolMessage.editedMessage.extendedTextMessage.text', 'message.editedMessage.message.protocolMessage.editedMessage.imageMessage.caption', 'text', 'message.interactiveResponseMessage.nativeFlowResponseMessage.paramsJson'];
 
-                    for (var path of paths) {
-                        var value = path.split('.').reduce((obj, key) => obj?.[key], info);
+                    for (var textoPath of paths) {
+                        var value = textoPath.split('.').reduce((obj, key) => obj?.[key], info);
                         if (value) {
-                            if (path.includes('paramsJson')) {
+                            if (textoPath.includes('paramsJson')) {
                                 try {
                                     return JSON.parse(value)?.id || '';
                                 } catch {
@@ -1184,18 +1261,20 @@ async function startcorvo(upsert, corvo, qrcode) {
                     ? (jsonGp[0]?.prefixos[jsonGp[0]?.prefixos?.indexOf(String(body)?.trim()?.charAt(0))] || jsonGp[0].prefixos[0])
                     : (setting.prefix || "/");
 
-                var isCmd = body.startsWith(prefix) || body.startsWith("/") || body.startsWith(".");
+                // Só considerar comando quando a mensagem for texto/extendedText/list/template/button
+                var textLike = (type === 'conversation' || type === 'extendedTextMessage' || type === 'buttonsResponseMessage' || type === 'listResponseMessage' || type === 'templateButtonReplyMessage');
+                var isCmd = textLike && (body.startsWith(prefix) || body.startsWith("/") || body.startsWith("."));
 
                 var args = isCmd ? body.slice(prefix.length).trim().split(/[ \t]+/) : body.split(/[ \t]+/);
 
                 var command = isCmd ? args.shift().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ç/g, "c") : null;
 
-                if (!isCmd) {
+                if (!isCmd && textLike) {
                     const checkPref = body.trim().split(/[ \t]+/);
                     const firstWord = checkPref[0].toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ç/g, "c");
-                    if (['prefixo', 'vai', 'vaai', 'vaii'].includes(firstWord)) {
+                    if (firstWord === 'prefixo') {
                         isCmd = true;
-                        command = firstWord.startsWith('vai') ? 'vai' : 'prefixo';
+                        command = 'prefixo';
                         args = checkPref.slice(1);
                     }
                 }
@@ -1822,7 +1901,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                 //============(VERIFICADOS)============\\
 
                 if (nescessario.verificado) {
-                    var selo = { "key": { "participant": "0@s.whatsapp.net", "remoteJid": from, "fromMe": false }, "message": { "contactMessage": { "displayName": `${pushname}`, "vcard": `BEGIN:VCARD\nVERSION:3.0\nN:;${pushname};;;\nFN:${pushname}\nitem1.TEL;waid=13135550002:13135550002\nitem1.X-ABLabel:Celular\nEND:VCARD`, "contextInfo": { "forwardingScore": 1, "isForwarded": true } } } }
+                    var selo = { "key": { "participant": "0@s.whatsapp.net", "remoteJid": from, "fromMe": false }, "message": { "contactMessage": { "displayName": `${pushname}`, "vcard": `BEGIN:VCARD\nVERSION:3.0\nN:;${pushname};;;\nFN:${pushname}\nitem1.TEL;waid=13135550002:13135550002\nitem1.X-ABLabel:Celular\nEND:VCARD` } } };
                 } else {
                     var selo = info
                 }
@@ -1930,6 +2009,14 @@ async function startcorvo(upsert, corvo, qrcode) {
                                 }
                             ];
 
+                            // tentar carregar thumbnail do menu (se existir), senão fallback silencioso
+                            var _thumb = null;
+                            try {
+                                var thumbPath = './DADOS DO CORVO/INFO_CORVO/media/menu.jpg';
+                                if (fs.existsSync(thumbPath)) _thumb = await getBuffer(thumbPath);
+                                else if (setting.channel) _thumb = await getBuffer(setting.channel).catch(() => null);
+                            } catch (e) { _thumb = null }
+
                             var interactiveMessage = {
                                 viewOnceMessage: {
                                     message: {
@@ -1941,7 +2028,8 @@ async function startcorvo(upsert, corvo, qrcode) {
                                             },
                                             contextInfo: {
                                                 mentionedJid: [sender],
-                                                ...gerarContextNewsletter()
+                                                ...gerarContextNewsletter(),
+                                                externalAdReply: _thumb ? { title: NomeDoBot, body: textoPrefixo.slice(0, 100), thumbnail: _thumb, mediaType: 1, sourceUrl: setting.channel || '' } : undefined
                                             }
                                         }
                                     }
@@ -1965,17 +2053,6 @@ async function startcorvo(upsert, corvo, qrcode) {
                 // ======================================================
 
 
-                async function sendAudioMenu(from) {
-                    const menuAudioPath = './DADOS DO CORVO/data/media/audios/menu.mp3';
-                    if (fs.existsSync(menuAudioPath)) {
-                        var soundft = fs.readFileSync(menuAudioPath);
-                        await corvo.sendMessage(from, {
-                            audio: soundft,
-                            mimetype: "audio/mpeg",
-                            contextInfo: gerarContextNewsletter(),
-                        }, { quoted: selo });
-                    }
-                }
                 var corvochannel = gerarContextNewsletter();
 
                 async function sendUrlText(id, textCaption, title, desc, imageUrl, linkAcess, quotedThis) {
@@ -5173,6 +5250,7 @@ Agora vocês estão *casados* oficialmente! ❤️`,
                                 }
                             } catch (err) {
                                 console.error("[AGENT-ERROR]", err);
+                                reply(`Tô com uma dor de cabeça lascada agora, me dá um minuto pra eu reiniciar meus miolos... 🦇`);
                             }
                         } else {
                             // ===== MODO NORMAL (Produção - Individual por Usuário) =====
@@ -7528,16 +7606,9 @@ ${prefix}antiemoji off`)
                         reply("🔄 *Iniciando atualização do bot pelo GitHub...*\nPor favor, aguarde alguns segundos!");
                         try {
                             const { exec } = require("child_process");
-                            const path = require('path');
-                            // Garantir que o comando git rode na pasta do repositório (onde está este arquivo)
-                            const repoDir = path.resolve(__dirname);
-                            const gitCmd = "git fetch origin main && git reset --hard origin/main";
-
-                            exec(gitCmd, { cwd: repoDir }, async (err, stdout, stderr) => {
+                            exec("git fetch origin main && git reset --hard origin/main", async (err, stdout, stderr) => {
                                 if (err) {
-                                    // Mostrar cwd e stderr para facilitar diagnóstico remoto
-                                    reply(`❌ *Erro ao atualizar:*\n${err.message}\n\nPasta atual: ${repoDir}\n${stderr ? '\nGit stderr:\n' + stderr : ''}`);
-                                    console.error('Erro ao executar atualização (cwd=' + repoDir + '):', err, stderr);
+                                    reply("❌ *Erro ao atualizar:*\n" + err.message);
                                     return;
                                 }
 
@@ -10393,8 +10464,8 @@ ${prefix}global`)
                         if (!isGroup) return reply(mess.onlyGroup());
                         if (!isGroupAdmins && !SoDono) return reply(mess.onlyAdmins());
                         if (!isBotGroupAdmins) return reply(mess.onlyBotAdmin());
-                        var path = `./DADOS DO CORVO/grupos/ATIVAÇÕES-CORVO/${from}.json`;
-                        var jsonGp = JSON.parse(fs.readFileSync(path));
+                        var fundoFilePath = `./DADOS DO CORVO/grupos/ATIVAÇÕES-CORVO/${from}.json`;
+                        var jsonGp = JSON.parse(fs.readFileSync(fundoFilePath));
                         var arg = (q || args[0] || '').trim();
                         if (!isWelkom) { return reply(`*ᴀᴛɪᴠᴇ ᴏ ${prefix}ʙᴇᴍᴠɪɴᴅᴏ ᴘᴀʀᴀ ᴜsᴀʀ ᴇssᴇ ᴄᴏᴍᴀɴᴅᴏ 🤷‍♂️*`); }
                         var msg = info.message?.extendedTextMessage?.contextInfo?.quotedMessage || info.message || {};
