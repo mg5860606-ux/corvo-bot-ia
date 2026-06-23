@@ -670,8 +670,18 @@ async function startcorvo(upsert, corvo, qrcode) {
                     isOwnerRequired = false,
                     isModoCoinsRequired = false,
                     isModoBnRequired = false,
-                    sendAudio = true
+                    sendAudio = false
                 } = opt;
+
+                async function enviarTextoUnico(destino, texto, baseOptions = {}) {
+                    const textoLimpo = String(texto || '').trim();
+                    if (!textoLimpo) return;
+
+                    await corvo.sendMessage(destino, {
+                        text: textoLimpo,
+                        ...baseOptions
+                    });
+                }
 
                 // Extrair contexto (necessário agora que a função está fora do loop)
                 var { isGroup, isGroupAdmins, SoDono, isModoCoins, isModobn, prefix, sender, isAudioMenu, reagir, reply } = context;
@@ -684,29 +694,9 @@ async function startcorvo(upsert, corvo, qrcode) {
                     if (isModoCoinsRequired && !isModoCoins) return reply(`*ᴇssᴇ ᴄᴏᴍᴀɴᴅᴏ só ᴘᴏᴅᴇ sᴇʀ ᴀᴛɪᴠᴏ ǫᴜᴀɴᴅᴏ ᴏ sɪᴛᴇᴍᴀ ${prefix}ᴍᴏᴅᴏᴄᴏɪɴs ᴇsᴛɪᴠᴇʀ ᴀᴛɪᴠᴏ.*`);
                     if (isModoBnRequired && !isModobn) return reply(mess.onlyGroupFun(prefix));
 
-                    const cargo = SoDono ? "Dono" : isGroupAdmins ? "Admin" : (context.isVip ? "Vip" : "Membro");
-                    const data = moment.tz('America/Sao_Paulo').format('DD/MM/YYYY');
-                    const hora = moment.tz('America/Sao_Paulo').format('HH:mm:ss');
-                    const totalCmds = Object.keys(megaAliases).length;
-
-                    const header = `╭━━━❃ ° • ° ๑ ۩ ๑ ° • ° ❃━━━╮\n` +
-                        `│ 👤 Usuário: @${sender.split('@')[0]}\n` +
-                        `│ 🔰 Cargo: ${cargo}\n` +
-                        `│ 📅 Data: ${data}\n` +
-                        `│ ⏰ Hora: ${hora}\n` +
-                        `│ 🗃️ Comandos: ${totalCmds}\n` +
-                        `╰━━━❃ ° • ° ๑ ۩ ๑ ° • ° ❃━━━╯\n\n`;
-
-                    const finalCaption = header + caption;
+                    const finalCaption = caption;
 
                     console.log('sendMenu:', { from, sendAudio, isAudioMenu, sender });
-                    if (sendAudio && isAudioMenu) {
-                        try {
-                            await sendAudioMenu(from, selo);
-                        } catch (errAudio) {
-                            console.error('sendMenu: sendAudioMenu failed:', errAudio);
-                        }
-                    }
 
                     var midia = carregarMidia("fotomenu");
                     console.log('sendMenu: midia type=', midia.type, 'data length=', midia.data ? (midia.data.length || 'unknown') : 'no data');
@@ -733,7 +723,14 @@ async function startcorvo(upsert, corvo, qrcode) {
                     }
 
                     console.log('sendMenu: final msg keys=', Object.keys(msg), 'isImage=', !!msg.image, 'isVideo=', !!msg.video, 'isText=', !!msg.text, 'quotedId=', selo?.key?.id);
-                    await corvo.sendMessage(from, msg);
+                    if (msg.image || msg.video) {
+                        const mediaMsg = { ...msg };
+                        mediaMsg.caption = finalCaption;
+                        delete mediaMsg.text;
+                        await corvo.sendMessage(from, mediaMsg);
+                    } else {
+                        await enviarTextoUnico(from, finalCaption, { contextInfo: { mentionedJid: [sender] } });
+                    }
                 } catch (e) {
                     console.error('sendMenu error:', e);
                     await corvo.sendMessage(from, { text: caption, contextInfo: { ...corvochannel } });
@@ -792,7 +789,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                 await sendMenu(from, selo, {
                     reaction: reaction,
                     caption: caption,
-                    sendAudio: true
+                    sendAudio: false
                 }, context);
             }
 
@@ -4244,9 +4241,6 @@ ${data.current.condition.text}
 
                             var textok = `╭✘━𑁁━፝֟🌀₊˚✮⊰𝆺𝅥✿𝆺𝅥 ⊱✮˚₊‧🌀━𑁁━✘╮
 ⌇🔘 Usuário: ${pushname}
-⌇🔘 Bot: ${NomeDoBot}
-⌇🔘 Cargo: ${isGroupAdmins ? "adm" : "membro"}
-⌇🔘 Dono: ${ownerName}
 ⌇🔘 Prefixo: ${prefix}
 ⌇🔘 Versão: ${versao}
 ⌇🔘 Hora: ${time}
@@ -48806,7 +48800,6 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
 
                             const customDesign = getMenuDesignWithDefaults(customBotName, pushname);
                             const menuText = await menu(prefix, customBotName, pushname, customDesign);
-                            const lerMaisPrefix = getMenuLerMaisText();
 
                             // Envia o áudio primeiro se configurado
                             if (isMenuAudioEnabled()) {
@@ -48823,7 +48816,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                         // Depois envia o menu
                                         await corvo.sendMessage(from, {
                                             [useVideo ? 'video' : 'image']: mediaBuffer,
-                                            caption: lerMaisPrefix + menuText,
+                                            caption: menuText,
                                             gifPlayback: useVideo,
                                             mimetype: useVideo ? 'video/mp4' : 'image/jpeg'
                                         }, {
@@ -48834,7 +48827,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                     // Se não tem áudio válido, envia só o menu
                                     await corvo.sendMessage(from, {
                                         [useVideo ? 'video' : 'image']: mediaBuffer,
-                                        caption: lerMaisPrefix + menuText,
+                                        caption: menuText,
                                         gifPlayback: useVideo,
                                         mimetype: useVideo ? 'video/mp4' : 'image/jpeg'
                                     }, {
@@ -48845,7 +48838,7 @@ As consultas de dados estão disponíveis apenas no *plano ilimitado*.
                                 // Se áudio não está ativo, envia só o menu
                                 await corvo.sendMessage(from, {
                                     [useVideo ? 'video' : 'image']: mediaBuffer,
-                                    caption: lerMaisPrefix + menuText,
+                                    caption: menuText,
                                     gifPlayback: useVideo,
                                     mimetype: useVideo ? 'video/mp4' : 'image/jpeg'
                                 }, {
