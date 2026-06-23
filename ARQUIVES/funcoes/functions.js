@@ -154,7 +154,7 @@ fetch(url, options).then(response => response.json())
 //console.log(json)
 resolve(json)
 }).catch((err) => {
-reject(err)
+resolve({})
 })
 })
 

@@ -522,26 +522,8 @@ const CONFIG_ADMIN = {
 // ==============================================================
 
 // =================== INTELIGÊNCIA ARTIFICIAL ===================
-async function callGroqAI(prompt, system) {
-    try {
-        let query = system ? `${system}\n\n${prompt}` : prompt;
-        const res = await fetchJson(`https://api.zenzxz.my.id/ai/chatgpt?q=${encodeURIComponent(query)}`);
-        let resultado = res.result || res.data || res.message || res.response || res.text || res.answer || '';
-        if (typeof resultado === 'object' && resultado !== null) {
-            resultado = resultado.message || resultado.text || resultado.response || resultado.answer || resultado.content || JSON.stringify(resultado);
-        }
-        return typeof resultado === 'string' ? resultado.trim() : '';
-    } catch (e) {
-        console.error("ERRO AI Fallback:", e);
-        return "Desculpe, não consegui obter resposta no momento.";
-    }
-}
+// =================== INTELIGÊNCIA ARTIFICIAL ===================
 
-async function callGroqAgent(userPrompt, pushname, from = null, botName = "Corvo", ownerName = "Mestre") {
-    const systemPrompt = `Você é o ${botName}, um assistente humano e sarcástico...\nO dono se chama ${ownerName}.`;
-    return await callGroqAI(`${systemPrompt}\n\n${userPrompt}`);
-}
-// ==============================================================
 
 async function responderIA(texto, estilo, mediaData = null, rolePermissions = "Membro Comum", chatId = "default") {
     var promptFinal = `Você é o ${setting.NomeDoBot || "Assistente"}, o próprio bot de WhatsApp.
