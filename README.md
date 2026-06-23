@@ -1,10 +1,9 @@
-# 🦅 CorvoBot - O Robô de IA Multifuncional para WhatsApp
+# 🦅 CorvoBot - O Robô Multifuncional para WhatsApp
 
 <div align="center">
 
 ![WhatsApp](https://img.shields.io/badge/WhatsApp-25D366?style=flat-square&logo=whatsapp&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-v18+-339933?style=flat-square&logo=node.js&logoColor=white)
-![Groq AI](https://img.shields.io/badge/Groq-AI--Powered-FF6B6B?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=flat-square)
 
@@ -18,7 +17,7 @@
 
 ## 🌟 O que é CorvoBot?
 
-**CorvoBot** é um bot revolucionário para WhatsApp alimentado por **Groq AI**, combinando inteligência artificial avançada com um vasto ecossistema de jogos, ferramentas de automação e recursos de administração. Com mais de **25+ jogos multiplayer**, suporte a IA contextual e integração com redes sociais, CorvoBot transforma seu WhatsApp em uma plataforma completa de entretenimento e produtividade.
+**CorvoBot** é um bot revolucionário para WhatsApp com um vasto ecossistema de jogos, ferramentas de automação e recursos de administração. Com mais de **25+ jogos multiplayer** e integração com redes sociais, CorvoBot transforma seu WhatsApp em uma plataforma completa de entretenimento e produtividade.
 
 > 💡 Desde jogos clássicos até apostas automáticas, do gerenciamento de grupos até downloads de qualquer rede social - **tudo em um só lugar**.
 
@@ -79,13 +78,6 @@
 </tr>
 </table>
 
-### 🤖 Inteligência Artificial & IA
-
-- **IA Contextual:** Conversa natural com compreensão de contexto
-- **Execução Autônoma:** A IA pode executar comandos automaticamente
-- **Sistema de Memória:** Lembra interações passadas para conversas mais personalizadas
-- **Suporte Groq:** Processamento rápido e eficiente com Groq API
-
 ### 🛡️ Administração & Segurança de Grupos
 
 - **Anti-Link:** Bloqueio de links (modo Hard/Easy)
@@ -121,7 +113,7 @@ Baixe conteúdo de:
 - **Node.js** v18 ou superior
 - **Git**
 - Um celular com WhatsApp para pareamento
-- Chave da API **Groq** (gratuita em [console.groq.com](https://console.groq.com))
+
 
 ### Passo 1: Clonar e Instalar
 
@@ -154,7 +146,45 @@ O bot guiará você através:
 3. Pronto! Bot online 🎉
 
 ---
+## 🚀 Executando com PM2
 
+Se quiser manter o bot online e reiniciar automaticamente em caso de falha, use o PM2.
+
+### Instalar PM2
+```bash
+npm install -g pm2
+```
+
+### Iniciar o bot com PM2
+```bash
+cd corvo-bot-ia
+pm2 start corvo.js --name corvo-bot
+```
+
+### Salvar a lista de processos
+```bash
+pm2 save
+```
+
+### Reiniciar o bot manualmente
+```bash
+pm2 restart corvo-bot
+```
+
+### Logs em tempo real
+```bash
+pm2 logs corvo-bot
+```
+
+### Observação para Windows
+No Windows, use `pm2-windows-startup` para habilitar o auto-start no boot:
+```bash
+npm install -g pm2-windows-startup
+npx pm2-windows-startup install
+pm2 save
+```
+
+---
 ## 📋 Principais Comandos
 
 | Comando | Descrição |
@@ -166,7 +196,6 @@ O bot guiará você através:
 | `.lobisomem` / `.detetive` | Jogos em grupo (multiplayer) |
 | `.apostacorrida` | Aposta em corrida de cavalos |
 | `.roleta` | Roleta russa com ganhos |
-| `.ia sua pergunta` | Converse com a IA |
 | `.ytdl [url]` | Baixar vídeo do YouTube |
 | `.tiktok [url]` | Baixar vídeo do TikTok |
 | `.insta [url]` | Baixar do Instagram |
@@ -192,14 +221,12 @@ O bot guiará você através:
 Crie um arquivo `.env` na raiz:
 
 ```env
-GROQ_API_KEY=sua_chave_aqui
 BOT_NAME=CorvoBot
 OWNER_NUMBER=55119999999
 ```
 
 ### Arquivos de Configuração
 
-- **`database/groq_keys.json`** - Chaves da API Groq (rotação automática)
 - **`DADOS DO CORVO/`** - Dados persistentes de usuários e jogos
 - **`settings/lib/menus.js`** - Personalizar menus
 
@@ -230,8 +257,8 @@ npm install
 npm start
 ```
 
-### Erro de API Groq
-- Verifique sua chave em [console.groq.com](https://console.groq.com)
+### Erro de API
+- Verifique sua chave de API
 - Garanta que a chave não expirou
 - Tente adicionar uma nova chave
 
@@ -260,7 +287,7 @@ corvo-bot-ia/
 ├── corvo.js                 # Bot principal
 ├── package.json             # Dependências
 ├── ARQUIVES/
-│   ├── ai_core.js          # IA e Groq integration
+│   ├── ai_core.js          # Integração de IA e APIs
 │   ├── funcoes/            # Funções auxiliares
 │   ├── games/              # Lógica dos jogos
 │   └── sticker/            # Processamento de stickers
@@ -290,7 +317,7 @@ Distribuído sob a licença **MIT**. Veja [LICENSE](LICENSE) para detalhes.
 
 Desenvolvido com ❤️ pelo time **CorvoBot**
 
-- **Groq API** - Processamento de IA
+- **APIs de processamento** - Integração de serviços externos
 - **Baileys** - Cliente WhatsApp
 - **Node.js Community** - Ferramentas e bibliotecas
 
