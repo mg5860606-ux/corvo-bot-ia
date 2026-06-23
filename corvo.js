@@ -733,10 +733,10 @@ async function startcorvo(upsert, corvo, qrcode) {
                     }
 
                     console.log('sendMenu: final msg keys=', Object.keys(msg), 'isImage=', !!msg.image, 'isVideo=', !!msg.video, 'isText=', !!msg.text, 'quotedId=', selo?.key?.id);
-                    await corvo.sendMessage(from, msg, { quoted: selo });
+                    await corvo.sendMessage(from, msg);
                 } catch (e) {
                     console.error('sendMenu error:', e);
-                    await corvo.sendMessage(from, { text: caption, contextInfo: { ...corvochannel } }, { quoted: selo });
+                    await corvo.sendMessage(from, { text: caption, contextInfo: { ...corvochannel } });
                 }
             }
 
@@ -757,7 +757,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                         contextInfo: {},
                     };
                     console.log('sendAudioMenu: payload keys=', Object.keys(audioMsg), 'audioUrl=', audioMsg.audio.url);
-                    await corvo.sendMessage(from, audioMsg, { quoted: selo });
+                    await corvo.sendMessage(from, audioMsg);
                 } catch (err) {
                     console.log('Erro ao enviar áudio do menu:', err);
                     try {
@@ -769,7 +769,7 @@ async function startcorvo(upsert, corvo, qrcode) {
                             fileName: 'menu.mp3',
                             ptt: false,
                             contextInfo: {},
-                        }, { quoted: selo });
+                        });
                     } catch (err2) {
                         console.log('Erro fallback áudio do menu:', err2);
                     }
